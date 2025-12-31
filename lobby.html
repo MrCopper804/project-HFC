@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Cloud Lobby</title>
+    <title>HFC Academy - Pro Lobby</title>
     <style>
         :root {
             --bg: #000000;
             --glass: rgba(255, 255, 255, 0.05);
             --neon: #64ffda;
+            --danger: #ff4d4d;
             --text: #ccd6f6;
             --panel-bg: rgba(10, 15, 26, 0.95);
         }
@@ -25,63 +26,79 @@
 
         /* --- FIXED HEADER --- */
         .user-panel {
-            width: 100%; background: var(--panel-bg); padding: 20px;
+            width: 100%; background: var(--panel-bg); padding: 15px 20px;
             backdrop-filter: blur(20px); border-bottom: 1px solid rgba(100, 255, 218, 0.2);
             display: flex; align-items: center; box-sizing: border-box; z-index: 100;
         }
 
+        .back-btn {
+            background: var(--glass); border: 1px solid var(--neon);
+            color: var(--neon); padding: 8px 12px; border-radius: 8px;
+            text-decoration: none; font-size: 12px; font-weight: bold;
+            margin-right: 15px; transition: 0.3s;
+        }
+
+        .back-btn:active { transform: scale(0.9); background: var(--neon); color: #000; }
+
         .rank-circle {
-            width: 55px; height: 55px; border-radius: 50%;
-            border: 2px solid var(--neon); box-shadow: 0 0 15px var(--neon);
-            display: flex; justify-content: center; align-items: center;
-            font-size: 22px; margin-right: 15px; background: rgba(0,0,0,0.5);
+            width: 45px; height: 45px; border-radius: 50%;
+            border: 2px solid var(--neon); display: flex; 
+            justify-content: center; align-items: center;
+            font-size: 18px; margin-right: 12px; background: rgba(0,0,0,0.5);
         }
 
         .user-info { flex-grow: 1; }
-        .rank-name { font-weight: 900; font-size: 13px; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
-        .prog-bar-bg { width: 100%; height: 8px; background: #1a2639; border-radius: 10px; margin-top: 10px; overflow: hidden; }
-        .prog-fill { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: 1s ease-in-out; }
-        .score-text { font-size: 10px; margin-top: 6px; color: var(--neon); font-weight: bold; letter-spacing: 1px; }
+        .rank-name { font-weight: 900; font-size: 11px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
+        .prog-bar-bg { width: 100%; height: 6px; background: #1a2639; border-radius: 10px; margin-top: 5px; overflow: hidden; }
+        .prog-fill { width: 0%; height: 100%; background: var(--neon); transition: 1s ease; }
+        .score-text { font-size: 10px; margin-top: 4px; color: var(--neon); font-weight: bold; }
 
         /* --- SCROLLABLE GRID --- */
         .scroll-content {
-            flex-grow: 1; overflow-y: auto; padding: 25px 20px;
+            flex-grow: 1; overflow-y: auto; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
-            -webkit-overflow-scrolling: touch;
         }
 
         .game-grid { 
             display: grid; grid-template-columns: repeat(2, 1fr); 
-            gap: 20px; width: 100%; max-width: 400px; padding-bottom: 40px;
+            gap: 15px; width: 100%; max-width: 400px; padding-bottom: 30px;
         }
 
         .square-box {
             aspect-ratio: 1 / 1; background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px;
             display: flex; flex-direction: column; justify-content: center;
             align-items: center; text-decoration: none; color: white;
-            transition: 0.3s ease; backdrop-filter: blur(10px);
+            transition: 0.3s ease;
         }
 
-        .square-box:hover { border-color: var(--neon); transform: translateY(-5px); }
-        .icon-bg { font-size: 35px; margin-bottom: 12px; }
-        .box-title { font-weight: 800; font-size: 11px; letter-spacing: 1px; text-align: center; color: #fff; }
+        .square-box:active { transform: scale(0.95); border-color: var(--neon); }
+        .icon-bg { font-size: 30px; margin-bottom: 8px; }
+        .box-title { font-weight: bold; font-size: 10px; letter-spacing: 1px; text-align: center; }
         
         /* --- FOOTER --- */
         .footer-panel {
-            width: 100%; background: var(--panel-bg); padding: 18px;
-            text-align: center; border-top: 1px solid rgba(100, 255, 218, 0.1);
+            width: 100%; background: var(--panel-bg); padding: 15px;
+            text-align: center; border-top: 1px solid rgba(255,255,255,0.05);
         }
 
-        .logout-btn { color: #ff4d4d; text-decoration: none; font-size: 11px; font-weight: bold; letter-spacing: 1px; cursor: pointer; }
+        .signout-btn { 
+            color: var(--danger); font-size: 12px; font-weight: 900; 
+            letter-spacing: 1px; border: 1px solid var(--danger);
+            padding: 8px 20px; border-radius: 20px; display: inline-block;
+            cursor: pointer; transition: 0.3s;
+        }
+
+        .signout-btn:active { background: var(--danger); color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="user-panel">
+        <a href="index.html" class="back-btn">← BACK</a>
         <div class="rank-circle" id="rankIcon">...</div>
         <div class="user-info">
-            <div class="rank-name" id="rankTitle">Loading Profile...</div>
+            <div class="rank-name" id="rankTitle">Loading...</div>
             <div class="prog-bar-bg"><div class="prog-fill" id="progFill"></div></div>
             <div class="score-text">PTS: <span id="lobbyScore">0</span></div>
         </div>
@@ -99,7 +116,7 @@
     </div>
 
     <div class="footer-panel">
-        <div class="logout-btn" id="logoutBtn">LOGOUT FROM SYSTEM</div>
+        <div class="signout-btn" id="signoutBtn">TERMINATE SESSION (SIGNOUT)</div>
     </div>
 
     <script type="module">
@@ -120,24 +137,19 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Logout Function
-        document.getElementById('logoutBtn').onclick = () => {
-            signOut(auth).then(() => { window.location.href = "auth.html"; });
+        document.getElementById('signoutBtn').onclick = () => {
+            if(confirm("Are you sure you want to sign out?")) {
+                signOut(auth).then(() => { window.location.href = "auth.html"; });
+            }
         };
 
-        // Main Auth Monitor
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
-
                 let score = 0;
-                if (userSnap.exists()) {
-                    score = userSnap.data().score || 0;
-                } else {
-                    // Naya account hai to database entry banao
-                    await setDoc(userRef, { score: 0, email: user.email });
-                }
+                if (userSnap.exists()) { score = userSnap.data().score || 0; }
+                else { await setDoc(userRef, { score: 0, email: user.email }); }
                 updateUI(score);
             } else {
                 window.location.href = "auth.html";
@@ -147,15 +159,14 @@
         function updateUI(score) {
             document.getElementById('lobbyScore').innerText = score;
             let rank = "RECRUIT"; let icon = "👤"; let max = 100;
-
             if (score >= 2000) { rank = "MASTER"; icon = "👑"; max = 2000; }
             else if (score >= 1000) { rank = "ELITE"; icon = "⚡"; max = 2000; }
             else if (score >= 500) { rank = "SPECIALIST"; icon = "🛡️"; max = 1000; }
             else if (score >= 100) { rank = "ANALYST"; icon = "🕵️"; max = 500; }
-
-            let percent = (score / max) * 100;
+            
             document.getElementById('rankTitle').innerText = rank;
             document.getElementById('rankIcon').innerText = icon;
+            let percent = (score / max) * 100;
             document.getElementById('progFill').style.width = (percent > 100 ? 100 : percent) + "%";
         }
     </script>
