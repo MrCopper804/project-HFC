@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFC Academy - Cipher Archive</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --glass: rgba(255, 255, 255, 0.05);
+            --neon: #64ffda;
+            --text: #ccd6f6;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg);
+            background-image: radial-gradient(circle at bottom left, #112240 0%, #000000 70%);
+            color: var(--text); 
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .header {
+            width: 100%; max-width: 500px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; padding-top: 10px;
+        }
+
+        .back-btn {
+            color: var(--neon); text-decoration: none; font-size: 12px;
+            border: 1px solid var(--neon); padding: 6px 15px; border-radius: 20px;
+            font-weight: bold;
+        }
+
+        h1 { font-size: 24px; letter-spacing: 3px; margin: 0; color: #fff; }
+
+        .search-bar {
+            width: 100%; max-width: 500px;
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px; border-radius: 15px;
+            color: white; margin-bottom: 25px;
+            outline: none; text-align: center;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .char-card {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        .char-card:hover {
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        .hfc-sym {
+            display: block; font-size: 32px; color: var(--neon);
+            font-weight: bold; margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+        }
+
+        .sym-name {
+            display: block; font-size: 9px; color: var(--text);
+            text-transform: uppercase; font-weight: 700;
+            letter-spacing: 1px; margin-bottom: 10px; opacity: 0.6;
+        }
+
+        .eng-letter {
+            display: inline-block; font-size: 14px; color: #fff;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 15px; border-radius: 10px;
+            font-weight: bold; border: 1px solid var(--neon);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="lobby.html" class="back-btn">⬅ LOBBY</a>
+        <h1>ARCHIVE</h1>
+    </div>
+
+    <input type="text" class="search-bar" id="search" placeholder="Search Symbol or Name..." oninput="filterCards()">
+
+    <div class="chart-grid" id="chartGrid"></div>
+
+<script>
+    const hfcData = [
+        { l: 'A', s: '+', n: 'Plus' }, { l: 'B', s: '[]', n: 'Square Brackets' },
+        { l: 'C', s: '©', n: 'Copyright' }, { l: 'D', s: '÷', n: 'Division' },
+        { l: 'E', s: '=', n: 'Equals' }, { l: 'F', s: '_', n: 'Underscore' },
+        { l: 'G', s: '>', n: 'Greater Than' }, { l: 'H', s: '|', n: 'Vertical Bar' },
+        { l: 'I', s: '!', n: 'Exclamation' }, { l: 'J', s: '#', n: 'Hash' },
+        { l: 'K', s: ':', n: 'Colon' }, { l: 'L', s: '<', n: 'Less Than' },
+        { l: 'M', s: '*', n: 'Asterisk' }, { l: 'N', s: '°', n: 'Degree' },
+        { l: 'O', s: '()', n: 'Parentheses' }, { l: 'P', s: '¶', n: 'Paragraph' },
+        { l: 'Q', s: '?', n: 'Question Mark' }, { l: 'R', s: '®', n: 'Registered' },
+        { l: 'S', s: '$', n: 'Dollar' }, { l: 'T', s: '™', n: 'Trademark' },
+        { l: 'U', s: "'", n: 'Apostrophe' }, { l: 'V', s: '^', n: 'Caret' },
+        { l: 'W', s: '&', n: 'Ampersand' }, { l: 'X', s: '`', n: 'Backtick' },
+        { l: 'Y', s: '~', n: 'Tilde' }, { l: 'Z', s: '℅', n: 'Care Of' }
+    ];
+
+    const grid = document.getElementById('chartGrid');
+
+    function displayCards(data) {
+        grid.innerHTML = '';
+        data.forEach(item => {
+            grid.innerHTML += `
+                <div class="char-card">
+                    <span class="hfc-sym">${item.s}</span>
+                    <span class="sym-name">${item.n}</span>
+                    <span class="eng-letter">${item.l}</span>
+                </div>
+            `;
+        });
+    }
+
+    function filterCards() {
+        const query = document.getElementById('search').value.toUpperCase();
+        const filtered = hfcData.filter(item => 
+            item.l.includes(query) || item.n.toUpperCase().includes(query) || item.s.includes(query)
+        );
+        displayCards(filtered);
+    }
+
+    displayCards(hfcData);
+</script>
+</body>
+</html>
