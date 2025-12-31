@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC PRO - Security Fix</title>
+    <title>HFC PRO - Classic Edition</title>
     <style>
         :root {
             --bg-color: #0a192f;
@@ -43,29 +42,41 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.4); 
             width: 85%; 
             max-width: 420px; 
-            position: relative;
             text-align: center;
+            border: 1px solid rgba(100, 255, 218, 0.1);
         }
 
-        .header-btns { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .header-btns { display: flex; justify-content: space-between; margin-bottom: 15px; }
 
         .btn-small {
             background: rgba(100, 255, 218, 0.1);
             color: var(--accent-color);
             border: 1px solid var(--accent-color);
-            padding: 6px 12px;
+            padding: 6px 15px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
         }
 
-        h2 { color: var(--accent-color); margin: 0; font-size: 24px; letter-spacing: 3px; font-weight: 900; }
+        /* Lobby Button - Custom Style to match your theme */
+        .lobby-btn {
+            display: block;
+            width: 100%;
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px dashed var(--accent-color);
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .lobby-btn:hover { background: rgba(100, 255, 218, 0.1); }
 
-        .flex-row { display: flex; gap: 10px; margin-top: 15px; }
-        .flex-item { flex: 1; text-align: left; }
-
-        label { display: block; margin-bottom: 5px; font-size: 0.75rem; color: var(--text-dim); font-weight: bold; }
+        h2 { color: var(--accent-color); letter-spacing: 3px; font-weight: 900; margin-bottom: 20px; }
 
         select, input, textarea { 
             width: 100%; padding: 12px; margin-bottom: 12px; 
@@ -74,29 +85,27 @@
             font-size: 14px; box-sizing: border-box; outline: none;
         }
 
-        textarea { height: 90px; resize: none; }
-
-        .stats { font-size: 10px; color: var(--accent-color); text-align: right; margin-top: -10px; margin-bottom: 10px; }
+        textarea { height: 120px; resize: none; }
 
         .result-container { 
             position: relative; background: rgba(0, 0, 0, 0.2); 
             border-radius: 18px; border: 2px solid var(--accent-color); 
-            padding: 35px 15px 20px; margin-top: 10px;
+            padding: 25px 15px; margin-top: 10px;
         }
 
         .output-box { word-wrap: break-word; font-weight: 700; color: var(--accent-color); font-size: 20px; min-height: 25px; }
 
-        .action-btns { display: flex; gap: 8px; position: absolute; top: 8px; right: 8px; }
+        .action-btns { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
 
         .icon-btn {
             background: var(--accent-color); color: var(--bg-color);
-            border: none; padding: 4px 10px; border-radius: 6px;
-            cursor: pointer; font-size: 9px; font-weight: 900;
+            border: none; padding: 8px 20px; border-radius: 10px;
+            cursor: pointer; font-size: 12px; font-weight: 900;
         }
 
-        .branding { margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(128,128,128,0.1); }
+        .branding { margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(128,128,128,0.1); }
         .made-by { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; }
-        .author-name { font-size: 15px; font-weight: 800; color: var(--text-main); }
+        .author-name { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 5px; }
         .author-name span { color: var(--accent-color); }
     </style>
 </head>
@@ -108,31 +117,26 @@
         <button class="btn-small" onclick="toggleTheme()">THEME</button>
     </div>
 
+    <a href="lobby.html" class="lobby-btn">ENTER HFC LOBBY ➔</a>
+
     <h2>HFC PRO</h2>
     
-    <div class="flex-row">
-        <div class="flex-item">
-            <label>MODE</label>
-            <select id="mode">
-                <option value="enToHfc">EN ➔ HFC</option>
-                <option value="hfcToEn">HFC ➔ EN</option>
-            </select>
-        </div>
-        <div class="flex-item">
-            <label id="keyLabel">SECRET KEY</label>
-            <input type="password" id="secretKey" placeholder="Key required for HFC">
-        </div>
-    </div>
+    <select id="mode" onchange="convert()">
+        <option value="enToHfc">English ➔ HFC</option>
+        <option value="hfcToEn">HFC ➔ English</option>
+    </select>
 
-    <textarea id="userInput" placeholder="Type message..."></textarea>
-    <div class="stats" id="charCount">0 Characters</div>
+    <input type="password" id="secretKey" placeholder="Secret Key (Required for Security)" oninput="convert()">
+
+    <textarea id="userInput" placeholder="Type message here..." oninput="convert()"></textarea>
 
     <div class="result-container">
-        <div class="action-btns">
-            <button class="icon-btn" onclick="copyText()">COPY</button>
-            <button class="icon-btn" onclick="shareText()">SHARE</button>
-        </div>
         <div id="result" class="output-box">...</div>
+    </div>
+
+    <div class="action-btns">
+        <button class="icon-btn" onclick="copyText()">COPY</button>
+        <button class="icon-btn" onclick="shareText()">SHARE</button>
     </div>
 
     <div class="branding">
@@ -152,46 +156,41 @@
     const reverseMapping = {};
     for (let key in hfcMapping) reverseMapping[hfcMapping[key]] = key;
 
-    const inputArea = document.getElementById('userInput');
-    const resultDiv = document.getElementById('result');
-    const secretInput = document.getElementById('secretKey');
-    const modeSelect = document.getElementById('mode');
-
     function toggleTheme() { document.body.classList.toggle('light-theme'); }
-    function clearAll() { inputArea.value = ""; secretInput.value = ""; convert(); }
+    
+    function clearAll() { 
+        document.getElementById('userInput').value = ""; 
+        document.getElementById('secretKey').value = ""; 
+        convert(); 
+    }
 
     function convert() {
-        const text = inputArea.value.trim();
-        const mode = modeSelect.value;
-        const key = secretInput.value;
+        const text = document.getElementById('userInput').value.trim();
+        const mode = document.getElementById('mode').value;
+        const key = document.getElementById('secretKey').value;
+        const resultDiv = document.getElementById('result');
         let convertedText = "";
-
-        document.getElementById('charCount').innerText = `${text.length} Characters`;
 
         if (!text) { resultDiv.innerText = "..."; return; }
 
         if (mode === "enToHfc") {
             convertedText = text.toUpperCase().split('').map(char => hfcMapping[char] || char).join('');
-            // Add key signature if key is present
             if(key) {
                 let salt = btoa(key).substring(0,4);
                 convertedText = salt + convertedText + salt;
             }
         } else {
-            // HFC to EN: Logic for Key Check
             let pureHfc = text;
             if(key) {
                 let salt = btoa(key).substring(0,4);
-                if(text.startsWith(salt) && text.endsWith(salt)) {
-                    pureHfc = text.substring(salt.length, text.length - salt.length);
+                if(text.includes(salt)) {
+                    pureHfc = text.split(salt).join('');
                 } else {
-                    resultDiv.innerText = "❌ ACCESS DENIED (WRONG KEY)";
+                    resultDiv.innerText = "❌ ACCESS DENIED";
                     return;
                 }
             } else {
-                // Check if the message looks encrypted with a key
-                // If it has random characters at start/end but no key provided
-                resultDiv.innerText = "🔑 KEY REQUIRED TO DECODE";
+                resultDiv.innerText = "🔑 KEY REQUIRED";
                 return;
             }
             
@@ -212,20 +211,18 @@
         resultDiv.innerText = convertedText || "...";
     }
 
-    inputArea.addEventListener('input', convert);
-    secretInput.addEventListener('input', convert);
-    modeSelect.addEventListener('change', convert);
-    
     function copyText() {
-        if(resultDiv.innerText !== "..." && !resultDiv.innerText.includes("❌")) {
-            navigator.clipboard.writeText(resultDiv.innerText);
+        const txt = document.getElementById('result').innerText;
+        if(txt !== "..." && !txt.includes("🔑")) {
+            navigator.clipboard.writeText(txt);
             alert("Copied!");
         }
     }
 
     function shareText() {
-        if(navigator.share && resultDiv.innerText !== "..." && !resultDiv.innerText.includes("❌")) {
-            navigator.share({ text: resultDiv.innerText });
+        const txt = document.getElementById('result').innerText;
+        if(navigator.share && txt !== "...") {
+            navigator.share({ text: txt });
         }
     }
 </script>
