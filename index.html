@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Advanced Translator</title>
+    <title>HFC Academy - Pro Translator</title>
     <style>
         :root {
             --bg: #000;
@@ -17,46 +17,43 @@
             color: #fff; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
         }
 
-        /* --- XP DISPLAY FLOATER --- */
         .xp-counter {
             position: fixed; top: 15px; right: 15px;
             background: rgba(100, 255, 218, 0.1); border: 1px solid var(--neon);
             padding: 8px 15px; border-radius: 20px; font-weight: 900;
             color: var(--neon); font-size: 12px; z-index: 1000;
-            box-shadow: 0 0 15px rgba(100, 255, 218, 0.2);
             backdrop-filter: blur(10px);
         }
 
-        .header {
-            padding: 20px; background: var(--panel); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .main-container { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .main-container { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-top: 50px; }
 
         textarea {
-            width: 100%; height: 120px; background: var(--glass); border: 1px solid #333;
+            width: 100%; height: 110px; background: var(--glass); border: 1px solid #333;
             border-radius: 15px; color: #fff; padding: 15px; font-size: 16px; outline: none;
-            resize: none; box-sizing: border-box; transition: 0.3s;
+            resize: none; box-sizing: border-box;
         }
-        textarea:focus { border-color: var(--neon); background: rgba(100, 255, 218, 0.05); }
 
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         .trans-btn {
-            padding: 15px; border-radius: 12px; border: none; font-weight: bold;
-            cursor: pointer; transition: 0.3s; font-size: 11px; letter-spacing: 1px;
+            padding: 14px; border-radius: 12px; border: none; font-weight: bold;
+            cursor: pointer; transition: 0.2s; font-size: 11px;
         }
 
         .eng-hfc { background: var(--neon); color: #000; }
         .hfc-eng { background: #fff; color: #000; }
-        .trans-btn:active { transform: scale(0.95); opacity: 0.8; }
-        .cost-tag { display: block; font-size: 9px; margin-top: 4px; opacity: 0.7; }
+        .cost-tag { display: block; font-size: 8px; opacity: 0.8; margin-top: 3px; }
 
         .output-box {
-            background: rgba(100, 255, 218, 0.05); border: 1px dashed var(--neon);
-            padding: 20px; border-radius: 15px; min-height: 50px; position: relative;
-            word-break: break-all; font-size: 18px; line-height: 1.6;
+            background: rgba(100, 255, 218, 0.03); border: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 20px; border-radius: 15px; min-height: 60px; word-break: break-all;
+            font-size: 20px; line-height: 1.5; position: relative;
+        }
+
+        .copy-btn {
+            position: absolute; bottom: 10px; right: 10px; background: var(--neon);
+            color: #000; border: none; padding: 5px 10px; border-radius: 5px;
+            font-size: 10px; font-weight: bold; cursor: pointer;
         }
 
         .lobby-link {
@@ -69,24 +66,24 @@
 
     <div class="xp-counter">XP: <span id="displayXP">...</span></div>
 
-    <div class="header">
-        <div style="font-weight: 900; letter-spacing: 2px; font-size: 14px; color: var(--neon);">HFC TRANSLATOR</div>
-    </div>
-
     <div class="main-container">
-        <textarea id="inputArea" placeholder="Type message here..."></textarea>
+        <div style="font-weight: 900; color: var(--neon); letter-spacing: 2px;">INPUT DATA</div>
+        <textarea id="inputArea" placeholder="Enter English or HFC Symbols..."></textarea>
 
         <div class="btn-group">
-            <button class="trans-btn eng-hfc" onclick="processTranslation('toHFC')">
-                ENG TO HFC <span class="cost-tag">COST: 10 XP</span>
+            <button class="trans-btn eng-hfc" onclick="startTranslation('toHFC')">
+                ENGLISH TO HFC <span class="cost-tag">10 XP DEDUCTION</span>
             </button>
-            <button class="trans-btn hfc-eng" onclick="processTranslation('toENG')">
-                HFC TO ENG <span class="cost-tag">COST: 20 XP</span>
+            <button class="trans-btn hfc-eng" onclick="startTranslation('toENG')">
+                HFC TO ENGLISH <span class="cost-tag">20 XP DEDUCTION</span>
             </button>
         </div>
 
-        <div class="label" style="font-size: 10px; color: #888;">DECRYPTED OUTPUT:</div>
-        <div class="output-box" id="outputArea">Waiting for input...</div>
+        <div style="font-weight: 900; color: #888; letter-spacing: 2px; margin-top: 10px;">DECRYPTED RESULTS</div>
+        <div class="output-box">
+            <span id="outputArea">Ready...</span>
+            <button class="copy-btn" onclick="copyText()">COPY</button>
+        </div>
 
         <a href="lobby.html" class="lobby-link">OPEN MISSION LOBBY</a>
     </div>
@@ -109,66 +106,72 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const hfcData = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅', ' ': ' '};
-        const reverseHfc = Object.fromEntries(Object.entries(hfcData).map(([k, v]) => [v, k]));
-
+        const hfcMap = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
+        
         let currentUID = null;
         let currentXP = 0;
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUID = user.uid;
-                const userSnap = await getDoc(doc(db, "users", currentUID));
-                if (userSnap.exists()) {
-                    currentXP = userSnap.data().score || 0;
+                const snap = await getDoc(doc(db, "users", currentUID));
+                if (snap.exists()) {
+                    currentXP = snap.data().score || 0;
                     document.getElementById('displayXP').innerText = currentXP;
                 }
-            } else {
-                window.location.href = "auth.html";
-            }
+            } else { window.location.href = "auth.html"; }
         });
 
-        window.processTranslation = async (mode) => {
-            const text = document.getElementById('inputArea').value.toUpperCase();
+        window.startTranslation = async (mode) => {
+            const input = document.getElementById('inputArea').value.toUpperCase();
+            if (!input.trim()) return;
+
             const cost = (mode === 'toHFC') ? 10 : 20;
-
-            if (!text.trim()) return;
-
             if (currentXP < cost) {
-                alert(`Insufficient XP! Translation costs ${cost} XP. You have ${currentXP} XP.`);
+                alert("Insufficient XP! Go play games.");
                 return;
             }
 
-            // XP Deduction in Cloud
             try {
-                const userRef = doc(db, "users", currentUID);
-                await updateDoc(userRef, { score: increment(-cost) });
-                
-                // Update Local UI
+                await updateDoc(doc(db, "users", currentUID), { score: increment(-cost) });
                 currentXP -= cost;
                 document.getElementById('displayXP').innerText = currentXP;
 
-                // Perform Logic
-                let result = "";
+                let finalResult = "";
                 if (mode === 'toHFC') {
-                    result = text.split('').map(c => hfcData[c] || c).join('');
+                    finalResult = input.split('').map(char => hfcMap[char] || char).join('');
                 } else {
-                    // Reverse translation logic (handling symbols)
-                    // Simplified for this example, usually requires symbol matching
-                    let symbols = Object.values(hfcData).filter(s => s !== ' ');
-                    let sortedSymbols = symbols.sort((a,b) => b.length - a.length);
-                    let tempText = text;
-                    let decoded = "";
+                    // --- ADVANCED REVERSE LOGIC ---
+                    let tempText = input;
+                    // Sort symbols by length (longest first) to avoid partial matching
+                    let items = Object.entries(hfcMap).sort((a,b) => b[1].length - a[1].length);
                     
-                    // Basic character by character for standard symbols
-                    result = text.split('').map(c => reverseHfc[c] || c).join('');
+                    let decoded = "";
+                    while (tempText.length > 0) {
+                        let found = false;
+                        for (let [letter, symbol] of items) {
+                            if (tempText.startsWith(symbol)) {
+                                decoded += letter;
+                                tempText = tempText.slice(symbol.length);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            decoded += tempText[0];
+                            tempText = tempText.slice(1);
+                        }
+                    }
+                    finalResult = decoded;
                 }
+                document.getElementById('outputArea').innerText = finalResult;
+            } catch (e) { alert("Sync Error!"); }
+        };
 
-                document.getElementById('outputArea').innerText = result;
-
-            } catch (e) {
-                console.error("XP Sync Error", e);
-            }
+        window.copyText = () => {
+            const text = document.getElementById('outputArea').innerText;
+            navigator.clipboard.writeText(text);
+            alert("Copied to clipboard!");
         };
     </script>
 </body>
