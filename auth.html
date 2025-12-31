@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC Academy - Secure Access</title>
+    <style>
+        :root { --neon: #64ffda; --bg: #000; --glass: rgba(255, 255, 255, 0.05); }
+        body { 
+            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
+            background-image: radial-gradient(circle at center, #112240 0%, #000 80%);
+            overflow: hidden;
+        }
+        .auth-card {
+            background: var(--glass); padding: 40px 30px; border-radius: 25px;
+            border: 1px solid rgba(100, 255, 218, 0.2); width: 90%; max-width: 380px; 
+            text-align: center; backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h2 { letter-spacing: 3px; font-weight: 900; color: var(--neon); margin-bottom: 30px; text-transform: uppercase; }
+        input {
+            width: 100%; padding: 14px; margin: 12px 0; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; 
+            box-sizing: border-box; outline: none; transition: 0.3s; font-size: 16px;
+        }
+        input:focus { border-color: var(--neon); background: rgba(100, 255, 218, 0.05); }
+        button {
+            width: 100%; padding: 14px; background: var(--neon); border: none;
+            border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px;
+            color: #000; letter-spacing: 1px; transition: 0.3s; font-size: 16px;
+        }
+        button:hover { box-shadow: 0 0 20px var(--neon); transform: translateY(-2px); }
+        .toggle-link { font-size: 13px; color: #888; margin-top: 25px; cursor: pointer; display: block; }
+        .toggle-link span { color: var(--neon); font-weight: bold; text-decoration: underline; }
+        #errorMsg { color: #ff4d4d; font-size: 12px; margin-top: 15px; min-height: 18px; font-weight: bold; }
+        
+        /* Simple Loading Spinner */
+        .loading { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card" id="authCard">
+        <h2 id="authTitle">Agent Login</h2>
+        <input type="email" id="email" placeholder="Email Address" autocomplete="email">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        <div id="errorMsg"></div>
+        <button id="authBtn">INITIALIZE ACCESS</button>
+        <div class="toggle-link" id="toggleLink">Don't have an account? <span>Sign Up</span></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // Aapka Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+            authDomain: "hfc-academy.firebaseapp.com",
+            projectId: "hfc-academy",
+            storageBucket: "hfc-academy.firebasestorage.app",
+            messagingSenderId: "84006497196",
+            appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        let isLoginMode = true;
+
+        const toggleLink = document.getElementById('toggleLink');
+        const authTitle = document.getElementById('authTitle');
+        const authBtn = document.getElementById('authBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const authCard = document.getElementById('authCard');
+
+        // Login aur Signup ke darmiyan switch karna
+        toggleLink.onclick = () => {
+            isLoginMode = !isLoginMode;
+            errorMsg.innerText = "";
+            authTitle.innerText = isLoginMode ? "Agent Login" : "Agent Signup";
+            authBtn.innerText = isLoginMode ? "INITIALIZE ACCESS" : "CREATE ACCOUNT";
+            toggleLink.innerHTML = isLoginMode ? "Don't have an account? <span>Sign Up</span>" : "Already have an account? <span>Login</span>";
+        };
+
+        // Main Login/Signup Button Function
+        authBtn.onclick = () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if(!email || !password) {
+                errorMsg.innerText = "Please fill all fields.";
+                return;
+            }
+
+            authCard.classList.add('loading');
+            errorMsg.innerText = "Processing...";
+
+            if (isLoginMode) {
+                // Login Logic
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(() => {
+                        window.location.href = "lobby.html";
+                    })
+                    .catch((err) => {
+                        authCard.classList.remove('loading');
+                        errorMsg.innerText = "Login Failed: " + err.message;
+                    });
+            } else {
+                // Signup Logic
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then(() => {
+                        window.location.href = "lobby.html";
+                    })
+                    .catch((err) => {
+                        authCard.classList.remove('loading');
+                        errorMsg.innerText = "Signup Failed: " + err.message;
+                    });
+            }
+        };
+
+        // Check if user is already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = "lobby.html";
+            }
+        });
+    </script>
+</body>
+</html>
