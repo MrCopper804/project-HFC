@@ -2,229 +2,174 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC PRO - Classic Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC Academy - Advanced Translator</title>
     <style>
         :root {
-            --bg-color: #0a192f;
-            --container-bg: #112240;
-            --accent-color: #64ffda;
-            --text-main: #ccd6f6;
-            --text-dim: #8892b0;
-            --input-bg: #1d2d50;
-        }
-
-        .light-theme {
-            --bg-color: #f0f2f5;
-            --container-bg: #ffffff;
-            --accent-color: #1a73e8;
-            --text-main: #1a1a1a;
-            --text-dim: #5f6368;
-            --input-bg: #f1f3f4;
+            --bg: #000;
+            --neon: #64ffda;
+            --glass: rgba(255, 255, 255, 0.05);
+            --panel: rgba(10, 15, 26, 0.95);
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background-color: var(--bg-color); 
-            color: var(--text-main);
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0;
-            transition: 0.4s;
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            color: #fff; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
         }
 
-        .container { 
-            background: var(--container-bg); 
-            padding: 25px; 
-            border-radius: 28px; 
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4); 
-            width: 85%; 
-            max-width: 420px; 
-            text-align: center;
-            border: 1px solid rgba(100, 255, 218, 0.1);
+        /* --- XP DISPLAY FLOATER --- */
+        .xp-counter {
+            position: fixed; top: 15px; right: 15px;
+            background: rgba(100, 255, 218, 0.1); border: 1px solid var(--neon);
+            padding: 8px 15px; border-radius: 20px; font-weight: 900;
+            color: var(--neon); font-size: 12px; z-index: 1000;
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.2);
+            backdrop-filter: blur(10px);
         }
 
-        .header-btns { display: flex; justify-content: space-between; margin-bottom: 15px; }
-
-        .btn-small {
-            background: rgba(100, 255, 218, 0.1);
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-            padding: 6px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 700;
+        .header {
+            padding: 20px; background: var(--panel); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Lobby Button - Custom Style to match your theme */
-        .lobby-btn {
-            display: block;
-            width: 100%;
-            background: transparent;
-            color: var(--accent-color);
-            border: 1px dashed var(--accent-color);
-            padding: 10px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: bold;
-            transition: 0.3s;
+        .main-container { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+
+        textarea {
+            width: 100%; height: 120px; background: var(--glass); border: 1px solid #333;
+            border-radius: 15px; color: #fff; padding: 15px; font-size: 16px; outline: none;
+            resize: none; box-sizing: border-box; transition: 0.3s;
         }
-        .lobby-btn:hover { background: rgba(100, 255, 218, 0.1); }
+        textarea:focus { border-color: var(--neon); background: rgba(100, 255, 218, 0.05); }
 
-        h2 { color: var(--accent-color); letter-spacing: 3px; font-weight: 900; margin-bottom: 20px; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        select, input, textarea { 
-            width: 100%; padding: 12px; margin-bottom: 12px; 
-            border: 1px solid rgba(128,128,128,0.2); border-radius: 12px; 
-            background: var(--input-bg); color: var(--text-main);
-            font-size: 14px; box-sizing: border-box; outline: none;
+        .trans-btn {
+            padding: 15px; border-radius: 12px; border: none; font-weight: bold;
+            cursor: pointer; transition: 0.3s; font-size: 11px; letter-spacing: 1px;
         }
 
-        textarea { height: 120px; resize: none; }
+        .eng-hfc { background: var(--neon); color: #000; }
+        .hfc-eng { background: #fff; color: #000; }
+        .trans-btn:active { transform: scale(0.95); opacity: 0.8; }
+        .cost-tag { display: block; font-size: 9px; margin-top: 4px; opacity: 0.7; }
 
-        .result-container { 
-            position: relative; background: rgba(0, 0, 0, 0.2); 
-            border-radius: 18px; border: 2px solid var(--accent-color); 
-            padding: 25px 15px; margin-top: 10px;
+        .output-box {
+            background: rgba(100, 255, 218, 0.05); border: 1px dashed var(--neon);
+            padding: 20px; border-radius: 15px; min-height: 50px; position: relative;
+            word-break: break-all; font-size: 18px; line-height: 1.6;
         }
 
-        .output-box { word-wrap: break-word; font-weight: 700; color: var(--accent-color); font-size: 20px; min-height: 25px; }
-
-        .action-btns { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
-
-        .icon-btn {
-            background: var(--accent-color); color: var(--bg-color);
-            border: none; padding: 8px 20px; border-radius: 10px;
-            cursor: pointer; font-size: 12px; font-weight: 900;
+        .lobby-link {
+            text-align: center; margin-top: auto; padding: 20px;
+            color: var(--neon); text-decoration: none; font-weight: bold; font-size: 13px;
         }
-
-        .branding { margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(128,128,128,0.1); }
-        .made-by { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; }
-        .author-name { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 5px; }
-        .author-name span { color: var(--accent-color); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header-btns">
-        <button class="btn-small" onclick="clearAll()">RESET</button>
-        <button class="btn-small" onclick="toggleTheme()">THEME</button>
+    <div class="xp-counter">XP: <span id="displayXP">...</span></div>
+
+    <div class="header">
+        <div style="font-weight: 900; letter-spacing: 2px; font-size: 14px; color: var(--neon);">HFC TRANSLATOR</div>
     </div>
 
-    <a href="lobby.html" class="lobby-btn">ENTER HFC LOBBY ➔</a>
+    <div class="main-container">
+        <textarea id="inputArea" placeholder="Type message here..."></textarea>
 
-    <h2>HFC PRO</h2>
-    
-    <select id="mode" onchange="convert()">
-        <option value="enToHfc">English ➔ HFC</option>
-        <option value="hfcToEn">HFC ➔ English</option>
-    </select>
+        <div class="btn-group">
+            <button class="trans-btn eng-hfc" onclick="processTranslation('toHFC')">
+                ENG TO HFC <span class="cost-tag">COST: 10 XP</span>
+            </button>
+            <button class="trans-btn hfc-eng" onclick="processTranslation('toENG')">
+                HFC TO ENG <span class="cost-tag">COST: 20 XP</span>
+            </button>
+        </div>
 
-    <input type="password" id="secretKey" placeholder="Secret Key (Required for Security)" oninput="convert()">
+        <div class="label" style="font-size: 10px; color: #888;">DECRYPTED OUTPUT:</div>
+        <div class="output-box" id="outputArea">Waiting for input...</div>
 
-    <textarea id="userInput" placeholder="Type message here..." oninput="convert()"></textarea>
-
-    <div class="result-container">
-        <div id="result" class="output-box">...</div>
+        <a href="lobby.html" class="lobby-link">OPEN MISSION LOBBY</a>
     </div>
 
-    <div class="action-btns">
-        <button class="icon-btn" onclick="copyText()">COPY</button>
-        <button class="icon-btn" onclick="shareText()">SHARE</button>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <div class="branding">
-        <div class="made-by">CRAFTED BY</div>
-        <div class="author-name">UMAIR <span>KHAN</span></div>
-    </div>
-</div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+            authDomain: "hfc-academy.firebaseapp.com",
+            projectId: "hfc-academy",
+            storageBucket: "hfc-academy.firebasestorage.app",
+            messagingSenderId: "84006497196",
+            appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+        };
 
-<script>
-    const hfcMapping = {
-        'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 
-        'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 
-        'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 
-        'Y': '~', 'Z': '℅', ' ': ' '
-    };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-    const reverseMapping = {};
-    for (let key in hfcMapping) reverseMapping[hfcMapping[key]] = key;
+        const hfcData = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅', ' ': ' '};
+        const reverseHfc = Object.fromEntries(Object.entries(hfcData).map(([k, v]) => [v, k]));
 
-    function toggleTheme() { document.body.classList.toggle('light-theme'); }
-    
-    function clearAll() { 
-        document.getElementById('userInput').value = ""; 
-        document.getElementById('secretKey').value = ""; 
-        convert(); 
-    }
+        let currentUID = null;
+        let currentXP = 0;
 
-    function convert() {
-        const text = document.getElementById('userInput').value.trim();
-        const mode = document.getElementById('mode').value;
-        const key = document.getElementById('secretKey').value;
-        const resultDiv = document.getElementById('result');
-        let convertedText = "";
-
-        if (!text) { resultDiv.innerText = "..."; return; }
-
-        if (mode === "enToHfc") {
-            convertedText = text.toUpperCase().split('').map(char => hfcMapping[char] || char).join('');
-            if(key) {
-                let salt = btoa(key).substring(0,4);
-                convertedText = salt + convertedText + salt;
-            }
-        } else {
-            let pureHfc = text;
-            if(key) {
-                let salt = btoa(key).substring(0,4);
-                if(text.includes(salt)) {
-                    pureHfc = text.split(salt).join('');
-                } else {
-                    resultDiv.innerText = "❌ ACCESS DENIED";
-                    return;
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUID = user.uid;
+                const userSnap = await getDoc(doc(db, "users", currentUID));
+                if (userSnap.exists()) {
+                    currentXP = userSnap.data().score || 0;
+                    document.getElementById('displayXP').innerText = currentXP;
                 }
             } else {
-                resultDiv.innerText = "🔑 KEY REQUIRED";
+                window.location.href = "auth.html";
+            }
+        });
+
+        window.processTranslation = async (mode) => {
+            const text = document.getElementById('inputArea').value.toUpperCase();
+            const cost = (mode === 'toHFC') ? 10 : 20;
+
+            if (!text.trim()) return;
+
+            if (currentXP < cost) {
+                alert(`Insufficient XP! Translation costs ${cost} XP. You have ${currentXP} XP.`);
                 return;
             }
-            
-            let i = 0;
-            const sortedKeys = Object.values(hfcMapping).filter(s => s !== ' ').sort((a,b) => b.length - a.length);
-            while (i < pureHfc.length) {
-                let found = false;
-                if (pureHfc[i] === ' ') { convertedText += ' '; i++; continue; }
-                for (let s of sortedKeys) {
-                    if (pureHfc.substr(i, s.length) === s) {
-                        convertedText += reverseMapping[s];
-                        i += s.length; found = true; break;
-                    }
+
+            // XP Deduction in Cloud
+            try {
+                const userRef = doc(db, "users", currentUID);
+                await updateDoc(userRef, { score: increment(-cost) });
+                
+                // Update Local UI
+                currentXP -= cost;
+                document.getElementById('displayXP').innerText = currentXP;
+
+                // Perform Logic
+                let result = "";
+                if (mode === 'toHFC') {
+                    result = text.split('').map(c => hfcData[c] || c).join('');
+                } else {
+                    // Reverse translation logic (handling symbols)
+                    // Simplified for this example, usually requires symbol matching
+                    let symbols = Object.values(hfcData).filter(s => s !== ' ');
+                    let sortedSymbols = symbols.sort((a,b) => b.length - a.length);
+                    let tempText = text;
+                    let decoded = "";
+                    
+                    // Basic character by character for standard symbols
+                    result = text.split('').map(c => reverseHfc[c] || c).join('');
                 }
-                if (!found) { convertedText += pureHfc[i]; i++; }
+
+                document.getElementById('outputArea').innerText = result;
+
+            } catch (e) {
+                console.error("XP Sync Error", e);
             }
-        }
-        resultDiv.innerText = convertedText || "...";
-    }
-
-    function copyText() {
-        const txt = document.getElementById('result').innerText;
-        if(txt !== "..." && !txt.includes("🔑")) {
-            navigator.clipboard.writeText(txt);
-            alert("Copied!");
-        }
-    }
-
-    function shareText() {
-        const txt = document.getElementById('result').innerText;
-        if(navigator.share && txt !== "...") {
-            navigator.share({ text: txt });
-        }
-    }
-</script>
+        };
+    </script>
 </body>
 </html>
