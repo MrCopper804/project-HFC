@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFC Academy - Lobby</title>
+    <style>
+        :root {
+            --bg-color: #0a192f;
+            --container-bg: #112240;
+            --accent-color: #64ffda;
+            --text-main: #ccd6f6;
+            --text-dim: #8892b0;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0;
+        }
+
+        .container { 
+            background: var(--container-bg); 
+            padding: 30px; border-radius: 28px; 
+            width: 85%; max-width: 450px; text-align: center;
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .exit-btn {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--text-dim);
+            padding: 5px 15px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .exit-btn:hover { color: var(--accent-color); border-color: var(--accent-color); }
+
+        h1 { color: var(--accent-color); letter-spacing: 5px; margin-bottom: 10px; font-size: 28px; }
+        p { font-size: 14px; color: var(--text-dim); margin-bottom: 30px; }
+
+        .menu-grid { display: flex; flex-direction: column; gap: 15px; }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            padding: 20px;
+            border-radius: 18px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: 0.3s;
+        }
+
+        .menu-card:hover {
+            background: rgba(100, 255, 218, 0.05);
+            border-color: var(--accent-color);
+            transform: scale(1.02);
+        }
+
+        .card-text { text-align: left; }
+        .card-title { display: block; color: var(--accent-color); font-weight: bold; font-size: 16px; }
+        .card-desc { font-size: 11px; color: var(--text-dim); }
+
+        .tag {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="exit-btn">⬅ EXIT ACADEMY</a>
+    
+    <h1>LOBBY</h1>
+    <p>Welcome to HFC Academy. Choose your mission to master the secret code.</p>
+
+    <div class="menu-grid">
+        <a href="game1.html" class="menu-card">
+            <div class="card-text">
+                <span class="card-title">MISSION: DECODER</span>
+                <span class="card-desc">Crack the HFC codes to win.</span>
+            </div>
+            <span class="tag">PLAY</span>
+        </a>
+
+        <a href="chart.html" class="menu-card">
+            <div class="card-text">
+                <span class="card-title">ALPHABET CHART</span>
+                <span class="card-desc">Study the HFC symbols.</span>
+            </div>
+            <span class="tag">STUDY</span>
+        </a>
+
+        <div class="menu-card locked">
+            <div class="card-text">
+                <span class="card-title">SPEED TYPER</span>
+                <span class="card-desc">Type HFC as fast as you can.</span>
+            </div>
+            <span class="tag" style="background: #555;">LOCKED</span>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; font-size: 10px; color: var(--text-dim); letter-spacing: 2px;">
+        HFC ACADEMY SYSTEM | BY UMAIR KHAN
+    </div>
+</div>
+
+</body>
+</html>
