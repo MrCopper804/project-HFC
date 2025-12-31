@@ -3,155 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Pro Lobby</title>
+    <title>HFC Academy - Mission Lobby</title>
     <style>
         :root {
             --bg: #000000;
             --glass: rgba(255, 255, 255, 0.05);
             --neon: #64ffda;
             --danger: #ff4d4d;
-            --admin-color: #ff0055;
+            --admin: #ff0055;
             --gold: #ffd700;
-            --text: #ccd6f6;
-            --panel-bg: rgba(10, 15, 26, 0.95);
+            --panel: rgba(10, 15, 26, 0.95);
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg); 
-            background-image: radial-gradient(circle at top right, #112240 0%, #000000 70%);
-            color: var(--text); margin: 0; padding: 0;
-            display: flex; flex-direction: column;
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            background-image: radial-gradient(circle at top right, #112240 0%, #000 70%);
+            color: #ccd6f6; margin: 0; padding: 0; display: flex; flex-direction: column;
             height: 100vh; overflow: hidden;
         }
 
         /* --- HEADER --- */
-        .user-panel {
-            width: 100%; background: var(--panel-bg); padding: 10px 15px;
+        .header {
+            width: 100%; background: var(--panel); padding: 12px 15px;
             backdrop-filter: blur(20px); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
             display: flex; align-items: center; box-sizing: border-box; z-index: 100;
         }
 
         .icon-btn {
-            width: 42px; height: 42px; display: flex; justify-content: center; 
+            width: 40px; height: 40px; display: flex; justify-content: center; 
             align-items: center; border-radius: 12px; background: var(--glass);
             color: var(--neon); text-decoration: none; font-size: 20px;
             border: 1px solid rgba(100, 255, 218, 0.2); cursor: pointer;
         }
 
-        .rank-info-main { flex-grow: 1; display: flex; align-items: center; margin: 0 15px; }
-
-        .rank-circle {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 2px solid var(--neon); display: flex; 
-            justify-content: center; align-items: center;
-            font-size: 16px; margin-right: 10px; background: rgba(0,0,0,0.5);
+        .user-stats { flex-grow: 1; margin: 0 15px; display: flex; align-items: center; }
+        .rank-badge {
+            width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--neon);
+            display: flex; justify-content: center; align-items: center; font-size: 14px;
+            margin-right: 10px; background: rgba(0,0,0,0.5); box-shadow: 0 0 10px var(--neon);
         }
 
-        .rank-name { font-weight: 900; font-size: 10px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
-        .prog-bar-bg { width: 100%; height: 5px; background: #1a2639; border-radius: 10px; margin-top: 4px; overflow: hidden; }
-        .prog-fill { width: 0%; height: 100%; background: var(--neon); transition: 1s ease; }
+        .rank-text { font-weight: 900; font-size: 10px; color: #fff; letter-spacing: 1px; text-transform: uppercase; }
+        .currency-row { font-size: 9px; margin-top: 3px; display: flex; gap: 10px; font-weight: bold; }
 
-        /* --- DROPDOWN MENU --- */
-        .settings-menu {
-            position: absolute; top: 65px; right: 15px; 
-            background: #0d1117; border: 1px solid #30363d;
-            border-radius: 15px; width: 210px; display: none;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200;
-            overflow: hidden;
+        /* --- MENU --- */
+        .menu {
+            position: absolute; top: 65px; right: 15px; background: #0d1117;
+            border: 1px solid #30363d; border-radius: 15px; width: 210px;
+            display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200; overflow: hidden;
         }
-        .settings-menu.active { display: block; }
+        .menu.active { display: block; }
         .menu-item {
-            color: #fff; font-size: 13px; font-weight: bold;
-            padding: 14px 20px; cursor: pointer; display: block;
-            text-decoration: none; border-bottom: 1px solid #21262d;
-            transition: 0.2s;
+            color: #fff; font-size: 13px; font-weight: bold; padding: 14px 20px;
+            cursor: pointer; display: block; text-decoration: none; border-bottom: 1px solid #21262d;
         }
         .menu-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--neon); }
 
-        /* --- CONVERT MODAL --- */
+        /* --- EXCHANGE MODAL --- */
         .modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             display: none; justify-content: center; align-items: center; z-index: 1000;
         }
         .modal.active { display: flex; }
-        .modal-content {
+        .modal-box {
             background: #0d1117; border: 2px solid var(--neon); padding: 25px;
             border-radius: 20px; width: 90%; max-width: 320px; text-align: center;
         }
-        .conv-input {
-            width: 100%; padding: 12px; margin: 15px 0; background: #1a1a1a;
-            border: 1px solid #333; border-radius: 10px; color: white; text-align: center; box-sizing: border-box;
-        }
-        .mode-btn { flex: 1; padding: 10px; font-size: 10px; border-radius: 8px; border: 1px solid #333; background: none; color: #fff; cursor: pointer; }
-        .mode-btn.active { background: var(--neon); color: #000; font-weight: bold; border-color: var(--neon); }
+        .mode-selector { display: flex; gap: 8px; margin-bottom: 15px; }
+        .m-btn { flex: 1; padding: 10px; font-size: 10px; border-radius: 8px; border: 1px solid #333; background: none; color: #fff; cursor: pointer; }
+        .m-btn.active { background: var(--neon); color: #000; font-weight: bold; }
+        .c-input { width: 100%; padding: 12px; margin: 15px 0; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; color: white; text-align: center; }
 
         /* --- GRID --- */
-        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 25px 20px; display: flex; flex-direction: column; align-items: center; }
-        .game-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; width: 100%; max-width: 420px; padding-bottom: 40px; }
-        .square-box {
-            aspect-ratio: 1/1; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 28px; display: flex; flex-direction: column; justify-content: center;
+        .grid { flex-grow: 1; overflow-y: auto; padding: 25px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 450px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .card {
+            aspect-ratio: 1/1; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 25px; display: flex; flex-direction: column; justify-content: center;
             align-items: center; text-decoration: none; color: white; transition: 0.3s;
         }
-        .square-box:active { transform: scale(0.95); border-color: var(--neon); }
+        .card:active { transform: scale(0.95); border-color: var(--neon); }
     </style>
 </head>
 <body>
 
-    <div class="user-panel">
+    <div class="header">
         <a href="index.html" class="icon-btn">🏠</a>
-        <div class="rank-info-main">
-            <div class="rank-circle" id="rankIcon">?</div>
-            <div class="user-info" style="flex:1">
-                <div class="rank-name" id="rankTitle">LOADING...</div>
-                <div class="prog-bar-bg"><div class="prog-fill" id="progFill"></div></div>
-                <div style="font-size: 9px; color: var(--neon); margin-top:3px; font-weight: bold;">XP: <span id="lobbyScore">0</span></div>
+        <div class="user-stats">
+            <div class="rank-badge">⭐</div>
+            <div>
+                <div class="rank-text" id="displayRank">RECRUIT</div>
+                <div class="currency-row">
+                    <span style="color:var(--neon)">XP: <span id="displayXP">0</span></span>
+                    <span style="color:var(--gold)">COINS: <span id="displayCoins">0</span></span>
+                </div>
             </div>
         </div>
-        <div class="icon-btn" id="menuTrigger">⚙️</div>
+        <div class="icon-btn" id="menuToggle">⚙️</div>
     </div>
 
-    <div class="settings-menu" id="settingsMenu">
-        <div class="menu-item" onclick="openConvertModal()" style="color: var(--gold);">💎 EXCHANGE CENTER</div>
-        <a href="profile.html" class="menu-item">👤 AGENT PROFILE</a>
+    <div class="menu" id="mainMenu">
+        <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 EXCHANGE CENTER</div>
+        <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ RANK UP STORE</a>
+        <a href="profile.html" class="menu-item">👤 PROFILE</a>
         <a href="leaderboard.html" class="menu-item">🏆 LEADERBOARD</a>
-        <div class="menu-item" id="signoutBtn" style="color: var(--danger); border:none;">🚪 LOGOUT</div>
+        <div class="menu-item" id="logoutBtn" style="color:var(--danger); border:none;">🚪 LOGOUT</div>
     </div>
 
-    <div class="modal" id="convertModal">
-        <div class="modal-content">
-            <h3 style="color: var(--neon); margin-top:0;">EXCHANGE</h3>
-            
-            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                <button id="modeCtoX" class="mode-btn active" onclick="setMode('CtoX')">COIN ➔ XP</button>
-                <button id="modeXtoC" class="mode-btn" onclick="setMode('XtoC')">XP ➔ COIN</button>
+    <div class="modal" id="exModal">
+        <div class="modal-box">
+            <h3 style="color:var(--neon); margin-top:0;">EXCHANGE</h3>
+            <div class="mode-selector">
+                <button id="btnCtoX" class="m-btn active" onclick="setExMode('CtoX')">COIN ➔ XP</button>
+                <button id="btnXtoC" class="m-btn" onclick="setExMode('XtoC')">XP ➔ COIN</button>
             </div>
-
-            <p id="rateText" style="font-size: 11px; color: #888;">1 COIN = 15 XP</p>
-            <input type="number" id="convertInput" class="conv-input" placeholder="Enter Amount">
-            <div id="convPreview" style="font-size: 12px; color: var(--neon); margin-bottom: 15px;">You get: 0 XP</div>
-            
-            <button onclick="processExchange()" style="background:var(--neon); color:#000; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">CONFIRM</button>
-            <p onclick="closeConvertModal()" style="color:#555; font-size:12px; margin-top:15px; cursor:pointer;">Cancel</p>
+            <p id="rate" style="font-size: 11px; color: #888;">1 COIN = 15 XP</p>
+            <input type="number" id="exInput" class="c-input" placeholder="Amount">
+            <div id="exPreview" style="font-size: 12px; color: var(--neon); margin-bottom: 15px;">You get: 0 XP</div>
+            <button onclick="doExchange()" style="background:var(--neon); color:#000; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">CONFIRM</button>
+            <p onclick="closeExchange()" style="color:#555; font-size:12px; margin-top:15px; cursor:pointer;">Cancel</p>
         </div>
     </div>
 
-    <div class="scroll-content">
-        <div class="game-grid">
-            <a href="chart.html" class="square-box">📖<br><span style="font-size:10px; font-weight:800; margin-top:10px;">CHART</span></a>
-            <a href="game1.html" class="square-box">⌨️<br><span style="font-size:10px; font-weight:800; margin-top:10px;">DECODE</span></a>
-            <a href="game2.html" class="square-box">🧩<br><span style="font-size:10px; font-weight:800; margin-top:10px;">QUIZ</span></a>
-            <a href="game3.html" class="square-box">🔎<br><span style="font-size:10px; font-weight:800; margin-top:10px;">MATCH</span></a>
-            <a href="game4.html" class="square-box">☄️<br><span style="font-size:10px; font-weight:800; margin-top:10px;">FALLING</span></a>
-            <a href="game5.html" class="square-box">🧠<br><span style="font-size:10px; font-weight:800; margin-top:10px;">RECALL</span></a>
-        </div>
+    <div class="grid">
+        <a href="chart.html" class="card">📖<br><span style="font-size:10px; margin-top:8px;">CHART</span></a>
+        <a href="game1.html" class="card">⌨️<br><span style="font-size:10px; margin-top:8px;">DECODE</span></a>
+        <a href="game2.html" class="card">🧩<br><span style="font-size:10px; margin-top:8px;">QUIZ</span></a>
+        <a href="game3.html" class="card">🔎<br><span style="font-size:10px; margin-top:8px;">MATCH</span></a>
+        <a href="game4.html" class="card">☄️<br><span style="font-size:10px; margin-top:8px;">FALLING</span></a>
+        <a href="game5.html" class="card">🧠<br><span style="font-size:10px; margin-top:8px;">RECALL</span></a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -166,78 +151,64 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let exchangeMode = 'CtoX';
+        let exMode = 'CtoX';
+        const toggle = document.getElementById('menuToggle');
+        const menu = document.getElementById('mainMenu');
 
-        // Toggle Logic
-        document.getElementById('menuTrigger').onclick = (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.toggle('active'); };
-        document.onclick = () => document.getElementById('settingsMenu').classList.remove('active');
-        document.getElementById('signoutBtn').onclick = () => signOut(auth).then(() => location.href = "auth.html");
+        toggle.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('active'); };
+        document.onclick = () => menu.classList.remove('active');
+        document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => location.href = "auth.html");
 
-        // Exchange Functions
-        window.openConvertModal = () => document.getElementById('convertModal').classList.add('active');
-        window.closeConvertModal = () => document.getElementById('convertModal').classList.remove('active');
-        
-        window.setMode = (mode) => {
-            exchangeMode = mode;
-            document.getElementById('modeCtoX').className = mode === 'CtoX' ? 'mode-btn active' : 'mode-btn';
-            document.getElementById('modeXtoC').className = mode === 'XtoC' ? 'mode-btn active' : 'mode-btn';
-            document.getElementById('rateText').innerText = mode === 'CtoX' ? "1 COIN = 15 XP" : "100 XP = 1 COIN";
-            updatePreview();
+        window.openExchange = () => document.getElementById('exModal').classList.add('active');
+        window.closeExchange = () => document.getElementById('exModal').classList.remove('active');
+
+        window.setExMode = (mode) => {
+            exMode = mode;
+            document.getElementById('btnCtoX').className = mode==='CtoX'?'m-btn active':'m-btn';
+            document.getElementById('btnXtoC').className = mode==='XtoC'?'m-btn active':'m-btn';
+            document.getElementById('rate').innerText = mode==='CtoX'?"1 COIN = 15 XP":"100 XP = 1 COIN";
+            updateExPreview();
         };
 
-        const updatePreview = () => {
-            const val = parseInt(document.getElementById('convertInput').value) || 0;
-            const res = exchangeMode === 'CtoX' ? val * 15 + " XP" : Math.floor(val / 100) + " Coins";
-            document.getElementById('convPreview').innerText = "You get: " + res;
+        const updateExPreview = () => {
+            const val = parseInt(document.getElementById('exInput').value) || 0;
+            document.getElementById('exPreview').innerText = "You get: " + (exMode==='CtoX' ? val*15+" XP" : Math.floor(val/100)+" Coins");
         };
-        document.getElementById('convertInput').oninput = updatePreview;
+        document.getElementById('exInput').oninput = updateExPreview;
 
-        window.processExchange = async () => {
-            const amount = parseInt(document.getElementById('convertInput').value);
-            if (!amount || amount <= 0) return;
-
+        window.doExchange = async () => {
+            const amt = parseInt(document.getElementById('exInput').value);
+            if (!amt || amt <= 0) return;
             const userRef = doc(db, "users", auth.currentUser.uid);
             const snap = await getDoc(userRef);
             const data = snap.data();
 
-            if (exchangeMode === 'CtoX') {
-                if ((data.coins || 0) < amount) return alert("Low Coins!");
-                await updateDoc(userRef, { coins: increment(-amount), score: increment(amount * 15) });
+            if (exMode === 'CtoX') {
+                if ((data.coins||0) < amt) return alert("Not enough Coins!");
+                await updateDoc(userRef, { coins: increment(-amt), score: increment(amt*15) });
             } else {
-                if (amount < 100) return alert("Min 100 XP!");
-                if ((data.score || 0) < amount) return alert("Low XP!");
-                await updateDoc(userRef, { score: increment(-amount), coins: increment(Math.floor(amount / 100)) });
+                if (amt < 100) return alert("Min 100 XP!");
+                if ((data.score||0) < amt) return alert("Not enough XP!");
+                await updateDoc(userRef, { score: increment(-amt), coins: increment(Math.floor(amt/100)) });
             }
-            alert("Exchange Done!"); location.reload();
+            location.reload();
         };
 
-        // Auth Sync
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
-                const userData = userSnap.data() || {};
+                const snap = await getDoc(doc(db, "users", user.uid));
+                const data = snap.data() || {};
+                document.getElementById('displayRank').innerText = (data.rank || "recruit").replace('_', ' ');
+                document.getElementById('displayXP').innerText = data.score || 0;
+                document.getElementById('displayCoins').innerText = data.coins || 0;
 
-                if (userData.role === "admin" && !document.getElementById('adminBtn')) {
-                    const btn = document.createElement('a');
-                    btn.href = "admin.html"; btn.id = "adminBtn"; btn.className = "menu-item";
-                    btn.style.color = "var(--admin-color)"; btn.innerHTML = "🛡️ COMMAND CENTER";
-                    document.getElementById('settingsMenu').prepend(btn);
+                if (data.role === "admin" && !document.getElementById('adm')) {
+                    const b = document.createElement('a');
+                    b.href="admin.html"; b.id="adm"; b.className="menu-item"; b.style.color="var(--admin)";
+                    b.innerHTML="🛡️ COMMAND CENTER"; menu.prepend(b);
                 }
-                updateUI(userData.score || 0);
             } else { location.href = "auth.html"; }
         });
-
-        function updateUI(score) {
-            document.getElementById('lobbyScore').innerText = score;
-            let rank = "RECRUIT"; let max = 100;
-            if (score >= 2000) { rank = "MASTER"; max = 5000; }
-            else if (score >= 1000) { rank = "ELITE"; max = 2000; }
-            else if (score >= 500) { rank = "SPECIALIST"; max = 1000; }
-            else if (score >= 100) { rank = "ANALYST"; max = 500; }
-            document.getElementById('rankTitle').innerText = rank;
-            document.getElementById('progFill').style.width = Math.min((score / max) * 100, 100) + "%";
-        }
     </script>
 </body>
 </html>
