@@ -56,7 +56,7 @@
         .settings-menu {
             position: absolute; top: 65px; right: 15px; 
             background: #0d1117; border: 1px solid #30363d;
-            border-radius: 15px; width: 200px; display: none;
+            border-radius: 15px; width: 210px; display: none;
             box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200;
             overflow: hidden;
         }
@@ -83,6 +83,8 @@
             width: 100%; padding: 12px; margin: 15px 0; background: #1a1a1a;
             border: 1px solid #333; border-radius: 10px; color: white; text-align: center; box-sizing: border-box;
         }
+        .mode-btn { flex: 1; padding: 10px; font-size: 10px; border-radius: 8px; border: 1px solid #333; background: none; color: #fff; cursor: pointer; }
+        .mode-btn.active { background: var(--neon); color: #000; font-weight: bold; border-color: var(--neon); }
 
         /* --- GRID --- */
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 25px 20px; display: flex; flex-direction: column; align-items: center; }
@@ -102,7 +104,7 @@
         <div class="rank-info-main">
             <div class="rank-circle" id="rankIcon">?</div>
             <div class="user-info" style="flex:1">
-                <div class="rank-name" id="rankTitle">AUTHENTICATING...</div>
+                <div class="rank-name" id="rankTitle">LOADING...</div>
                 <div class="prog-bar-bg"><div class="prog-fill" id="progFill"></div></div>
                 <div style="font-size: 9px; color: var(--neon); margin-top:3px; font-weight: bold;">XP: <span id="lobbyScore">0</span></div>
             </div>
@@ -111,7 +113,7 @@
     </div>
 
     <div class="settings-menu" id="settingsMenu">
-        <div class="menu-item" onclick="openConvertModal()" style="color: var(--gold);">💎 CONVERT COINS</div>
+        <div class="menu-item" onclick="openConvertModal()" style="color: var(--gold);">💎 EXCHANGE CENTER</div>
         <a href="profile.html" class="menu-item">👤 AGENT PROFILE</a>
         <a href="leaderboard.html" class="menu-item">🏆 LEADERBOARD</a>
         <div class="menu-item" id="signoutBtn" style="color: var(--danger); border:none;">🚪 LOGOUT</div>
@@ -119,11 +121,18 @@
 
     <div class="modal" id="convertModal">
         <div class="modal-content">
-            <h3 style="color: var(--neon); margin-top:0;">EXCHANGE CENTER</h3>
-            <p style="font-size: 11px; color: #888;">RATE: 1 COIN = 15 XP</p>
-            <input type="number" id="coinToConvert" class="conv-input" placeholder="Enter Coins">
-            <div id="convPreview" style="font-size: 12px; color: var(--neon); margin-bottom: 15px;">You will get: 0 XP</div>
-            <button onclick="executeConversion()" style="background:var(--neon); color:#000; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">CONVERT NOW</button>
+            <h3 style="color: var(--neon); margin-top:0;">EXCHANGE</h3>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <button id="modeCtoX" class="mode-btn active" onclick="setMode('CtoX')">COIN ➔ XP</button>
+                <button id="modeXtoC" class="mode-btn" onclick="setMode('XtoC')">XP ➔ COIN</button>
+            </div>
+
+            <p id="rateText" style="font-size: 11px; color: #888;">1 COIN = 15 XP</p>
+            <input type="number" id="convertInput" class="conv-input" placeholder="Enter Amount">
+            <div id="convPreview" style="font-size: 12px; color: var(--neon); margin-bottom: 15px;">You get: 0 XP</div>
+            
+            <button onclick="processExchange()" style="background:var(--neon); color:#000; border:none; padding:12px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;">CONFIRM</button>
             <p onclick="closeConvertModal()" style="color:#555; font-size:12px; margin-top:15px; cursor:pointer;">Cancel</p>
         </div>
     </div>
@@ -157,41 +166,52 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Menu Toggle
-        document.getElementById('menuTrigger').onclick = (e) => {
-            e.stopPropagation();
-            document.getElementById('settingsMenu').classList.toggle('active');
-        };
-        document.onclick = () => document.getElementById('settingsMenu').classList.remove('active');
+        let exchangeMode = 'CtoX';
 
-        // Logout
+        // Toggle Logic
+        document.getElementById('menuTrigger').onclick = (e) => { e.stopPropagation(); document.getElementById('settingsMenu').classList.toggle('active'); };
+        document.onclick = () => document.getElementById('settingsMenu').classList.remove('active');
         document.getElementById('signoutBtn').onclick = () => signOut(auth).then(() => location.href = "auth.html");
 
-        // Convert Logic
+        // Exchange Functions
         window.openConvertModal = () => document.getElementById('convertModal').classList.add('active');
         window.closeConvertModal = () => document.getElementById('convertModal').classList.remove('active');
         
-        document.getElementById('coinToConvert').oninput = (e) => {
-            document.getElementById('convPreview').innerText = `You will get: ${(e.target.value || 0) * 15} XP`;
+        window.setMode = (mode) => {
+            exchangeMode = mode;
+            document.getElementById('modeCtoX').className = mode === 'CtoX' ? 'mode-btn active' : 'mode-btn';
+            document.getElementById('modeXtoC').className = mode === 'XtoC' ? 'mode-btn active' : 'mode-btn';
+            document.getElementById('rateText').innerText = mode === 'CtoX' ? "1 COIN = 15 XP" : "100 XP = 1 COIN";
+            updatePreview();
         };
 
-        window.executeConversion = async () => {
-            const coins = parseInt(document.getElementById('coinToConvert').value);
-            if (!coins || coins <= 0) return alert("Enter valid coins!");
+        const updatePreview = () => {
+            const val = parseInt(document.getElementById('convertInput').value) || 0;
+            const res = exchangeMode === 'CtoX' ? val * 15 + " XP" : Math.floor(val / 100) + " Coins";
+            document.getElementById('convPreview').innerText = "You get: " + res;
+        };
+        document.getElementById('convertInput').oninput = updatePreview;
+
+        window.processExchange = async () => {
+            const amount = parseInt(document.getElementById('convertInput').value);
+            if (!amount || amount <= 0) return;
 
             const userRef = doc(db, "users", auth.currentUser.uid);
             const snap = await getDoc(userRef);
-            if ((snap.data().coins || 0) < coins) return alert("Insufficient Coins!");
+            const data = snap.data();
 
-            await updateDoc(userRef, {
-                coins: increment(-coins),
-                score: increment(coins * 15)
-            });
-            alert("Conversion Successful!");
-            location.reload();
+            if (exchangeMode === 'CtoX') {
+                if ((data.coins || 0) < amount) return alert("Low Coins!");
+                await updateDoc(userRef, { coins: increment(-amount), score: increment(amount * 15) });
+            } else {
+                if (amount < 100) return alert("Min 100 XP!");
+                if ((data.score || 0) < amount) return alert("Low XP!");
+                await updateDoc(userRef, { score: increment(-amount), coins: increment(Math.floor(amount / 100)) });
+            }
+            alert("Exchange Done!"); location.reload();
         };
 
-        // Auth & Admin Sync
+        // Auth Sync
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userRef = doc(db, "users", user.uid);
@@ -199,11 +219,10 @@
                 const userData = userSnap.data() || {};
 
                 if (userData.role === "admin" && !document.getElementById('adminBtn')) {
-                    const adminLink = document.createElement('a');
-                    adminLink.href = "admin.html"; adminLink.id = "adminBtn";
-                    adminLink.className = "menu-item"; adminLink.style.color = "var(--admin-color)";
-                    adminLink.innerHTML = "🛡️ COMMAND CENTER";
-                    document.getElementById('settingsMenu').prepend(adminLink);
+                    const btn = document.createElement('a');
+                    btn.href = "admin.html"; btn.id = "adminBtn"; btn.className = "menu-item";
+                    btn.style.color = "var(--admin-color)"; btn.innerHTML = "🛡️ COMMAND CENTER";
+                    document.getElementById('settingsMenu').prepend(btn);
                 }
                 updateUI(userData.score || 0);
             } else { location.href = "auth.html"; }
