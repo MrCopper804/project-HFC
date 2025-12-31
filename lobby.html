@@ -1,147 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Pro Lobby</title>
-    <style>
-        :root {
-            --bg: #000000;
-            --glass: rgba(255, 255, 255, 0.05);
-            --neon: #64ffda;
-            --text: #ccd6f6;
-            --panel-bg: rgba(10, 15, 26, 0.95);
-        }
-
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg); 
-            background-image: radial-gradient(circle at top right, #112240 0%, #000000 70%);
-            color: var(--text); 
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* --- FIXED HEADER --- */
-        .user-panel {
-            width: 100%;
-            background: var(--panel-bg);
-            padding: 20px;
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(100, 255, 218, 0.2);
-            display: flex;
-            align-items: center;
-            box-sizing: border-box;
-            z-index: 100;
-        }
-
-        .rank-circle {
-            width: 55px; height: 55px; border-radius: 50%;
-            border: 2px solid var(--neon);
-            box-shadow: 0 0 15px var(--neon);
-            display: flex; justify-content: center; align-items: center;
-            font-size: 22px; margin-right: 15px;
-            background: rgba(0,0,0,0.5);
-        }
-
-        .user-info { flex-grow: 1; }
-        .rank-name { font-weight: 900; font-size: 13px; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
-        
-        .prog-bar-bg { width: 100%; height: 8px; background: #1a2639; border-radius: 10px; margin-top: 10px; overflow: hidden; }
-        .prog-fill { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .score-text { font-size: 10px; margin-top: 6px; color: var(--neon); font-weight: bold; letter-spacing: 1px; }
-
-        /* --- SCROLLABLE GAME AREA --- */
-        .scroll-content {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 25px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* Grid for Square Boxes */
-        .game-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 20px; 
-            width: 100%; 
-            max-width: 400px; 
-            padding-bottom: 40px;
-        }
-
-        .square-box {
-            aspect-ratio: 1 / 1; 
-            background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 30px;
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; text-decoration: none; color: white;
-            transition: 0.3s ease;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .square-box:hover { 
-            border-color: var(--neon); 
-            transform: translateY(-5px); 
-            background: rgba(100, 255, 218, 0.08); 
-        }
-
-        .icon-bg { font-size: 35px; margin-bottom: 12px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
-        .box-title { font-weight: 800; font-size: 11px; letter-spacing: 1px; text-align: center; color: #fff; padding: 0 10px; }
-        
-        /* Locked Box Style */
-        .coming-soon { 
-            opacity: 0.3; 
-            border: 1px dashed rgba(255, 255, 255, 0.2); 
-            cursor: not-allowed;
-            background: rgba(255,255,255,0.02);
-        }
-
-        /* --- FIXED FOOTER --- */
-        .footer-panel {
-            width: 100%;
-            background: var(--panel-bg);
-            padding: 18px;
-            text-align: center;
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(100, 255, 218, 0.1);
-            box-sizing: border-box;
-            z-index: 100;
-        }
-
-        .exit-btn { 
-            color: var(--neon); 
-            text-decoration: none; 
-            font-size: 13px; 
-            font-weight: 900; 
-            letter-spacing: 2px;
-            text-shadow: 0 0 5px var(--neon);
-        }
-
-        /* Custom Scrollbar for Chrome/Safari */
-        .scroll-content::-webkit-scrollbar { width: 0px; }
-    </style>
-</head>
-<body onload="updateLobby()">
-
-    <div class="user-panel">
-        <div class="rank-circle" id="rankIcon">👤</div>
-        <div class="user-info">
-            <div class="rank-name" id="rankTitle">RECRUIT</div>
-            <div class="prog-bar-bg">
-                <div class="prog-fill" id="progFill"></div>
-            </div>
-            <div class="score-text">PTS: <span id="lobbyScore">0</span></div>
-        </div>
-    </div>
-
-    <div class="scroll-content">
         <div class="game-grid">
             
             <a href="chart.html" class="square-box">
@@ -159,6 +15,11 @@
                 <div class="box-title">SYMBOL QUIZ</div>
             </a>
 
+            <a href="game3.html" class="square-box">
+                <div class="icon-bg">🔎</div>
+                <div class="box-title">WORD MATCH</div>
+            </a>
+
             <a href="game4.html" class="square-box">
                 <div class="icon-bg">☄️</div>
                 <div class="box-title">FALLING LETTER</div>
@@ -169,44 +30,4 @@
                 <div class="box-title">COMING SOON</div>
             </div>
 
-            <div class="square-box coming-soon">
-                <div class="icon-bg">🔒</div>
-                <div class="box-title">COMING SOON</div>
-            </div>
-
         </div>
-    </div>
-
-    <div class="footer-panel">
-        <a href="index.html" class="exit-btn">TERMINATE CONNECTION</a>
-    </div>
-
-<script>
-    function updateLobby() {
-        // Points Storage se nikaalein
-        let score = parseInt(localStorage.getItem('hfcScore')) || 0;
-        document.getElementById('lobbyScore').innerText = score;
-
-        let rank = "RECRUIT";
-        let icon = "👤";
-        let maxForNext = 100;
-
-        // Rank System Logic
-        if (score >= 2000) { rank = "MASTER DECRYPTOR"; icon = "👑"; maxForNext = 2000; }
-        else if (score >= 1000) { rank = "ELITE AGENT"; icon = "⚡"; maxForNext = 2000; }
-        else if (score >= 500) { rank = "CIPHER SPECIALIST"; icon = "🛡️"; maxForNext = 1000; }
-        else if (score >= 100) { rank = "JUNIOR ANALYST"; icon = "🕵️"; maxForNext = 500; }
-        else { rank = "RECRUIT"; icon = "👤"; maxForNext = 100; }
-
-        // Progress Bar Calculation
-        let percent = (score / maxForNext) * 100;
-        if (percent > 100) percent = 100;
-
-        // Update UI
-        document.getElementById('rankTitle').innerText = rank;
-        document.getElementById('rankIcon').innerText = icon;
-        document.getElementById('progFill').style.width = percent + "%";
-    }
-</script>
-</body>
-</html>
