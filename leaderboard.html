@@ -2,50 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC - Global Rankings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC - Global Leaderboard</title>
     <style>
-        :root { --bg: #000; --neon: #64ffda; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; text-align: center; }
-        .list { max-width: 400px; margin: 20px auto; background: rgba(255,255,255,0.03); border-radius: 20px; padding: 10px; border: 1px solid #222; }
-        .row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #111; align-items: center; }
-        .row:last-child { border: none; }
-        .rank { color: var(--neon); font-weight: bold; margin-right: 10px; }
-        .name { flex: 1; text-align: left; font-size: 14px; }
-        .pts { font-weight: bold; background: var(--neon); color: #000; padding: 2px 8px; border-radius: 5px; font-size: 12px; }
-        .back-link { display: block; margin-top: 30px; color: #555; text-decoration: none; font-size: 13px; }
+        :root { --bg: #000; --neon: #64ffda; --glass: rgba(255, 255, 255, 0.05); }
+        body { 
+            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
+            margin: 0; padding: 20px; text-align: center;
+            background-image: radial-gradient(circle at top, #112240 0%, #000 80%);
+        }
+        .leader-container {
+            max-width: 450px; margin: 20px auto; background: var(--glass);
+            border: 1px solid rgba(100, 255, 218, 0.2); border-radius: 25px;
+            padding: 20px; backdrop-filter: blur(10px);
+        }
+        .title { color: var(--neon); letter-spacing: 4px; font-weight: 900; margin-bottom: 30px; }
+        
+        .entry {
+            display: flex; align-items: center; padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            animation: fadeIn 0.5s ease forwards; opacity: 0;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .rank-num { width: 40px; font-weight: bold; color: var(--neon); font-size: 18px; }
+        .agent-name { flex: 1; text-align: left; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .agent-score { font-weight: 900; color: #fff; background: rgba(100, 255, 218, 0.1); padding: 5px 12px; border-radius: 8px; border: 1px solid var(--neon); }
+        
+        /* Top 3 Special Styling */
+        .entry:nth-child(1) .rank-num { color: #ffd700; text-shadow: 0 0 10px #ffd700; } /* Gold */
+        .entry:nth-child(2) .rank-num { color: #c0c0c0; } /* Silver */
+        .entry:nth-child(3) .rank-num { color: #cd7f32; } /* Bronze */
+
+        .back-btn {
+            display: inline-block; margin-top: 30px; color: #555;
+            text-decoration: none; font-size: 12px; font-weight: bold;
+            border: 1px solid #333; padding: 10px 25px; border-radius: 12px;
+        }
     </style>
 </head>
 <body>
-    <h2 style="letter-spacing: 5px; color: var(--neon);">TOP AGENTS</h2>
-    <div class="list" id="leaderList">Fetching Intel...</div>
-    <a href="lobby.html" class="back-link">← BACK TO LOBBY</a>
+
+    <h2 class="title">TOP AGENTS</h2>
+
+    <div class="leader-container" id="leaderboardList">
+        <p style="color: #666;">DECRYPTING GLOBAL INTEL...</p>
+    </div>
+
+    <a href="lobby.html" class="back-btn">RETURN TO LOBBY</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = { /* Aapka Config Code */ };
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+            authDomain: "hfc-academy.firebaseapp.com",
+            projectId: "hfc-academy",
+            storageBucket: "hfc-academy.firebasestorage.app",
+            messagingSenderId: "84006497196",
+            appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+        };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        async function load() {
-            const q = query(collection(db, "users"), orderBy("score", "desc"), limit(10));
-            const snap = await getDocs(q);
-            const list = document.getElementById('leaderList');
-            list.innerHTML = "";
-            let i = 1;
-            snap.forEach(doc => {
+        // --- Real-time Sync Logic ---
+        const leaderRef = collection(db, "users");
+        // Query: Score ke hisab se order karo (Desc), aur sirf top 10 dikhao
+        const q = query(leaderRef, orderBy("score", "desc"), limit(10));
+
+        // onSnapshot use karne se agar koi game khel kar score barhata hai, 
+        // toh leaderboard bina refresh kiye khud update ho jayegi!
+        onSnapshot(q, (snapshot) => {
+            const listDiv = document.getElementById('leaderboardList');
+            listDiv.innerHTML = ""; // Purana data saaf karo
+
+            let rank = 1;
+            snapshot.forEach((doc) => {
                 const data = doc.data();
-                list.innerHTML += `<div class="row">
-                    <span class="rank">#${i}</span>
-                    <span class="name">${data.email.split('@')[0]}</span>
-                    <span class="pts">${data.score} XP</span>
-                </div>`;
-                i++;
+                const emailPrefix = data.email ? data.email.split('@')[0] : "UNKNOWN AGENT";
+                
+                listDiv.innerHTML += `
+                    <div class="entry" style="animation-delay: ${rank * 0.1}s">
+                        <div class="rank-num">#${rank}</div>
+                        <div class="agent-name">${emailPrefix}</div>
+                        <div class="agent-score">${data.score || 0} XP</div>
+                    </div>
+                `;
+                rank++;
             });
-        }
-        load();
+
+            if (snapshot.empty) {
+                listDiv.innerHTML = "<p>No agents active yet.</p>";
+            }
+        });
     </script>
 </body>
 </html>
+
