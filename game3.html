@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC Academy - Word Match</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC Academy - Word Match Cloud</title>
     <style>
         :root {
             --bg: #000000;
@@ -25,7 +25,6 @@
         .game-header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 40px; }
         .score-box { color: var(--neon); font-weight: bold; }
 
-        /* Word Question Box */
         .word-card {
             width: 100%; max-width: 400px;
             background: var(--glass);
@@ -46,7 +45,6 @@
             word-break: break-all;
         }
 
-        /* Options Grid */
         .options-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -79,7 +77,7 @@
 
     <div class="game-header">
         <span>MISSION: WORD MATCH</span>
-        <span class="score-box">PTS: <span id="score">0</span></span>
+        <span class="score-box" id="syncStatus">ONLINE</span>
     </div>
 
     <div class="word-card">
@@ -87,37 +85,66 @@
         <p style="font-size: 10px; color: #888; margin-top: 20px; letter-spacing: 2px;">IDENTIFY THE ENCRYPTED WORD</p>
     </div>
 
-    <div class="options-grid" id="optionsGrid">
-        </div>
+    <div class="options-grid" id="optionsGrid"></div>
 
     <a href="lobby.html" class="back-link">TERMINATE MISSION</a>
 
-<script>
+<script type="module">
+    // --- FIREBASE INTEGRATION ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+        } else {
+            window.location.href = "auth.html";
+        }
+    });
+
+    async function syncPoints() {
+        if (currentUser) {
+            document.getElementById('syncStatus').innerText = "SYNCING...";
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, {
+                score: increment(2)
+            });
+            document.getElementById('syncStatus').innerText = "ONLINE";
+        }
+    }
+
+    // --- GAME LOGIC ---
     const hfcMapping = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
-    
-    // Global word bank for the game
     const wordBank = ["HELLO", "WORLD", "AGENT", "CRYPT", "DARK", "SECRET", "LEVEL", "POWER", "GHOST", "NIGHT", "CYBER", "BRAVE", "SHARP", "QUICK", "PHANTOM", "SIGMA", "ALPHA", "OMEGA", "DRAGON", "STORM"];
 
-    let score = parseInt(localStorage.getItem('hfcScore')) || 0;
-    document.getElementById('score').innerText = score;
     let correctWord = "";
 
     function nextQuestion() {
-        // Pick a random word
         correctWord = wordBank[Math.floor(Math.random() * wordBank.length)];
-        
-        // Convert to HFC
         let hfcText = correctWord.split('').map(c => hfcMapping[c] || c).join('');
         document.getElementById('hfcWordQ').innerText = hfcText;
 
-        // Prepare 4 options
         let options = [correctWord];
         while(options.length < 4) {
             let randWord = wordBank[Math.floor(Math.random() * wordBank.length)];
             if(!options.includes(randWord)) options.push(randWord);
         }
-        
-        // Shuffle
         options.sort(() => Math.random() - 0.5);
 
         const grid = document.getElementById('optionsGrid');
@@ -134,13 +161,10 @@
     function checkAnswer(btn, choice) {
         if(choice === correctWord) {
             btn.classList.add('correct');
-            score += 2;
-            localStorage.setItem('hfcScore', score);
-            document.getElementById('score').innerText = score;
+            syncPoints(); // Database save
             setTimeout(nextQuestion, 800);
         } else {
             btn.classList.add('wrong');
-            // Highlight correct one
             const buttons = document.querySelectorAll('.opt-btn');
             buttons.forEach(b => {
                 if(b.innerText === correctWord) b.classList.add('correct');
