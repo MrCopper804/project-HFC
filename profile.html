@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFC - Agent Profile</title>
+    <style>
+        :root { --bg: #000; --neon: #64ffda; --glass: rgba(255,255,255,0.05); }
+        body { 
+            background: var(--bg); color: white; font-family: sans-serif;
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
+            background-image: radial-gradient(circle at center, #112240 0%, #000 80%);
+        }
+        .card {
+            background: var(--glass); padding: 40px; border-radius: 25px;
+            border: 1px solid var(--neon); width: 85%; max-width: 350px; text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .stat-label { font-size: 12px; color: #888; letter-spacing: 2px; margin-top: 20px; }
+        .stat-value { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 10px; }
+        .back-btn { margin-top: 30px; display: inline-block; color: var(--neon); text-decoration: none; font-weight: bold; border: 1px solid var(--neon); padding: 10px 20px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 style="color: var(--neon); letter-spacing: 3px;">AGENT PROFILE</h2>
+        <div class="stat-label">EMAIL IDENTITY</div>
+        <div class="stat-value" id="userEmail">Loading...</div>
+        <div class="stat-label">TOTAL MISSION XP</div>
+        <div class="stat-value" id="userScore" style="font-size: 35px; color: var(--neon);">0</div>
+        <a href="lobby.html" class="back-btn">RETURN TO LOBBY</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = { /* Aapka Config Code */ };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                document.getElementById('userEmail').innerText = user.email;
+                document.getElementById('userScore').innerText = userSnap.data().score || 0;
+            } else { window.location.href = "auth.html"; }
+        });
+    </script>
+</body>
+</html>
