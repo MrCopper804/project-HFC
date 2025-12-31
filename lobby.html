@@ -31,8 +31,7 @@
             padding: 20px;
             backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(100, 255, 218, 0.2);
-            display: flex;
-            align-items: center;
+            display: flex; align-items: center;
             box-sizing: border-box;
             z-index: 100;
         }
@@ -121,6 +120,7 @@
             text-shadow: 0 0 5px var(--neon);
         }
 
+        /* Hide Scrollbar Chrome/Safari */
         .scroll-content::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
@@ -165,6 +165,11 @@
                 <div class="box-title">FALLING LETTER</div>
             </a>
 
+            <a href="game5.html" class="square-box">
+                <div class="icon-bg">🧠</div>
+                <div class="box-title">MEMORY RECALL</div>
+            </a>
+
             <div class="square-box coming-soon">
                 <div class="icon-bg">🔒</div>
                 <div class="box-title">COMING SOON</div>
@@ -186,6 +191,7 @@
         let icon = "👤";
         let maxForNext = 100;
 
+        // Rank System Logic
         if (score >= 2000) { rank = "MASTER DECRYPTOR"; icon = "👑"; maxForNext = 2000; }
         else if (score >= 1000) { rank = "ELITE AGENT"; icon = "⚡"; maxForNext = 2000; }
         else if (score >= 500) { rank = "CIPHER SPECIALIST"; icon = "🛡️"; maxForNext = 1000; }
