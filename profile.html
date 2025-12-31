@@ -14,32 +14,35 @@
         .profile-card {
             background: var(--glass); padding: 30px; border-radius: 30px;
             border: 1px solid rgba(100, 255, 218, 0.2); width: 100%; max-width: 400px;
-            backdrop-filter: blur(15px); text-align: center;
+            backdrop-filter: blur(15px); text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-        .avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--neon); margin-bottom: 10px; }
-        
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0; }
         .stat-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; border: 1px solid #222; }
-        .label { font-size: 10px; color: #888; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+        .label { font-size: 10px; color: #888; letter-spacing: 1px; display: block; margin-bottom: 5px; text-transform: uppercase; }
         .val-xp { color: var(--neon); font-weight: bold; font-size: 18px; }
         .val-coin { color: var(--gold); font-weight: bold; font-size: 18px; }
 
+        .input-group { text-align: left; margin-bottom: 15px; }
         input {
-            width: 100%; padding: 12px; margin: 8px 0; background: rgba(255,255,255,0.03);
-            border: 1px solid #333; border-radius: 10px; color: white; text-align: center;
+            width: 100%; padding: 12px; margin: 5px 0; background: rgba(255,255,255,0.03);
+            border: 1px solid #333; border-radius: 10px; color: white; text-align: center; font-size: 14px;
         }
+        input:focus { border-color: var(--neon); outline: none; background: rgba(100, 255, 218, 0.05); }
+        
         .update-btn {
-            background: var(--neon); color: #000; border: none; padding: 12px 25px;
-            border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;
+            background: var(--neon); color: #000; border: none; padding: 15px;
+            border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;
+            transition: 0.3s;
         }
-        .msg { font-size: 11px; margin-top: 10px; min-height: 15px; }
+        .update-btn:active { transform: scale(0.95); }
+        .msg { font-size: 11px; margin-top: 15px; min-height: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="profile-card">
-        <h2 style="letter-spacing: 3px; margin-bottom: 5px;">AGENT PROFILE</h2>
-        <p id="userEmail" style="font-size: 12px; color: #666; margin-bottom: 20px;">---</p>
+        <h2 style="letter-spacing: 3px; margin-bottom: 5px; color: var(--neon);">AGENT PROFILE</h2>
+        <p id="userEmail" style="font-size: 12px; color: #888; margin-bottom: 20px;">authenticating...</p>
 
         <div class="stat-grid">
             <div class="stat-box">
@@ -52,18 +55,20 @@
             </div>
         </div>
 
-        <div style="text-align: left;">
+        <div class="input-group">
             <span class="label">AGENT USERNAME</span>
-            <input type="text" id="usernameInput" placeholder="Enter Username">
-            
+            <input type="text" id="usernameInput" placeholder="Set Codename">
+        </div>
+        
+        <div class="input-group">
             <span class="label">DATE OF BIRTH</span>
             <input type="date" id="dobInput">
         </div>
 
-        <button class="update-btn" id="updateBtn">UPDATE DATA</button>
+        <button class="update-btn" id="updateBtn">UPDATE CLOUD DATA</button>
         <p class="msg" id="statusMsg"></p>
 
-        <a href="lobby.html" style="display:block; margin-top:25px; color:#555; text-decoration:none; font-size:12px;">BACK TO LOBBY</a>
+        <a href="lobby.html" style="display:block; margin-top:25px; color:#444; text-decoration:none; font-size:11px; font-weight: bold;">← RETURN TO LOBBY</a>
     </div>
 
 <script type="module">
@@ -85,26 +90,36 @@
     const db = getFirestore(app);
 
     let currentUID = null;
-    let lastUpdateDate = null;
+    let lastUpdateTS = null;
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUID = user.uid;
             document.getElementById('userEmail').innerText = user.email;
-            fetchProfile();
-        } else { window.location.href = "auth.html"; }
+            // Foran data load karo
+            await loadProfileData();
+        } else { 
+            window.location.href = "auth.html"; 
+        }
     });
 
-    async function fetchProfile() {
+    async function loadProfileData() {
+        const status = document.getElementById('statusMsg');
+        status.innerText = "Syncing with cloud...";
+        
         const docRef = doc(db, "users", currentUID);
         const snap = await getDoc(docRef);
+        
         if (snap.exists()) {
             const data = snap.data();
             document.getElementById('displayXP').innerText = data.score || 0;
             document.getElementById('displayCoins').innerText = data.coins || 0;
             document.getElementById('usernameInput').value = data.username || "";
             document.getElementById('dobInput').value = data.dob || "";
-            lastUpdateDate = data.lastUsernameChange; // This is a Firebase Timestamp
+            lastUpdateTS = data.lastUsernameChange; // Cloud timestamp
+            status.innerText = "Cloud Synced";
+            status.style.color = "#64ffda";
+            setTimeout(() => { status.innerText = ""; }, 2000);
         }
     }
 
@@ -113,30 +128,38 @@
         const newDob = document.getElementById('dobInput').value;
         const status = document.getElementById('statusMsg');
 
-        // Check 30 Days Limit
-        if (lastUpdateDate) {
-            const lastDate = lastUpdateDate.toDate();
+        if(!newUsername) { status.innerText = "Username cannot be empty!"; return; }
+
+        status.innerText = "Validating...";
+
+        // 30 Days Check
+        if (lastUpdateTS) {
+            const lastDate = lastUpdateTS.toDate(); // Firebase timestamp to JS Date
             const now = new Date();
-            const diffDays = Math.ceil((now - lastDate) / (1000 * 60 * 60 * 24));
+            const diffTime = Math.abs(now - lastDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
             
             if (diffDays < 30) {
-                status.innerText = `Username can be changed after ${30 - diffDays} days.`;
+                status.innerText = `LOCKED: You can change again in ${30 - diffDays} days.`;
                 status.style.color = "#ff4d4d";
                 return;
             }
         }
 
         try {
-            await updateDoc(doc(db, "users", currentUID), {
+            const userRef = doc(db, "users", currentUID);
+            await updateDoc(userRef, {
                 username: newUsername,
                 dob: newDob,
-                lastUsernameChange: serverTimestamp()
+                lastUsernameChange: serverTimestamp() // Set current server time
             });
-            status.innerText = "Data Updated Successfully!";
-            status.style.color = var(--neon);
-            location.reload();
+            status.innerText = "PROFILE UPDATED IN CLOUD!";
+            status.style.color = "#64ffda";
+            // Refresh local timestamp to prevent multiple clicks
+            loadProfileData();
         } catch (e) {
-            status.innerText = "Update Failed!";
+            status.innerText = "Error updating profile.";
+            status.style.color = "#ff4d4d";
         }
     };
 </script>
