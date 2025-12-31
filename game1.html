@@ -2,153 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC Mission - Decoder Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC - Decode Mission Cloud</title>
     <style>
-        :root {
-            --bg: #000000;
-            --glass: rgba(255, 255, 255, 0.05);
-            --neon: #64ffda;
-            --danger: #ff0055;
-        }
-
+        :root { --bg: #000; --neon: #64ffda; --glass: rgba(255, 255, 255, 0.05); }
         body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg);
-            color: white; margin: 0; padding: 15px;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; overflow: hidden;
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
+            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
+        .header { padding: 15px; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(100,255,218,0.1); }
+        .stat { text-align: center; }
+        .stat span { display: block; font-size: 10px; color: var(--neon); }
+        
+        #displayZone { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
+        .symbol-text { font-size: 28px; letter-spacing: 5px; color: #fff; text-shadow: 0 0 10px var(--neon); margin-bottom: 20px; }
+        .input-view { font-size: 22px; color: var(--neon); letter-spacing: 3px; min-height: 30px; border-bottom: 2px solid var(--neon); padding: 5px 20px; }
 
-        .header { width: 100%; display: flex; justify-content: space-between; font-weight: bold; color: var(--neon); margin-bottom: 20px; }
-
-        /* Puzzle Display */
-        .puzzle-card {
-            width: 100%; max-width: 400px;
-            background: var(--glass);
-            border: 2px solid var(--neon);
-            border-radius: 20px;
-            padding: 30px 10px;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 0 20px rgba(100, 255, 218, 0.1);
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 15px; background: #0a0a0a; border-top: 1px solid #222; }
+        .key { 
+            background: #1a1a1a; padding: 15px 0; text-align: center; border-radius: 8px; 
+            font-weight: bold; font-size: 18px; box-shadow: 0 3px 0 #000; transition: 0.1s;
         }
-
-        #symbolDisplay { font-size: 32px; letter-spacing: 5px; text-shadow: 0 0 10px var(--neon); }
-
-        /* Input Display Area */
-        .answer-preview {
-            font-size: 24px; font-weight: bold; letter-spacing: 3px;
-            height: 40px; color: var(--neon); margin-bottom: 20px;
-        }
-
-        /* Virtual Keypad */
-        .keypad {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px; width: 100%; max-width: 400px;
-        }
-
-        .key {
-            background: var(--glass);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white; padding: 15px 5px;
-            border-radius: 10px; font-weight: bold;
-            cursor: pointer; transition: 0.2s;
-        }
-
-        .key:active { background: var(--neon); color: black; transform: scale(0.9); }
-
-        .controls { display: flex; gap: 10px; width: 100%; max-width: 400px; margin-top: 15px; }
-        .btn { flex: 1; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-clear { background: var(--danger); color: white; }
-        .btn-submit { background: var(--neon); color: black; }
-
-        .back-nav { margin-top: auto; padding: 20px; color: #555; text-decoration: none; font-size: 12px; }
+        .key:active { transform: translateY(2px); box-shadow: 0 0 0 #000; background: var(--neon); color: #000; }
+        .controls { grid-column: span 4; display: flex; gap: 8px; margin-top: 5px; }
+        .ctrl-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .del { background: #ff4d4d; color: white; }
+        .sub { background: var(--neon); color: black; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <span>AGENT MISSIONS</span>
-        <span>PTS: <span id="scoreDisplay">0</span></span>
+        <div class="stat"><span>MISSION XP</span><b id="xp">0 / 5</b></div>
+        <div class="stat"><span>CLOUD</span><b id="syncStatus" style="color:#888;">...</b></div>
     </div>
 
-    <div class="puzzle-card">
-        <div id="symbolDisplay">LOADING...</div>
-        <p style="font-size: 10px; color: #888; margin-top: 10px;">DECODE THE CIPHER</p>
+    <div id="displayZone">
+        <div class="symbol-text" id="targetSymbols">---</div>
+        <div class="input-view" id="userEntry"></div>
+        <div id="feedback" style="margin-top:15px; font-size:12px;"></div>
     </div>
 
-    <div class="answer-preview" id="answerPreview">_ _ _ _</div>
-
-    <div class="keypad" id="keypad"></div>
-
-    <div class="controls">
-        <button class="btn btn-clear" onclick="clearInput()">CLEAR</button>
-        <button class="btn btn-submit" onclick="submitAnswer()">SUBMIT</button>
+    <div class="keypad" id="keypad">
+        </div>
+    <div style="padding:0 15px 15px; background:#0a0a0a;">
+        <div class="controls">
+            <button class="ctrl-btn del" onclick="clearInput()">CLEAR</button>
+            <button class="ctrl-btn sub" onclick="submitEntry()">DECODE</button>
+        </div>
+        <a href="lobby.html" style="display:block; text-align:center; color:#555; text-decoration:none; font-size:11px; margin-top:12px;">EXIT TO LOBBY</a>
     </div>
 
-    <a href="lobby.html" class="back-nav">TERMINATE MISSION</a>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<script>
-    const hfcMapping = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
-    
-    const wordBank = ["AGENT", "SECRET", "DARK", "MISSION", "CRYPT", "KEY", "DATA", "CYBER", "BOX", "STAR"];
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let missionXP = 0;
     let targetWord = "";
-    let userTyped = "";
-    let score = parseInt(localStorage.getItem('hfcScore')) || 0;
+    const hfc = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
+    const words = ["HELL", "FIRE", "CLUB", "CODE", "AGENT", "DARK", "HACK"];
 
-    document.getElementById('scoreDisplay').innerText = score;
+    onAuthStateChanged(auth, (user) => {
+        if (user) { currentUser = user; document.getElementById('syncStatus').innerText = "ONLINE"; document.getElementById('syncStatus').style.color = "#64ffda"; }
+        else { window.location.href = "auth.html"; }
+    });
 
-    // Shuffle and Create Keypad
-    function setupKeypad() {
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
-        const keypad = document.getElementById('keypad');
-        keypad.innerHTML = "";
-        letters.forEach(l => {
-            const btn = document.createElement('button');
-            btn.className = "key";
-            btn.innerText = l;
-            btn.onclick = () => {
-                userTyped += l;
-                updatePreview();
-            };
-            keypad.appendChild(btn);
-        });
-    }
-
-    function updatePreview() {
-        document.getElementById('answerPreview').innerText = userTyped || "_ _ _ _";
-    }
-
-    function clearInput() {
-        userTyped = "";
-        updatePreview();
-    }
-
-    function nextPuzzle() {
-        targetWord = wordBank[Math.floor(Math.random() * wordBank.length)];
-        let hfcText = targetWord.split('').map(c => hfcMapping[c] || c).join('');
-        document.getElementById('symbolDisplay').innerText = hfcText;
-        clearInput();
-    }
-
-    function submitAnswer() {
-        if (userTyped === targetWord) {
-            score += 2;
-            localStorage.setItem('hfcScore', score);
-            document.getElementById('scoreDisplay').innerText = score;
-            alert("✓ CORRECT! +2 POINTS");
-            nextPuzzle();
-        } else {
-            alert("✗ WRONG DECODE! TRY AGAIN");
-            clearInput();
+    async function syncPoints() {
+        if (currentUser) {
+            document.getElementById('syncStatus').innerText = "SYNCING...";
+            await updateDoc(doc(db, "users", currentUser.uid), { score: increment(2) });
+            document.getElementById('syncStatus').innerText = "SYNCED";
         }
     }
 
-    setupKeypad();
-    nextPuzzle();
+    function initKeypad() {
+        const container = document.getElementById('keypad');
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').forEach(char => {
+            const k = document.createElement('div');
+            k.className = 'key'; k.innerText = char;
+            k.onclick = () => { document.getElementById('userEntry').innerText += char; };
+            container.appendChild(k);
+        });
+    }
+
+    function spawn() {
+        targetWord = words[Math.floor(Math.random() * words.length)];
+        let symbols = targetWord.split('').map(c => hfc[c]).join(' ');
+        document.getElementById('targetSymbols').innerText = symbols;
+        document.getElementById('userEntry').innerText = "";
+    }
+
+    window.submitEntry = () => {
+        if(document.getElementById('userEntry').innerText === targetWord) {
+            missionXP++;
+            if(missionXP >= 5) { syncPoints(); missionXP = 0; }
+            document.getElementById('xp').innerText = missionXP + " / 5";
+            spawn();
+        } else {
+            document.getElementById('feedback').innerText = "❌ ERROR: DECODE FAILED";
+            setTimeout(() => document.getElementById('feedback').innerText = "", 1000);
+        }
+    }
+
+    window.clearInput = () => document.getElementById('userEntry').innerText = "";
+
+    initKeypad();
+    spawn();
 </script>
 </body>
 </html>
-
