@@ -42,66 +42,77 @@
         }
 
         .rank-circle {
-            width: 40px; height: 40px; border-radius: 50%;
+            width: 42px; height: 42px; border-radius: 50%;
             border: 2px solid var(--neon); display: flex; 
             justify-content: center; align-items: center;
-            font-size: 16px; margin-right: 10px; background: rgba(0,0,0,0.5);
+            font-size: 18px; margin-right: 12px; background: rgba(0,0,0,0.5);
+            box-shadow: 0 0 10px rgba(100, 255, 218, 0.2);
         }
 
         .rank-name { font-weight: 900; font-size: 10px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
-        .prog-bar-bg { width: 100%; height: 5px; background: #1a2639; border-radius: 10px; margin-top: 4px; overflow: hidden; }
-        .prog-fill { width: 0%; height: 100%; background: var(--neon); transition: 1s ease; }
+        .prog-bar-bg { width: 100%; height: 6px; background: #1a2639; border-radius: 10px; margin-top: 5px; overflow: hidden; }
+        .prog-fill { width: 0%; height: 100%; background: var(--neon); transition: 1s ease; box-shadow: 0 0 8px var(--neon); }
 
-        /* --- HIDDEN SETTINGS MENU --- */
+        /* --- DROPDOWN SETTINGS MENU --- */
         .settings-menu {
             position: absolute; top: 60px; right: 15px; 
-            background: #111; border: 1px solid #333;
-            border-radius: 12px; padding: 10px; display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 200;
+            background: #0d1117; border: 1px solid #30363d;
+            border-radius: 15px; width: 180px; display: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200;
+            overflow: hidden;
         }
 
-        .settings-menu.active { display: block; }
+        .settings-menu.active { display: block; animation: slideDown 0.2s ease; }
+        @keyframes slideDown { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
+
         .menu-item {
-            color: var(--danger); font-size: 12px; font-weight: bold;
-            padding: 10px 20px; cursor: pointer; white-space: nowrap;
+            color: #fff; font-size: 13px; font-weight: 500;
+            padding: 14px 20px; cursor: pointer; display: block;
+            text-decoration: none; border-bottom: 1px solid #21262d;
+            transition: 0.2s;
         }
+        .menu-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--neon); }
+        .menu-item.logout { color: var(--danger); border-bottom: none; }
+        .menu-item.logout:hover { background: rgba(255, 77, 77, 0.1); }
 
         /* --- SCROLLABLE GRID --- */
         .scroll-content {
-            flex-grow: 1; overflow-y: auto; padding: 20px;
+            flex-grow: 1; overflow-y: auto; padding: 25px 20px;
             display: flex; flex-direction: column; align-items: center;
+            -webkit-overflow-scrolling: touch;
         }
 
         .game-grid { 
             display: grid; grid-template-columns: repeat(2, 1fr); 
-            gap: 15px; width: 100%; max-width: 400px; padding-bottom: 30px;
+            gap: 18px; width: 100%; max-width: 420px; padding-bottom: 40px;
         }
 
         .square-box {
             aspect-ratio: 1 / 1; background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 28px;
             display: flex; flex-direction: column; justify-content: center;
             align-items: center; text-decoration: none; color: white;
-            transition: 0.3s ease;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
         }
 
-        .square-box:active { transform: scale(0.95); border-color: var(--neon); }
-        .icon-bg { font-size: 30px; margin-bottom: 8px; }
-        .box-title { font-weight: bold; font-size: 10px; letter-spacing: 1px; text-align: center; }
+        .square-box:active { transform: scale(0.92); border-color: var(--neon); background: rgba(100, 255, 218, 0.05); }
+        .icon-bg { font-size: 32px; margin-bottom: 10px; }
+        .box-title { font-weight: 800; font-size: 10px; letter-spacing: 1.5px; text-align: center; color: #fff; }
         
     </style>
 </head>
 <body>
 
     <div class="user-panel">
-        <a href="index.html" class="icon-btn" title="Back">🏠</a>
+        <a href="index.html" class="icon-btn">🏠</a>
 
         <div class="rank-info-main">
-            <div class="rank-circle" id="rankIcon">...</div>
+            <div class="rank-circle" id="rankIcon">?</div>
             <div class="user-info" style="flex:1">
-                <div class="rank-name" id="rankTitle">Loading...</div>
+                <div class="rank-name" id="rankTitle">AUTHENTICATING...</div>
                 <div class="prog-bar-bg"><div class="prog-fill" id="progFill"></div></div>
-                <div style="font-size: 9px; color: var(--neon); margin-top:2px;">PTS: <span id="lobbyScore">0</span></div>
+                <div style="font-size: 9px; color: var(--neon); margin-top:3px; font-weight: bold;">MISSION XP: <span id="lobbyScore">0</span></div>
             </div>
         </div>
 
@@ -109,7 +120,9 @@
     </div>
 
     <div class="settings-menu" id="settingsMenu">
-        <div class="menu-item" id="signoutBtn">Logout Agent</div>
+        <a href="profile.html" class="menu-item">👤 AGENT PROFILE</a>
+        <a href="leaderboard.html" class="menu-item">🏆 LEADERBOARD</a>
+        <div class="menu-item logout" id="signoutBtn">🚪 TERMINATE SESSION</div>
     </div>
 
     <div class="scroll-content">
@@ -141,9 +154,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Menu Toggle
+        // UI Interactions
         const menuTrigger = document.getElementById('menuTrigger');
         const settingsMenu = document.getElementById('settingsMenu');
+
         menuTrigger.onclick = (e) => {
             e.stopPropagation();
             settingsMenu.classList.toggle('active');
@@ -151,18 +165,26 @@
 
         document.onclick = () => settingsMenu.classList.remove('active');
 
-        // Signout Logic
+        // Logout
         document.getElementById('signoutBtn').onclick = () => {
-            signOut(auth).then(() => { window.location.href = "auth.html"; });
+            if(confirm("Are you sure you want to end your session?")) {
+                signOut(auth).then(() => { window.location.href = "auth.html"; });
+            }
         };
 
+        // Firebase Auth & Data Sync
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
+                
                 let score = 0;
-                if (userSnap.exists()) { score = userSnap.data().score || 0; }
-                else { await setDoc(userRef, { score: 0, email: user.email }); }
+                if (userSnap.exists()) {
+                    score = userSnap.data().score || 0;
+                } else {
+                    // Initialize new user in cloud
+                    await setDoc(userRef, { score: 0, email: user.email });
+                }
                 updateUI(score);
             } else {
                 window.location.href = "auth.html";
@@ -172,13 +194,15 @@
         function updateUI(score) {
             document.getElementById('lobbyScore').innerText = score;
             let rank = "RECRUIT"; let icon = "👤"; let max = 100;
-            if (score >= 2000) { rank = "MASTER"; icon = "👑"; max = 2000; }
+
+            if (score >= 2000) { rank = "MASTER"; icon = "👑"; max = 5000; }
             else if (score >= 1000) { rank = "ELITE"; icon = "⚡"; max = 2000; }
             else if (score >= 500) { rank = "SPECIALIST"; icon = "🛡️"; max = 1000; }
             else if (score >= 100) { rank = "ANALYST"; icon = "🕵️"; max = 500; }
-            
+
             document.getElementById('rankTitle').innerText = rank;
             document.getElementById('rankIcon').innerText = icon;
+            
             let percent = (score / max) * 100;
             document.getElementById('progFill').style.width = (percent > 100 ? 100 : percent) + "%";
         }
