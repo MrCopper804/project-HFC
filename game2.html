@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFC Academy - MCQ Mode</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --glass: rgba(255, 255, 255, 0.05);
+            --neon: #64ffda;
+            --text: #ccd6f6;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg);
+            background-image: radial-gradient(circle at center, #112240 0%, #000000 70%);
+            color: var(--text); 
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 40px; }
+        .score-box { color: var(--neon); font-weight: bold; }
+
+        /* Question Box */
+        .q-card {
+            width: 100%; max-width: 400px;
+            background: var(--glass);
+            border: 1px solid var(--neon);
+            border-radius: 30px;
+            padding: 40px 10px;
+            text-align: center;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        #symbolQ { font-size: 60px; color: #fff; text-shadow: 0 0 15px var(--neon); }
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .opt-btn {
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .opt-btn:hover { border-color: var(--neon); background: rgba(100, 255, 218, 0.1); }
+        .opt-btn.correct { background: #39ff14 !important; color: #000; border-color: #39ff14; }
+        .opt-btn.wrong { background: #ff0055 !important; color: #fff; border-color: #ff0055; }
+
+        .back-link { margin-top: auto; padding: 20px; color: #555; text-decoration: none; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="game-header">
+        <span>MISSION: MCQ</span>
+        <span class="score-box">PTS: <span id="score">0</span></span>
+    </div>
+
+    <div class="q-card">
+        <div id="symbolQ">?</div>
+        <p style="font-size: 11px; color: #888; margin-top: 15px;">WHICH LETTER IS THIS?</p>
+    </div>
+
+    <div class="options-grid" id="optionsGrid">
+        </div>
+
+    <a href="lobby.html" class="back-link">TERMINATE MISSION</a>
+
+<script>
+    const hfcData = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
+    
+    let score = parseInt(localStorage.getItem('hfcScore')) || 0;
+    document.getElementById('score').innerText = score;
+    let currentCorrectLetter = "";
+
+    function nextQuestion() {
+        const letters = Object.keys(hfcData);
+        currentCorrectLetter = letters[Math.floor(Math.random() * letters.length)];
+        document.getElementById('symbolQ').innerText = hfcData[currentCorrectLetter];
+
+        // Prepare options
+        let options = [currentCorrectLetter];
+        while(options.length < 4) {
+            let randomL = letters[Math.floor(Math.random() * letters.length)];
+            if(!options.includes(randomL)) options.push(randomL);
+        }
+        
+        // Shuffle options
+        options.sort(() => Math.random() - 0.5);
+
+        const grid = document.getElementById('optionsGrid');
+        grid.innerHTML = "";
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "opt-btn";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, opt);
+            grid.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(btn, choice) {
+        if(choice === currentCorrectLetter) {
+            btn.classList.add('correct');
+            score += 2;
+            localStorage.setItem('hfcScore', score);
+            document.getElementById('score').innerText = score;
+            setTimeout(nextQuestion, 800);
+        } else {
+            btn.classList.add('wrong');
+            // Show correct answer
+            const buttons = document.querySelectorAll('.opt-btn');
+            buttons.forEach(b => {
+                if(b.innerText === currentCorrectLetter) b.classList.add('correct');
+            });
+            setTimeout(nextQuestion, 1500);
+        }
+    }
+
+    nextQuestion();
+</script>
+</body>
+</html>
