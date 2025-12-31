@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC - Memory Recall</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --neon: #64ffda;
+            --danger: #ff0055;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: white; margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
+        }
+
+        .game-header {
+            padding: 15px; display: flex; justify-content: space-between;
+            background: rgba(100, 255, 218, 0.05);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .stat-box { text-align: center; }
+        .label { font-size: 9px; color: var(--neon); letter-spacing: 1px; display: block; }
+        .value { font-size: 16px; font-weight: 900; }
+
+        #displayArea {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: radial-gradient(circle, #0a192f 0%, #000 100%);
+        }
+
+        .sequence-container {
+            display: flex; gap: 15px; margin-bottom: 30px;
+            min-height: 80px; align-items: center;
+        }
+
+        .symbol-box {
+            width: 60px; height: 60px;
+            background: var(--glass);
+            border: 2px solid var(--neon);
+            border-radius: 12px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 32px; font-weight: bold;
+            text-shadow: 0 0 10px var(--neon);
+            transition: 0.3s;
+        }
+
+        .hidden { opacity: 0; transform: scale(0.8); }
+
+        .input-preview {
+            font-size: 24px; font-weight: bold; color: var(--neon);
+            letter-spacing: 5px; height: 30px; margin-top: 20px;
+        }
+
+        /* Keyboard Styles (Same as Game 4 for consistency) */
+        .keyboard-area { background: #0d0d0d; padding: 10px 5px 25px 5px; border-top: 1px solid #333; }
+        .kb-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 6px; }
+        .key {
+            background: #1a1a1a; color: white; flex: 1; max-width: 35px; height: 45px;
+            display: flex; justify-content: center; align-items: center;
+            border-radius: 6px; font-size: 16px; font-weight: bold;
+            box-shadow: 0 3px 0 #000; cursor: pointer;
+        }
+        .key:active { transform: translateY(2px); box-shadow: 0 0 0 #000; background: var(--neon); color: #000; }
+        .row-2 { padding: 0 5%; } .row-3 { padding: 0 10%; }
+
+        .btn-action {
+            margin-top: 10px; background: var(--danger); color: white;
+            border: none; padding: 10px 30px; border-radius: 8px; font-weight: bold;
+        }
+    </style>
+</head>
+<body id="mainBody">
+
+    <div class="game-header">
+        <div class="stat-box">
+            <span class="label">MISSION XP</span>
+            <span class="value" id="gameScore">0 / 15</span>
+        </div>
+        <div class="stat-box">
+            <span class="label">TOTAL PTS</span>
+            <span class="value" id="totalPts">0</span>
+        </div>
+    </div>
+
+    <div id="displayArea">
+        <div class="sequence-container" id="seqContainer"></div>
+        <div class="input-preview" id="previewText">MEMORIZE...</div>
+        <button class="btn-action" onclick="clearInput()">CLEAR</button>
+    </div>
+
+    <div class="keyboard-area">
+        <div class="kb-row" id="row1"></div>
+        <div class="kb-row row-2" id="row2"></div>
+        <div class="kb-row row-3" id="row3"></div>
+    </div>
+
+<script>
+    const hfcMapping = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
+    const alphabet = Object.keys(hfcMapping);
+    const qwerty = [["Q","W","E","R","T","Y","U","I","O","P"], ["A","S","D","F","G","H","J","K","L"], ["Z","X","C","V","B","N","M"]];
+    
+    let targetSeq = "";
+    let userSeq = "";
+    let missionScore = 0;
+    let totalScore = parseInt(localStorage.getItem('hfcScore')) || 0;
+
+    document.getElementById('totalPts').innerText = totalScore;
+
+    // Build Keyboard
+    qwerty.forEach((row, i) => {
+        const rowDiv = document.getElementById(`row${i+1}`);
+        row.forEach(k => {
+            const btn = document.createElement('div');
+            btn.className = 'key'; btn.innerText = k;
+            btn.onclick = () => handleInput(k);
+            rowDiv.appendChild(btn);
+        });
+    });
+
+    function spawnSequence() {
+        targetSeq = "";
+        userSeq = "";
+        const container = document.getElementById('seqContainer');
+        container.innerHTML = "";
+        document.getElementById('previewText').innerText = "MEMORIZE...";
+
+        // Generate 3 random symbols
+        for(let i=0; i<3; i++) {
+            let char = alphabet[Math.floor(Math.random() * alphabet.length)];
+            targetSeq += char;
+            container.innerHTML += `<div class="symbol-box">${hfcMapping[char]}</div>`;
+        }
+
+        // Hide after 2 seconds
+        setTimeout(() => {
+            const boxes = document.querySelectorAll('.symbol-box');
+            boxes.forEach(b => b.classList.add('hidden'));
+            document.getElementById('previewText').innerText = "_ _ _";
+        }, 2000);
+    }
+
+    function handleInput(key) {
+        if(userSeq.length < 3) {
+            userSeq += key;
+            document.getElementById('previewText').innerText = userSeq;
+            if(userSeq.length === 3) checkResult();
+        }
+    }
+
+    function checkResult() {
+        if(userSeq === targetSeq) {
+            missionScore += 5;
+            if(missionScore >= 15) {
+                totalScore += 2;
+                localStorage.setItem('hfcScore', totalScore);
+                document.getElementById('totalPts').innerText = totalScore;
+                missionScore = 0;
+            }
+            document.getElementById('gameScore').innerText = missionScore + " / 15";
+            setTimeout(spawnSequence, 1000);
+        } else {
+            alert("WRONG SEQUENCE! Target was: " + targetSeq);
+            missionScore = 0;
+            document.getElementById('gameScore').innerText = "0 / 15";
+            spawnSequence();
+        }
+    }
+
+    function clearInput() { userSeq = ""; document.getElementById('previewText').innerText = "_ _ _"; }
+
+    spawnSequence();
+</script>
+</body>
+</html>
