@@ -6,11 +6,10 @@
     <title>HFC Academy - Pro Lobby</title>
     <style>
         :root {
-            --bg: #000000; /* Pure Black for Dope look */
+            --bg: #000000;
             --glass: rgba(255, 255, 255, 0.05);
             --neon: #64ffda;
             --text: #ccd6f6;
-            --accent: #00f2ff;
         }
 
         body { 
@@ -23,7 +22,7 @@
             min-height: 100vh;
         }
 
-        /* --- Header: Mera Concept (Rank Circle & Progress) --- */
+        /* Profile & Rank Panel */
         .user-panel {
             width: 100%; max-width: 400px;
             background: var(--glass);
@@ -31,12 +30,11 @@
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255,255,255,0.1);
             display: flex; align-items: center;
-            margin-bottom: 30px; margin-top: 10px;
+            margin-bottom: 30px;
         }
 
         .rank-circle {
-            width: 60px; height: 60px;
-            border-radius: 50%;
+            width: 60px; height: 60px; border-radius: 50%;
             border: 3px solid var(--neon);
             box-shadow: 0 0 15px var(--neon);
             display: flex; justify-content: center; align-items: center;
@@ -44,11 +42,12 @@
         }
 
         .user-info { flex-grow: 1; }
-        .rank-name { font-weight: 900; font-size: 14px; letter-spacing: 2px; color: #fff; }
-        .prog-bar-bg { width: 100%; height: 6px; background: #1a2639; border-radius: 10px; margin-top: 8px; }
-        .prog-fill { width: 30%; height: 100%; background: var(--neon); border-radius: 10px; box-shadow: 0 0 10px var(--neon); }
+        .rank-name { font-weight: 900; font-size: 14px; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
+        
+        .prog-bar-bg { width: 100%; height: 6px; background: #1a2639; border-radius: 10px; margin-top: 8px; position: relative; }
+        .prog-fill { width: 0%; height: 100%; background: var(--neon); border-radius: 10px; box-shadow: 0 0 10px var(--neon); transition: 0.5s; }
 
-        /* --- Game Area: Aapka Concept (Square Boxes) --- */
+        /* Square Grid Area */
         .game-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -58,55 +57,34 @@
         }
 
         .square-box {
-            aspect-ratio: 1 / 1;
+            aspect-ratio: 1 / 1; 
             background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
             border-radius: 28px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-decoration: none;
-            color: white;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; text-decoration: none; color: white;
             transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             backdrop-filter: blur(10px);
         }
 
-        .square-box:hover {
-            border-color: var(--neon);
-            transform: scale(1.05);
-            background: rgba(100, 255, 218, 0.08);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        }
-
-        .icon-bg {
-            width: 55px; height: 55px; background: rgba(0,0,0,0.4);
-            border-radius: 18px; display: flex; justify-content: center;
-            align-items: center; font-size: 28px; margin-bottom: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .box-title { font-weight: 800; font-size: 12px; letter-spacing: 1px; color: var(--text); }
-
-        .coming-soon {
-            opacity: 0.3;
-            border: 1px dashed rgba(255, 255, 255, 0.2);
-            cursor: not-allowed;
-        }
-
+        .square-box:hover { border-color: var(--neon); transform: scale(1.05); background: rgba(100, 255, 218, 0.08); }
+        .icon-bg { font-size: 32px; margin-bottom: 12px; }
+        .box-title { font-weight: 800; font-size: 11px; letter-spacing: 1px; text-align: center; }
+        
+        .coming-soon { opacity: 0.3; border: 1px dashed rgba(255, 255, 255, 0.2); cursor: not-allowed; }
         .exit-btn { margin-top: auto; padding: 20px; color: var(--neon); text-decoration: none; font-size: 12px; font-weight: bold; opacity: 0.6; }
     </style>
 </head>
-<body>
+<body onload="updateLobby()">
 
     <div class="user-panel">
-        <div class="rank-circle">👤</div>
+        <div class="rank-circle" id="rankIcon">👤</div>
         <div class="user-info">
-            <div class="rank-name">SILVER DECODER</div>
+            <div class="rank-name" id="rankTitle">RECRUIT</div>
             <div class="prog-bar-bg">
-                <div class="prog-fill"></div>
+                <div class="prog-fill" id="progFill"></div>
             </div>
-            <div style="font-size: 9px; margin-top: 5px; color: var(--neon);">350 / 1000 XP</div>
+            <div style="font-size: 9px; margin-top: 5px; color: var(--neon);">SCORE: <span id="lobbyScore">0</span></div>
         </div>
     </div>
 
@@ -116,15 +94,38 @@
             <div class="box-title">BASIC CHART</div>
         </a>
 
+        <a href="game1.html" class="square-box">
+            <div class="icon-bg">🎮</div>
+            <div class="box-title">DECODE MISSION</div>
+        </a>
+        
         <div class="square-box coming-soon">
             <div class="icon-bg">🔒</div>
             <div class="box-title">COMING SOON</div>
         </div>
-        
-        </div>
+    </div>
 
     <a href="index.html" class="exit-btn">TERMINATE CONNECTION</a>
 
+<script>
+    function updateLobby() {
+        let score = parseInt(localStorage.getItem('hfcScore')) || 0;
+        document.getElementById('lobbyScore').innerText = score;
+
+        let rank = "RECRUIT";
+        let percent = (score / 100) * 100; 
+        let icon = "👤";
+
+        if (score >= 2000) { rank = "MASTER DECRYPTOR"; icon = "👑"; percent = 100; }
+        else if (score >= 1000) { rank = "ELITE AGENT"; icon = "⚡"; percent = (score/2000)*100; }
+        else if (score >= 500) { rank = "CIPHER SPECIALIST"; icon = "🛡️"; percent = (score/1000)*100; }
+        else if (score >= 100) { rank = "JUNIOR ANALYST"; icon = "🕵️"; percent = (score/500)*100; }
+
+        document.getElementById('rankTitle').innerText = rank;
+        document.getElementById('rankIcon').innerText = icon;
+        document.getElementById('progFill').style.width = percent + "%";
+    }
+</script>
 </body>
 </html>
 
