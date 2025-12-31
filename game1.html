@@ -3,143 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC Mission - Decoder</title>
+    <title>HFC Mission - Decoder Pro</title>
     <style>
         :root {
             --bg: #000000;
             --glass: rgba(255, 255, 255, 0.05);
             --neon: #64ffda;
-            --text: #ccd6f6;
+            --danger: #ff0055;
         }
 
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background: var(--bg);
-            background-image: radial-gradient(circle at top, #112240 0%, #000000 70%);
-            color: var(--text); 
-            margin: 0; padding: 20px;
+            color: white; margin: 0; padding: 15px;
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
+            min-height: 100vh; overflow: hidden;
         }
 
-        .game-header {
-            width: 100%; max-width: 400px;
-            display: flex; justify-content: space-between;
-            margin-bottom: 40px; font-weight: bold; letter-spacing: 1px;
-        }
+        .header { width: 100%; display: flex; justify-content: space-between; font-weight: bold; color: var(--neon); margin-bottom: 20px; }
 
-        .score-val { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-
+        /* Puzzle Display */
         .puzzle-card {
             width: 100%; max-width: 400px;
             background: var(--glass);
-            border: 1px solid rgba(100, 255, 218, 0.2);
-            border-radius: 30px;
-            padding: 50px 20px;
-            backdrop-filter: blur(10px);
+            border: 2px solid var(--neon);
+            border-radius: 20px;
+            padding: 30px 10px;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(100, 255, 218, 0.1);
         }
 
-        #hfcDisplay {
-            font-size: 38px;
-            color: #fff;
-            letter-spacing: 10px;
-            text-shadow: 0 0 20px var(--neon);
-            margin-bottom: 30px;
-            display: block;
+        #symbolDisplay { font-size: 32px; letter-spacing: 5px; text-shadow: 0 0 10px var(--neon); }
+
+        /* Input Display Area */
+        .answer-preview {
+            font-size: 24px; font-weight: bold; letter-spacing: 3px;
+            height: 40px; color: var(--neon); margin-bottom: 20px;
         }
 
-        input {
-            width: 85%;
-            background: rgba(255,255,255,0.05);
+        /* Virtual Keypad */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px; width: 100%; max-width: 400px;
+        }
+
+        .key {
+            background: var(--glass);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 15px;
-            color: white;
-            font-size: 18px;
-            text-align: center;
-            outline: none;
-            text-transform: uppercase;
-            transition: 0.3s;
+            color: white; padding: 15px 5px;
+            border-radius: 10px; font-weight: bold;
+            cursor: pointer; transition: 0.2s;
         }
 
-        input:focus { border-color: var(--neon); background: rgba(100, 255, 218, 0.05); }
+        .key:active { background: var(--neon); color: black; transform: scale(0.9); }
 
-        .btn-verify {
-            background: var(--neon);
-            color: #000;
-            border: none;
-            width: 85%;
-            padding: 15px;
-            border-radius: 15px;
-            font-weight: 900;
-            margin-top: 20px;
-            cursor: pointer;
-            letter-spacing: 2px;
-        }
+        .controls { display: flex; gap: 10px; width: 100%; max-width: 400px; margin-top: 15px; }
+        .btn { flex: 1; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-clear { background: var(--danger); color: white; }
+        .btn-submit { background: var(--neon); color: black; }
 
-        #msg { margin-top: 25px; font-size: 14px; font-weight: bold; min-height: 20px; }
-
-        .back-nav { margin-top: auto; padding: 30px; color: #444; text-decoration: none; font-size: 12px; }
+        .back-nav { margin-top: auto; padding: 20px; color: #555; text-decoration: none; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <div class="game-header">
-        <span>MISSION: DECODER</span>
-        <span>SCORE: <span id="score" class="score-val">0</span></span>
+    <div class="header">
+        <span>AGENT MISSIONS</span>
+        <span>PTS: <span id="scoreDisplay">0</span></span>
     </div>
 
     <div class="puzzle-card">
-        <span id="hfcDisplay">---</span>
-        
-        <input type="text" id="answerInput" placeholder="ENTER PLAIN TEXT" autocomplete="off">
-        
-        <button class="btn-verify" onclick="check()">VERIFY</button>
-        
-        <div id="msg"></div>
+        <div id="symbolDisplay">LOADING...</div>
+        <p style="font-size: 10px; color: #888; margin-top: 10px;">DECODE THE CIPHER</p>
     </div>
 
-    <a href="lobby.html" class="back-nav">ABORT MISSION</a>
+    <div class="answer-preview" id="answerPreview">_ _ _ _</div>
+
+    <div class="keypad" id="keypad"></div>
+
+    <div class="controls">
+        <button class="btn btn-clear" onclick="clearInput()">CLEAR</button>
+        <button class="btn btn-submit" onclick="submitAnswer()">SUBMIT</button>
+    </div>
+
+    <a href="lobby.html" class="back-nav">TERMINATE MISSION</a>
 
 <script>
     const hfcMapping = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
     
-    // Game Data
-    const wordBank = ["AGENT", "SPY", "SECRET", "ENCODE", "DARK", "HFC", "MISSION", "CRYPT", "LOCK", "KEY", "DATA", "CYBER"];
+    const wordBank = ["AGENT", "SECRET", "DARK", "MISSION", "CRYPT", "KEY", "DATA", "CYBER", "BOX", "STAR"];
     let targetWord = "";
-    let currentScore = 0;
+    let userTyped = "";
+    let score = parseInt(localStorage.getItem('hfcScore')) || 0;
 
-    function newLevel() {
-        targetWord = wordBank[Math.floor(Math.random() * wordBank.length)];
-        let hfcText = targetWord.split('').map(c => hfcMapping[c] || c).join('');
-        document.getElementById('hfcDisplay').innerText = hfcText;
-        document.getElementById('answerInput').value = "";
-        document.getElementById('msg').innerText = "";
+    document.getElementById('scoreDisplay').innerText = score;
+
+    // Shuffle and Create Keypad
+    function setupKeypad() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+        const keypad = document.getElementById('keypad');
+        keypad.innerHTML = "";
+        letters.forEach(l => {
+            const btn = document.createElement('button');
+            btn.className = "key";
+            btn.innerText = l;
+            btn.onclick = () => {
+                userTyped += l;
+                updatePreview();
+            };
+            keypad.appendChild(btn);
+        });
     }
 
-    function check() {
-        const input = document.getElementById('answerInput').value.toUpperCase().trim();
-        const msg = document.getElementById('msg');
-        
-        if (input === targetWord) {
-            currentScore += 2; // +2 Points per word
-            msg.innerText = "CORRECT: +2 POINTS";
-            msg.style.color = var(--neon);
-            document.getElementById('score').innerText = currentScore;
-            
-            // Save score to local storage so Lobby can read it (Optional but good)
-            localStorage.setItem('hfcScore', currentScore);
-            
-            setTimeout(newLevel, 1000);
+    function updatePreview() {
+        document.getElementById('answerPreview').innerText = userTyped || "_ _ _ _";
+    }
+
+    function clearInput() {
+        userTyped = "";
+        updatePreview();
+    }
+
+    function nextPuzzle() {
+        targetWord = wordBank[Math.floor(Math.random() * wordBank.length)];
+        let hfcText = targetWord.split('').map(c => hfcMapping[c] || c).join('');
+        document.getElementById('symbolDisplay').innerText = hfcText;
+        clearInput();
+    }
+
+    function submitAnswer() {
+        if (userTyped === targetWord) {
+            score += 2;
+            localStorage.setItem('hfcScore', score);
+            document.getElementById('scoreDisplay').innerText = score;
+            alert("✓ CORRECT! +2 POINTS");
+            nextPuzzle();
         } else {
-            msg.innerText = "INVALID DECODE - TRY AGAIN";
-            msg.style.color = "#ff0055";
+            alert("✗ WRONG DECODE! TRY AGAIN");
+            clearInput();
         }
     }
 
-    newLevel();
+    setupKeypad();
+    nextPuzzle();
 </script>
 </body>
 </html>
+
