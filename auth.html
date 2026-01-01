@@ -2,60 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Secure Access</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFC Academy - Authentication</title>
     <style>
-        :root { --neon: #64ffda; --bg: #000; --glass: rgba(255, 255, 255, 0.05); }
-        body { 
-            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif;
-            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
-            background-image: radial-gradient(circle at center, #112240 0%, #000 80%);
-            overflow: hidden;
-        }
-        .auth-card {
-            background: var(--glass); padding: 40px 30px; border-radius: 25px;
-            border: 1px solid rgba(100, 255, 218, 0.2); width: 90%; max-width: 380px; 
-            text-align: center; backdrop-filter: blur(15px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        h2 { letter-spacing: 3px; font-weight: 900; color: var(--neon); margin-bottom: 30px; text-transform: uppercase; }
-        input {
-            width: 100%; padding: 14px; margin: 12px 0; background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; 
-            box-sizing: border-box; outline: none; transition: 0.3s; font-size: 16px;
-        }
-        input:focus { border-color: var(--neon); background: rgba(100, 255, 218, 0.05); }
-        button {
-            width: 100%; padding: 14px; background: var(--neon); border: none;
-            border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px;
-            color: #000; letter-spacing: 1px; transition: 0.3s; font-size: 16px;
-        }
-        button:hover { box-shadow: 0 0 20px var(--neon); transform: translateY(-2px); }
-        .toggle-link { font-size: 13px; color: #888; margin-top: 25px; cursor: pointer; display: block; }
-        .toggle-link span { color: var(--neon); font-weight: bold; text-decoration: underline; }
-        #errorMsg { color: #ff4d4d; font-size: 12px; margin-top: 15px; min-height: 18px; font-weight: bold; }
-        
-        /* Simple Loading Spinner */
-        .loading { opacity: 0.5; pointer-events: none; }
+        :root { --neon: #64ffda; --admin: #ff0055; --bg: #000; }
+        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .auth-container { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border: 1px solid #222; width: 90%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: var(--neon); color: #000; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .toggle-link { font-size: 12px; color: #888; margin-top: 15px; cursor: pointer; display: block; }
+        #statusMsg { font-size: 11px; margin-top: 10px; color: var(--admin); }
     </style>
 </head>
 <body>
 
-    <div class="auth-card" id="authCard">
-        <h2 id="authTitle">Agent Login</h2>
-        <input type="email" id="email" placeholder="Email Address" autocomplete="email">
-        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
-        <div id="errorMsg"></div>
-        <button id="authBtn">INITIALIZE ACCESS</button>
-        <div class="toggle-link" id="toggleLink">Don't have an account? <span>Sign Up</span></div>
+    <div class="auth-container">
+        <h2 id="authTitle" style="color: var(--neon);">LOGIN</h2>
+        <div id="regFields" style="display: none;">
+            <input type="text" id="username" placeholder="Username">
+        </div>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button id="authBtn">PROCEED</button>
+        <p id="statusMsg"></p>
+        <span class="toggle-link" id="toggleAuth">New here? Create an Account</span>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } 
-        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Aapka Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
             authDomain: "hfc-academy.firebaseapp.com",
@@ -67,64 +45,69 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        let isLoginMode = true;
+        let isLogin = true;
 
-        const toggleLink = document.getElementById('toggleLink');
-        const authTitle = document.getElementById('authTitle');
-        const authBtn = document.getElementById('authBtn');
-        const errorMsg = document.getElementById('errorMsg');
-        const authCard = document.getElementById('authCard');
-
-        // Login aur Signup ke darmiyan switch karna
-        toggleLink.onclick = () => {
-            isLoginMode = !isLoginMode;
-            errorMsg.innerText = "";
-            authTitle.innerText = isLoginMode ? "Agent Login" : "Agent Signup";
-            authBtn.innerText = isLoginMode ? "INITIALIZE ACCESS" : "CREATE ACCOUNT";
-            toggleLink.innerHTML = isLoginMode ? "Don't have an account? <span>Sign Up</span>" : "Already have an account? <span>Login</span>";
+        // Toggle Login/Register UI
+        document.getElementById('toggleAuth').onclick = () => {
+            isLogin = !isLogin;
+            document.getElementById('authTitle').innerText = isLogin ? "LOGIN" : "REGISTER";
+            document.getElementById('regFields').style.display = isLogin ? "none" : "block";
+            document.getElementById('toggleAuth').innerText = isLogin ? "New here? Create an Account" : "Already have an account? Login";
         };
 
-        // Main Login/Signup Button Function
-        authBtn.onclick = () => {
-            const email = document.getElementById('email').value;
+        // Main Auth Function
+        document.getElementById('authBtn').onclick = async () => {
+            const email = document.getElementById('email').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const status = document.getElementById('statusMsg');
 
-            if(!email || !password) {
-                errorMsg.innerText = "Please fill all fields.";
-                return;
-            }
+            if(!email || !password) return alert("Fill all fields!");
+            status.innerText = "Processing... Please wait.";
 
-            authCard.classList.add('loading');
-            errorMsg.innerText = "Processing...";
+            try {
+                if (isLogin) {
+                    // --- LOGIN LOGIC ---
+                    await signInWithEmailAndPassword(auth, email, password);
+                    location.href = "lobby.html";
+                } else {
+                    // --- REGISTER LOGIC ---
+                    if(!username) return alert("Enter Username!");
+                    
+                    const res = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = res.user;
 
-            if (isLoginMode) {
-                // Login Logic
-                signInWithEmailAndPassword(auth, email, password)
-                    .then(() => {
-                        window.location.href = "lobby.html";
-                    })
-                    .catch((err) => {
-                        authCard.classList.remove('loading');
-                        errorMsg.innerText = "Login Failed: " + err.message;
+                    status.innerText = "Saving Data to Database...";
+
+                    // Yahan data hamesha Number format mein save hoga
+                    await setDoc(doc(db, "users", user.uid), {
+                        username: username,
+                        email: email,
+                        score: 0,
+                        coins: 0,
+                        rank: "recruit",
+                        role: "user"
                     });
-            } else {
-                // Signup Logic
-                createUserWithEmailAndPassword(auth, email, password)
-                    .then(() => {
-                        window.location.href = "lobby.html";
-                    })
-                    .catch((err) => {
-                        authCard.classList.remove('loading');
-                        errorMsg.innerText = "Signup Failed: " + err.message;
-                    });
+
+                    status.innerText = "Account Created Successfully!";
+                    // Data save hone ke baad hi lobby par bhejega
+                    setTimeout(() => { location.href = "lobby.html"; }, 1000);
+                }
+            } catch (error) {
+                status.innerText = "Error: " + error.message;
+                console.error(error);
             }
         };
 
-        // Check if user is already logged in
+        // Auto-redirect if already logged in
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                window.location.href = "lobby.html";
+                // Check if user has data in firestore before redirecting
+                getDoc(doc(db, "users", user.uid)).then(snap => {
+                    if(snap.exists()) location.href = "lobby.html";
+                });
             }
         });
     </script>
