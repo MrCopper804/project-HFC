@@ -3,84 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC Admin - Master Controller</title>
+    <title>HFC Admin - Control</title>
     <style>
-        :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; --gold: #ffd700; }
-        body { 
-            background: var(--bg); color: white; font-family: sans-serif; 
-            padding: 10px; display: flex; flex-direction: column; min-height: 100vh; margin: 0;
-        }
-        .box { 
-            background: rgba(255,0,85,0.05); padding: 20px; 
-            border-radius: 20px; border: 1px solid var(--admin);
-            max-width: 500px; margin: 10px auto; width: 100%; box-sizing: border-box;
-        }
-        input, select { 
-            width: 100%; padding: 12px; margin: 8px 0; background: #111; 
-            border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box;
-        }
-        button { 
-            width: 100%; padding: 14px; background: var(--admin); color: white; 
-            border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
-        }
-        
-        /* Table Styling */
-        .table-container { margin-top: 20px; overflow-x: auto; background: #0a0a0a; border-radius: 15px; border: 1px solid #222; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
-        th { background: #111; color: var(--neon); padding: 12px; border-bottom: 1px solid #222; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #111; color: #ccc; }
-        .rank-tag { color: var(--gold); font-weight: bold; text-transform: uppercase; font-size: 9px; }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; text-align: center; }
+        .box { max-width: 400px; margin: auto; border: 1px solid #ff0055; padding: 20px; border-radius: 15px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #111; border: 1px solid #333; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #ff0055; color: #fff; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <h2 style="text-align:center; color: var(--admin); letter-spacing: 2px;">COMMAND CENTER</h2>
-
+    <h2>ADMIN PANEL</h2>
     <div class="box">
-        <input type="email" id="targetEmail" placeholder="Agent Email Address">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <input type="number" id="giveXP" placeholder="+/- XP">
-            <input type="number" id="giveCoins" placeholder="+/- Coins">
-        </div>
-        <select id="setRank">
-            <option value="">-- Change Rank --</option>
-            <option value="recruit">Recruit</option>
-            <option value="agent">Agent</option>
-            <option value="specialist">Specialist</option>
-            <option value="commander">Commander</option>
-            <option value="legend">Legend</option>
-        </select>
-        <button id="execBtn" style="margin-top:10px;">UPDATE AGENT</button>
-        <p id="status" style="font-size:12px; text-align:center; margin-top:10px;"></p>
+        <input type="email" id="email" placeholder="User Email">
+        <input type="number" id="xp" placeholder="Add XP">
+        <input type="number" id="coins" placeholder="Add Coins">
+        <button id="btn">UPDATE USER</button>
+        <p id="msg"></p>
     </div>
-
-    <div style="max-width: 800px; margin: 0 auto; width: 100%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px;">
-            <h4 style="color: var(--neon);">AGENT DATABASE</h4>
-            <button onclick="loadUsers()" style="width: auto; padding: 5px 15px; font-size: 10px; background: #222;">REFRESH LIST</button>
-        </div>
-        
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>XP</th>
-                        <th>Coins</th>
-                        <th>Rank</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody">
-                    </tbody>
-            </table>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, increment, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
             authDomain: "hfc-academy.firebaseapp.com",
@@ -89,66 +31,20 @@
             messagingSenderId: "84006497196",
             appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Load All Users ---
-        async function loadUsers() {
-            const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>Loading agents...</td></tr>";
-            
-            try {
-                // Sorting users by XP (score)
-                const q = query(collection(db, "users"), orderBy("score", "desc"));
-                const snap = await getDocs(q);
-                tbody.innerHTML = "";
-                
-                snap.forEach((userDoc) => {
-                    const d = userDoc.data();
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="color:#fff">${d.username || 'N/A'}</td>
-                            <td>${d.email}</td>
-                            <td style="color:var(--neon)">${d.score || 0}</td>
-                            <td style="color:var(--gold)">${d.coins || 0}</td>
-                            <td class="rank-tag">${d.rank || 'recruit'}</td>
-                        </tr>
-                    `;
-                });
-            } catch (e) {
-                tbody.innerHTML = `<tr><td colspan='5' style='color:red'>Error: ${e.message}</td></tr>`;
-            }
-        }
-
-        // --- Execute Update ---
-        document.getElementById('execBtn').onclick = async () => {
-            const email = document.getElementById('targetEmail').value.trim();
-            const xp = parseInt(document.getElementById('giveXP').value) || 0;
-            const coins = parseInt(document.getElementById('giveCoins').value) || 0;
-            const newRank = document.getElementById('setRank').value;
-            const status = document.getElementById('status');
-
-            if(!email) return;
-
-            try {
-                const q = query(collection(db, "users"), where("email", "==", email));
-                const snap = await getDocs(q);
-
-                if (!snap.empty) {
-                    const uDoc = snap.docs[0];
-                    const upData = { score: increment(xp), coins: increment(coins) };
-                    if(newRank) upData.rank = newRank;
-
-                    await updateDoc(doc(db, "users", uDoc.id), upData);
-                    status.innerText = "DONE!"; loadUsers(); // Refresh list after update
-                }
-            } catch (e) { status.innerText = "Error!"; }
+        document.getElementById('btn').onclick = async () => {
+            const email = document.getElementById('email').value;
+            const xp = parseInt(document.getElementById('xp').value) || 0;
+            const coins = parseInt(document.getElementById('coins').value) || 0;
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                await updateDoc(doc(db, "users", snap.docs[0].id), { score: increment(xp), coins: increment(coins) });
+                document.getElementById('msg').innerText = "Updated!";
+            } else { document.getElementById('msg').innerText = "Not found!"; }
         };
-
-        // Initial Load
-        loadUsers();
-        window.loadUsers = loadUsers;
     </script>
 </body>
 </html>
