@@ -6,18 +6,43 @@
     <title>HFC Admin - Master Controller</title>
     <style>
         :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; --gold: #ffd700; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; }
-        .box { background: rgba(255,0,85,0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--admin); max-width: 500px; margin: 10px auto; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: var(--admin); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .table-container { margin-top: 20px; overflow-x: auto; background: #0a0a0a; border-radius: 15px; border: 1px solid #222; }
+        body { 
+            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
+            padding: 10px; margin: 0; min-height: 100vh;
+        }
+        .box { 
+            background: rgba(255,0,85,0.05); padding: 20px; border-radius: 20px; 
+            border: 1px solid var(--admin); max-width: 500px; margin: 10px auto; 
+            box-sizing: border-box;
+        }
+        input, select { 
+            width: 100%; padding: 12px; margin: 8px 0; background: #111; 
+            border: 1px solid #333; color: white; border-radius: 10px; 
+            box-sizing: border-box; outline: none;
+        }
+        input:focus { border-color: var(--admin); }
+        button { 
+            width: 100%; padding: 14px; background: var(--admin); color: white; 
+            border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
+            margin-top: 10px; transition: 0.3s;
+        }
+        button:active { transform: scale(0.98); }
+        
+        .table-container { 
+            margin: 20px auto; max-width: 800px; overflow-x: auto; 
+            background: #0a0a0a; border-radius: 15px; border: 1px solid #222; 
+        }
         table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
-        th { background: #111; color: var(--neon); padding: 12px; border-bottom: 1px solid #222; }
+        th { background: #111; color: var(--neon); padding: 12px; border-bottom: 1px solid #222; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #111; color: #ccc; }
+        
+        #status { font-size: 12px; text-align: center; margin-top: 10px; font-weight: bold; }
+        .back-link { display: block; text-align: center; color: #555; text-decoration: none; margin-top: 20px; font-size: 12px; }
     </style>
 </head>
 <body>
-    <h2 style="text-align:center; color: var(--admin); letter-spacing: 1px;">HFC COMMAND CENTER</h2>
+
+    <h2 style="text-align:center; color: var(--admin); letter-spacing: 2px;">COMMAND CENTER</h2>
     
     <div class="box">
         <input type="email" id="targetEmail" placeholder="Agent Email Address">
@@ -33,16 +58,27 @@
             <option value="commander">Commander</option>
             <option value="legend">Legend</option>
         </select>
-        <button id="execBtn">UPDATE AGENT</button>
-        <p id="status" style="text-align:center; font-size:12px; margin-top:10px; color: #888;"></p>
+        <button id="execBtn">EXECUTE UPDATE</button>
+        <p id="status">System Ready</p>
     </div>
 
     <div class="table-container">
         <table>
-            <thead><tr><th>Username</th><th>Email</th><th>XP</th><th>Coins</th><th>Rank</th></tr></thead>
-            <tbody id="userTableBody"></tbody>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>XP</th>
+                    <th>Coins</th>
+                    <th>Rank</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                </tbody>
         </table>
     </div>
+
+    <a href="lobby.html" class="back-link">← EXIT TO LOBBY</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -56,11 +92,12 @@
             messagingSenderId: "84006497196",
             appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Real-time List Listener ---
-        function startSync() {
+        // --- REAL-TIME USER LIST ---
+        function startLiveSync() {
             const tbody = document.getElementById('userTableBody');
             const q = query(collection(db, "users"), orderBy("score", "desc"));
             
@@ -68,30 +105,40 @@
                 tbody.innerHTML = "";
                 snap.forEach((u) => {
                     const d = u.data();
-                    tbody.innerHTML += `<tr>
-                        <td>${d.username||'N/A'}</td>
-                        <td>${d.email}</td>
-                        <td style="color:var(--neon)">${d.score||0}</td>
-                        <td style="color:var(--gold)">${d.coins||0}</td>
-                        <td style="text-transform:uppercase; font-size:9px;">${d.rank||'recruit'}</td>
-                    </tr>`;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="color:#fff">${d.username || 'N/A'}</td>
+                            <td>${d.email}</td>
+                            <td style="color:var(--neon)">${d.score || 0}</td>
+                            <td style="color:var(--gold)">${d.coins || 0}</td>
+                            <td style="text-transform:uppercase; font-weight:bold; font-size:9px;">${d.rank || 'recruit'}</td>
+                        </tr>
+                    `;
                 });
+            }, (err) => {
+                console.error("Sync Error:", err);
             });
         }
 
-        // --- Execute Update Function ---
+        // --- UPDATE USER LOGIC ---
         document.getElementById('execBtn').onclick = async () => {
-            const email = document.getElementById('targetEmail').value.trim();
+            const emailInput = document.getElementById('targetEmail').value.trim().toLowerCase();
             const xp = parseInt(document.getElementById('giveXP').value) || 0;
             const coins = parseInt(document.getElementById('giveCoins').value) || 0;
             const rank = document.getElementById('setRank').value;
             const status = document.getElementById('status');
 
-            if(!email) { status.innerText = "Enter email!"; return; }
-            status.innerText = "Syncing...";
+            if(!emailInput) {
+                status.innerText = "Error: Enter Email!";
+                status.style.color = "red";
+                return;
+            }
+
+            status.innerText = "Searching Agent...";
+            status.style.color = "#888";
 
             try {
-                const q = query(collection(db, "users"), where("email", "==", email));
+                const q = query(collection(db, "users"), where("email", "==", emailInput));
                 const snap = await getDocs(q);
                 
                 if(!snap.empty) {
@@ -103,22 +150,26 @@
                     if(rank) upData.rank = rank;
                     
                     await updateDoc(doc(db, "users", userDoc.id), upData);
-                    status.innerText = "SUCCESS: Updated Database";
+                    
+                    status.innerText = "SUCCESS: DATABASE UPDATED";
                     status.style.color = "var(--neon)";
                     
                     // Clear inputs
                     document.getElementById('giveXP').value = "";
                     document.getElementById('giveCoins').value = "";
+                    document.getElementById('targetEmail').value = "";
                 } else {
-                    status.innerText = "Agent not found!";
-                    status.style.color = "red";
+                    status.innerText = "FAILED: AGENT NOT FOUND";
+                    status.style.color = "#ff4d4d";
                 }
             } catch (e) {
-                status.innerText = "Sync Error: " + e.message;
+                status.innerText = "SYNC ERROR: " + e.message;
+                status.style.color = "red";
             }
         };
 
-        startSync();
+        // Start Sync on load
+        startLiveSync();
     </script>
 </body>
 </html>
