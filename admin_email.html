@@ -3,57 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC Admin - Send Email</title>
+    <title>HFC Admin - Mail Center</title>
     <style>
-        :root { --admin: #ff0055; --bg: #000; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; }
-        .box { max-width: 400px; margin: auto; background: #0a0a0a; padding: 20px; border-radius: 20px; border: 1px solid var(--admin); }
-        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: var(--admin); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; }
+        body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .box { max-width: 400px; width: 100%; background: #0a0a0a; padding: 25px; border-radius: 20px; border: 1px solid var(--admin); box-sizing: border-box; }
+        select, input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 14px; background: var(--admin); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.98); }
+        .hint { font-size: 10px; color: #666; margin-bottom: 5px; }
     </style>
 </head>
 <body>
-    <h2 style="text-align:center; color: var(--admin);">SEND ANNOUNCEMENT</h2>
+
+    <h2 style="color: var(--admin); letter-spacing: 2px;">MAIL COMMANDER</h2>
+
     <div class="box">
-        <select id="sendTo">
-            <option value="all">Broadcast (All Users)</option>
-            <option value="specific">Specific User</option>
+        <label class="hint">SELECT TARGET TYPE:</label>
+        <select id="sendTo" onchange="toggleEmailInput()">
+            <option value="all">Broadcast (All Agents)</option>
+            <option value="specific">Specific Agent Email</option>
         </select>
-        <input type="email" id="targetEmail" placeholder="User Email (If specific)" style="display:none;">
-        <textarea id="msgBody" rows="5" placeholder="Write your message here..."></textarea>
-        <button id="sendBtn">SEND NOTIFICATION</button>
-        <p id="status" style="text-align:center; font-size:12px; margin-top:10px;"></p>
+
+        <div id="emailTargetWrapper" style="display:none;">
+            <label class="hint">AGENT EMAIL ADDRESS:</label>
+            <input type="email" id="targetEmail" placeholder="example@hfc.com">
+        </div>
+
+        <label class="hint">MESSAGE CONTENT:</label>
+        <textarea id="msgBody" rows="5" placeholder="Enter your instructions..."></textarea>
+        
+        <button id="sendBtn">DISPATCH EMAIL</button>
+        <p id="status" style="text-align:center; font-size:12px; margin-top:15px;"></p>
     </div>
+
+    <a href="admin.html" style="color:#444; text-decoration:none; font-size:12px; margin-top:20px;">BACK TO ADMIN</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = { /* Aapka Config */ };
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+            authDomain: "hfc-academy.firebaseapp.com",
+            projectId: "hfc-academy",
+            storageBucket: "hfc-academy.firebasestorage.app",
+            messagingSenderId: "84006497196",
+            appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+        };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        document.getElementById('sendTo').onchange = (e) => {
-            document.getElementById('targetEmail').style.display = e.target.value === 'specific' ? 'block' : 'none';
+        // UI Logic to show/hide email input
+        window.toggleEmailInput = () => {
+            const mode = document.getElementById('sendTo').value;
+            const wrapper = document.getElementById('emailTargetWrapper');
+            wrapper.style.display = (mode === 'specific') ? 'block' : 'none';
         };
 
         document.getElementById('sendBtn').onclick = async () => {
             const mode = document.getElementById('sendTo').value;
-            const email = document.getElementById('targetEmail').value;
-            const msg = document.getElementById('msgBody').value;
+            const targetEmail = document.getElementById('targetEmail').value.trim();
+            const message = document.getElementById('msgBody').value.trim();
             const status = document.getElementById('status');
 
-            if(!msg) return alert("Message is empty!");
+            // Validations
+            if (!message) {
+                status.innerText = "Error: Message is empty!";
+                status.style.color = "#ff4d4d";
+                return;
+            }
+            if (mode === 'specific' && !targetEmail) {
+                status.innerText = "Error: Please enter a target email!";
+                status.style.color = "#ff4d4d";
+                return;
+            }
+
+            status.innerText = "Sending...";
+            status.style.color = "#888";
 
             try {
+                // Database mein notification save karna
                 await addDoc(collection(db, "notifications"), {
-                    target: mode === 'all' ? 'all' : email,
-                    message: msg,
-                    timestamp: serverTimestamp()
+                    target: mode === 'all' ? 'all' : targetEmail,
+                    message: message,
+                    timestamp: serverTimestamp(),
+                    type: "admin_mail"
                 });
-                status.innerText = "Sent Successfully!";
+
+                status.innerText = "Email Dispatched Successfully!";
+                status.style.color = "#64ffda";
+                
+                // Reset fields
                 document.getElementById('msgBody').value = "";
-            } catch (e) { status.innerText = "Error!"; }
+                if(mode === 'specific') document.getElementById('targetEmail').value = "";
+                
+            } catch (e) {
+                console.error(e);
+                status.innerText = "Error: " + e.message;
+                status.style.color = "#ff4d4d";
+            }
         };
     </script>
 </body>
