@@ -6,7 +6,7 @@
     <title>HFC Admin - Master Controller</title>
     <style>
         :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; --gold: #ffd700; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 10px; margin: 0; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; }
         .box { background: rgba(255,0,85,0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--admin); max-width: 500px; margin: 10px auto; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; }
         button { width: 100%; padding: 14px; background: var(--admin); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
@@ -17,7 +17,8 @@
     </style>
 </head>
 <body>
-    <h2 style="text-align:center; color: var(--admin);">COMMAND CENTER</h2>
+    <h2 style="text-align:center; color: var(--admin); letter-spacing: 1px;">HFC COMMAND CENTER</h2>
+    
     <div class="box">
         <input type="email" id="targetEmail" placeholder="Agent Email Address">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -33,7 +34,7 @@
             <option value="legend">Legend</option>
         </select>
         <button id="execBtn">UPDATE AGENT</button>
-        <p id="status" style="text-align:center; font-size:12px; margin-top:10px;"></p>
+        <p id="status" style="text-align:center; font-size:12px; margin-top:10px; color: #888;"></p>
     </div>
 
     <div class="table-container">
@@ -45,7 +46,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, increment, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, increment, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -58,32 +59,66 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        async function loadUsers() {
+        // --- Real-time List Listener ---
+        function startSync() {
             const tbody = document.getElementById('userTableBody');
             const q = query(collection(db, "users"), orderBy("score", "desc"));
-            const snap = await getDocs(q);
-            tbody.innerHTML = "";
-            snap.forEach((u) => {
-                const d = u.data();
-                tbody.innerHTML += `<tr><td>${d.username||'N/A'}</td><td>${d.email}</td><td style="color:var(--neon)">${d.score||0}</td><td style="color:var(--gold)">${d.coins||0}</td><td>${d.rank||'recruit'}</td></tr>`;
+            
+            onSnapshot(q, (snap) => {
+                tbody.innerHTML = "";
+                snap.forEach((u) => {
+                    const d = u.data();
+                    tbody.innerHTML += `<tr>
+                        <td>${d.username||'N/A'}</td>
+                        <td>${d.email}</td>
+                        <td style="color:var(--neon)">${d.score||0}</td>
+                        <td style="color:var(--gold)">${d.coins||0}</td>
+                        <td style="text-transform:uppercase; font-size:9px;">${d.rank||'recruit'}</td>
+                    </tr>`;
+                });
             });
         }
 
+        // --- Execute Update Function ---
         document.getElementById('execBtn').onclick = async () => {
             const email = document.getElementById('targetEmail').value.trim();
             const xp = parseInt(document.getElementById('giveXP').value) || 0;
             const coins = parseInt(document.getElementById('giveCoins').value) || 0;
             const rank = document.getElementById('setRank').value;
-            const q = query(collection(db, "users"), where("email", "==", email));
-            const snap = await getDocs(q);
-            if(!snap.empty) {
-                const upData = { score: increment(xp), coins: increment(coins) };
-                if(rank) upData.rank = rank;
-                await updateDoc(doc(db, "users", snap.docs[0].id), upData);
-                loadUsers();
+            const status = document.getElementById('status');
+
+            if(!email) { status.innerText = "Enter email!"; return; }
+            status.innerText = "Syncing...";
+
+            try {
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const snap = await getDocs(q);
+                
+                if(!snap.empty) {
+                    const userDoc = snap.docs[0];
+                    const upData = { 
+                        score: increment(xp), 
+                        coins: increment(coins) 
+                    };
+                    if(rank) upData.rank = rank;
+                    
+                    await updateDoc(doc(db, "users", userDoc.id), upData);
+                    status.innerText = "SUCCESS: Updated Database";
+                    status.style.color = "var(--neon)";
+                    
+                    // Clear inputs
+                    document.getElementById('giveXP').value = "";
+                    document.getElementById('giveCoins').value = "";
+                } else {
+                    status.innerText = "Agent not found!";
+                    status.style.color = "red";
+                }
+            } catch (e) {
+                status.innerText = "Sync Error: " + e.message;
             }
         };
-        loadUsers();
+
+        startSync();
     </script>
 </body>
 </html>
