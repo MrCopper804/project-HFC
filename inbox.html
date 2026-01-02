@@ -7,22 +7,23 @@
     <style>
         :root { --neon: #64ffda; --bg: #000; }
         body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; }
-        .msg-card { background: #0a0a0a; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid transparent; }
+        .msg-card { background: #0a0a0a; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid #222; }
         .msg-card.unread { border-left-color: var(--neon); background: #0d1a17; }
         .time { font-size: 10px; color: #555; display: block; margin-bottom: 5px; }
-        .text { font-size: 14px; color: #ccc; word-wrap: break-word; }
+        .text { font-size: 14px; color: #ccc; word-wrap: break-word; font-weight: 500; }
         .badge { background: var(--neon); color: black; font-size: 10px; padding: 2px 6px; border-radius: 5px; float: right; font-weight: bold; }
+        #status-msg { text-align: center; color: #444; font-size: 12px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
     <h2 style="color: var(--neon);">INCOMING DATA</h2>
-    <div id="msgContainer">SCANNING FOR MESSAGES...</div>
+    <div id="msgContainer"><p id="status-msg">CONNECTING TO HFC SERVER...</p></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -39,60 +40,66 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const userEmail = user.email.toLowerCase();
-                
-                // Bilkul simple query taake index error na aye
-                const q = query(collection(db, "notifications"));
+                const currentUserEmail = user.email.trim().toLowerCase();
+                console.log("Checking for:", currentUserEmail);
 
-                onSnapshot(q, (snap) => {
+                // Sare notifications read karo, filter hum khud karenge
+                const colRef = collection(db, "notifications");
+
+                onSnapshot(colRef, (snap) => {
                     const container = document.getElementById('msgContainer');
                     container.innerHTML = "";
-                    
-                    let count = 0;
-                    snap.forEach((msgDoc) => {
-                        const data = msgDoc.data();
-                        const target = (data.target || "").toLowerCase();
+                    let foundAny = false;
 
-                        // Check if message is for this user or everyone
-                        if (target === userEmail || target === "all_users") {
-                            count++;
+                    // Messages ko array mein daal kar time se sort karenge
+                    const allMsgs = [];
+                    snap.forEach(d => allMsgs.push({id: d.id, ...d.data()}));
+                    allMsgs.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+                    allMsgs.forEach((data) => {
+                        const targetEmail = (data.target || "").trim().toLowerCase();
+
+                        // Match logic
+                        if (targetEmail === currentUserEmail || targetEmail === "all_users") {
+                            foundAny = true;
                             const isUnread = data.read === false || data.read === undefined;
                             
-                            // Handle different timestamp formats safely
-                            let dateDisplay = "Recent";
-                            if(data.timestamp) {
-                                try {
-                                    const dateObj = data.timestamp.seconds ? new Date(data.timestamp.seconds * 1000) : new Date(data.timestamp);
-                                    dateDisplay = dateObj.toLocaleString();
-                                } catch(e) { dateDisplay = "Secure Date"; }
+                            // Date calculation
+                            let displayTime = "Recent";
+                            if(data.timestamp && data.timestamp.seconds) {
+                                displayTime = new Date(data.timestamp.seconds * 1000).toLocaleString();
                             }
 
                             const div = document.createElement('div');
                             div.className = `msg-card ${isUnread ? 'unread' : ''}`;
                             div.innerHTML = `
                                 ${isUnread ? '<span class="badge">NEW</span>' : ''}
-                                <span class="time">${dateDisplay}</span>
-                                <p class="text">${data.message || "Encrypted Data"}</p>
+                                <span class="time">${displayTime}</span>
+                                <p class="text">${data.message || "No Message Content"}</p>
                             `;
 
                             div.onclick = async () => {
                                 if(isUnread) {
-                                    await updateDoc(doc(db, "notifications", msgDoc.id), {
+                                    await updateDoc(doc(db, "notifications", data.id), {
                                         read: true,
-                                        readBy: userEmail
+                                        readBy: currentUserEmail
                                     });
                                 }
-                                alert("Transmission Acknowledged.");
+                                alert("Message Read Confirmed.");
                             };
-                            container.prepend(div); // Naya message upar dikhane ke liye
+                            container.appendChild(div);
                         }
                     });
 
-                    if (count === 0) {
-                        container.innerHTML = "<p style='color:#444; text-align:center;'>No mission data found for: <br>" + userEmail + "</p>";
+                    if (!foundAny) {
+                        container.innerHTML = `<p id="status-msg">NO MESSAGES FOUND FOR:<br>${currentUserEmail}</p>`;
                     }
+                }, (error) => {
+                    container.innerHTML = `<p id="status-msg" style="color:red">SYNC ERROR: ${error.message}</p>`;
                 });
-            } else { location.href = "auth.html"; }
+            } else {
+                location.href = "auth.html";
+            }
         });
     </script>
 </body>
