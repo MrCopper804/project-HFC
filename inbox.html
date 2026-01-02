@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC - My Inbox</title>
+    <title>HFC - Secure Inbox</title>
     <style>
         :root { --neon: #64ffda; --bg: #000; }
         body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; }
-        .msg-card { background: #0a0a0a; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid #222; }
+        .msg-card { background: #0a0a0a; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid #222; position: relative; }
         .msg-card.unread { border-left-color: var(--neon); background: #0d1a17; }
         .time { font-size: 10px; color: #555; display: block; margin-bottom: 5px; }
-        .text { font-size: 14px; color: #ccc; word-wrap: break-word; font-weight: 500; }
-        .badge { background: var(--neon); color: black; font-size: 10px; padding: 2px 6px; border-radius: 5px; float: right; font-weight: bold; }
-        #status-msg { text-align: center; color: #444; font-size: 12px; margin-top: 20px; }
+        .text { font-size: 14px; color: #eee; line-height: 1.5; }
+        .badge { background: var(--neon); color: black; font-size: 9px; padding: 2px 6px; border-radius: 4px; position: absolute; top: 10px; right: 10px; font-weight: bold; }
+        #loader { text-align: center; color: var(--neon); margin-top: 50px; font-size: 12px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <h2 style="color: var(--neon);">INCOMING DATA</h2>
-    <div id="msgContainer"><p id="status-msg">CONNECTING TO HFC SERVER...</p></div>
+    <h2 style="color: var(--neon); letter-spacing: 1px;">MISSION INBOX</h2>
+    <div id="msgContainer"><p id="loader">SYNCHRONIZING WITH DATABASE...</p></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -40,62 +40,62 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const currentUserEmail = user.email.trim().toLowerCase();
-                console.log("Checking for:", currentUserEmail);
-
-                // Sare notifications read karo, filter hum khud karenge
+                const myEmail = user.email.toLowerCase().trim();
                 const colRef = collection(db, "notifications");
 
                 onSnapshot(colRef, (snap) => {
                     const container = document.getElementById('msgContainer');
                     container.innerHTML = "";
-                    let foundAny = false;
+                    let found = false;
 
-                    // Messages ko array mein daal kar time se sort karenge
-                    const allMsgs = [];
-                    snap.forEach(d => allMsgs.push({id: d.id, ...d.data()}));
-                    allMsgs.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                    // Dono type ke data ko support karne wala logic
+                    snap.forEach((msgDoc) => {
+                        const data = msgDoc.data();
+                        
+                        // Check Target (Jo dono screenshots mein alag hai)
+                        const target = (data.target || data.to || "").toLowerCase().trim();
 
-                    allMsgs.forEach((data) => {
-                        const targetEmail = (data.target || "").trim().toLowerCase();
-
-                        // Match logic
-                        if (targetEmail === currentUserEmail || targetEmail === "all_users") {
-                            foundAny = true;
-                            const isUnread = data.read === false || data.read === undefined;
+                        if (target === myEmail || target === "all_users") {
+                            found = true;
                             
-                            // Date calculation
-                            let displayTime = "Recent";
-                            if(data.timestamp && data.timestamp.seconds) {
-                                displayTime = new Date(data.timestamp.seconds * 1000).toLocaleString();
+                            // Check Message Content (Jo dono screenshots mein alag hai)
+                            const content = data.message || data.text || "No Data Transmission";
+                            
+                            // Check Read Status
+                            const isUnread = data.read === false || data.read === undefined;
+
+                            // Safe Date logic
+                            let timeStr = "Recent";
+                            if(data.timestamp || data.time) {
+                                let t = data.timestamp || data.time;
+                                let d = t.seconds ? new Date(t.seconds * 1000) : new Date(t);
+                                timeStr = d.toLocaleString();
                             }
 
-                            const div = document.createElement('div');
-                            div.className = `msg-card ${isUnread ? 'unread' : ''}`;
-                            div.innerHTML = `
-                                ${isUnread ? '<span class="badge">NEW</span>' : ''}
-                                <span class="time">${displayTime}</span>
-                                <p class="text">${data.message || "No Message Content"}</p>
+                            const card = document.createElement('div');
+                            card.className = `msg-card ${isUnread ? 'unread' : ''}`;
+                            card.innerHTML = `
+                                ${isUnread ? '<span class="badge">ENCRYPTED</span>' : ''}
+                                <span class="time">${timeStr}</span>
+                                <div class="text">${content}</div>
                             `;
 
-                            div.onclick = async () => {
+                            card.onclick = async () => {
                                 if(isUnread) {
-                                    await updateDoc(doc(db, "notifications", data.id), {
+                                    await updateDoc(doc(db, "notifications", msgDoc.id), {
                                         read: true,
-                                        readBy: currentUserEmail
+                                        readBy: myEmail
                                     });
                                 }
-                                alert("Message Read Confirmed.");
+                                alert("Transmission Acknowledged.");
                             };
-                            container.appendChild(div);
+                            container.prepend(card);
                         }
                     });
 
-                    if (!foundAny) {
-                        container.innerHTML = `<p id="status-msg">NO MESSAGES FOUND FOR:<br>${currentUserEmail}</p>`;
+                    if(!found) {
+                        container.innerHTML = `<p style="text-align:center; color:#444; margin-top:40px;">NO DATA FOUND FOR:<br>${myEmail}</p>`;
                     }
-                }, (error) => {
-                    container.innerHTML = `<p id="status-msg" style="color:red">SYNC ERROR: ${error.message}</p>`;
                 });
             } else {
                 location.href = "auth.html";
