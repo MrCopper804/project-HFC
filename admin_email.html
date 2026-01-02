@@ -3,45 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC Admin - Mail Center</title>
+    <title>HFC Admin - Email System</title>
     <style>
-        :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .box { max-width: 400px; width: 100%; background: #0a0a0a; padding: 25px; border-radius: 20px; border: 1px solid var(--admin); box-sizing: border-box; }
-        select, input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 14px; background: var(--admin); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.98); }
-        .hint { font-size: 10px; color: #666; margin-bottom: 5px; }
+        :root { --neon: #64ffda; --bg: #000; --admin: #ff0055; }
+        body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: #0a0a0a; border: 1px solid #333; padding: 20px; border-radius: 20px; }
+        .stat-box { background: rgba(100,255,218,0.1); padding: 10px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid var(--neon); }
+        .tab-btns { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; border: 1px solid #333; background: #111; color: #888; border-radius: 8px; cursor: pointer; }
+        .tab-btn.active { background: var(--admin); color: white; border-color: var(--admin); }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; }
+        .send-btn { width: 100%; padding: 15px; background: var(--neon); color: #000; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #status { margin-top: 15px; font-size: 12px; text-align: center; }
+        .tracker { margin-top: 30px; border-top: 1px solid #222; padding-top: 20px; text-align: left; }
+        .tracker h4 { color: var(--neon); font-size: 13px; }
+        .read-list { font-size: 11px; color: #888; list-style: none; padding: 0; }
     </style>
 </head>
 <body>
 
-    <h2 style="color: var(--admin); letter-spacing: 2px;">MAIL COMMANDER</h2>
+    <div class="container">
+        <h2 style="color: var(--admin); text-align: center;">HFC MAIL CENTER</h2>
+        
+        <div class="stat-box">TOTAL REGISTERED AGENTS: <span id="totalUsersCount">0</span></div>
 
-    <div class="box">
-        <label class="hint">SELECT TARGET TYPE:</label>
-        <select id="sendTo" onchange="toggleEmailInput()">
-            <option value="all">Broadcast (All Agents)</option>
-            <option value="specific">Specific Agent Email</option>
-        </select>
-
-        <div id="emailTargetWrapper" style="display:none;">
-            <label class="hint">AGENT EMAIL ADDRESS:</label>
-            <input type="email" id="targetEmail" placeholder="example@hfc.com">
+        <div class="tab-btns">
+            <button id="btnSpecific" class="tab-btn active" onclick="switchTab('specific')">SPECIFIC USER</button>
+            <button id="btnAll" class="tab-btn" onclick="switchTab('all')">ALL USERS</button>
         </div>
 
-        <label class="hint">MESSAGE CONTENT:</label>
-        <textarea id="msgBody" rows="5" placeholder="Enter your instructions..."></textarea>
+        <div id="emailField">
+            <input type="email" id="targetEmail" placeholder="Enter Agent Email">
+        </div>
         
-        <button id="sendBtn">DISPATCH EMAIL</button>
-        <p id="status" style="text-align:center; font-size:12px; margin-top:15px;"></p>
-    </div>
+        <textarea id="mailBody" rows="5" placeholder="Type your secure message..."></textarea>
+        <button id="sendBtn" class="send-btn">TRANSMIT MESSAGE</button>
+        
+        <p id="status"></p>
 
-    <a href="admin.html" style="color:#444; text-decoration:none; font-size:12px; margin-top:20px;">BACK TO ADMIN</a>
+        <div class="tracker">
+            <h4>READ RECEIPTS (Active Tracking)</h4>
+            <ul id="readReceipts" class="read-list"></ul>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where, addDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -54,57 +62,87 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        let currentMode = 'specific';
 
-        // UI Logic to show/hide email input
-        window.toggleEmailInput = () => {
-            const mode = document.getElementById('sendTo').value;
-            const wrapper = document.getElementById('emailTargetWrapper');
-            wrapper.style.display = (mode === 'specific') ? 'block' : 'none';
+        // --- Switch between Specific and All ---
+        window.switchTab = (mode) => {
+            currentMode = mode;
+            document.getElementById('btnSpecific').className = mode === 'specific' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('btnAll').className = mode === 'all' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('emailField').style.display = mode === 'all' ? 'none' : 'block';
         };
 
+        // --- Load Total Users ---
+        async function loadStats() {
+            const snap = await getDocs(collection(db, "users"));
+            document.getElementById('totalUsersCount').innerText = snap.size;
+        }
+
+        // --- Real-time Read Tracker ---
+        function startTracking() {
+            const list = document.getElementById('readReceipts');
+            const q = query(collection(db, "notifications"), orderBy("time", "desc"));
+            onSnapshot(q, (snap) => {
+                list.innerHTML = "";
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.read) {
+                        list.innerHTML += `<li>✅ [${data.toEmail || 'User'}] read your message</li>`;
+                    }
+                });
+            });
+        }
+
+        // --- Send Logic ---
         document.getElementById('sendBtn').onclick = async () => {
-            const mode = document.getElementById('sendTo').value;
-            const targetEmail = document.getElementById('targetEmail').value.trim();
-            const message = document.getElementById('msgBody').value.trim();
+            const emailInput = document.getElementById('targetEmail').value.trim().toLowerCase();
+            const body = document.getElementById('mailBody').value.trim();
             const status = document.getElementById('status');
 
-            // Validations
-            if (!message) {
-                status.innerText = "Error: Message is empty!";
-                status.style.color = "#ff4d4d";
-                return;
-            }
-            if (mode === 'specific' && !targetEmail) {
-                status.innerText = "Error: Please enter a target email!";
-                status.style.color = "#ff4d4d";
-                return;
-            }
-
-            status.innerText = "Sending...";
-            status.style.color = "#888";
+            if(!body) return alert("Message cannot be empty!");
+            status.innerText = "Transmitting...";
 
             try {
-                // Database mein notification save karna
-                await addDoc(collection(db, "notifications"), {
-                    target: mode === 'all' ? 'all' : targetEmail,
-                    message: message,
-                    timestamp: serverTimestamp(),
-                    type: "admin_mail"
-                });
-
-                status.innerText = "Email Dispatched Successfully!";
-                status.style.color = "#64ffda";
-                
-                // Reset fields
-                document.getElementById('msgBody').value = "";
-                if(mode === 'specific') document.getElementById('targetEmail').value = "";
-                
+                if(currentMode === 'specific') {
+                    const q = query(collection(db, "users"), where("email", "==", emailInput));
+                    const snap = await getDocs(q);
+                    
+                    if(!snap.empty) {
+                        const userDoc = snap.docs[0];
+                        await addDoc(collection(db, "notifications"), {
+                            to: userDoc.id,
+                            toEmail: emailInput,
+                            text: body,
+                            time: Date.now(),
+                            read: false,
+                            type: 'specific'
+                        });
+                        status.innerText = "CONFIRMED: Sent to " + emailInput;
+                        status.style.color = "var(--neon)";
+                    } else {
+                        status.innerText = "ERROR: Agent Email Not Found!";
+                        status.style.color = "red";
+                    }
+                } else {
+                    // Send to All logic
+                    await addDoc(collection(db, "notifications"), {
+                        to: "ALL_USERS",
+                        text: body,
+                        time: Date.now(),
+                        read: false,
+                        type: 'broadcast'
+                    });
+                    status.innerText = "CONFIRMED: Broadcast Sent to All Agents!";
+                    status.style.color = "var(--neon)";
+                }
+                document.getElementById('mailBody').value = "";
             } catch (e) {
-                console.error(e);
-                status.innerText = "Error: " + e.message;
-                status.style.color = "#ff4d4d";
+                status.innerText = "System Failure: " + e.message;
             }
         };
+
+        loadStats();
+        startTracking();
     </script>
 </body>
 </html>
