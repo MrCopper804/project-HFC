@@ -3,62 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Lobby</title>
+    <title>HFC Academy - Mission Lobby</title>
     <style>
-        :root { --bg: #000; --neon: #64ffda; --admin: #ff0055; --glass: rgba(255,255,255,0.05); }
-        body { font-family: sans-serif; background: var(--bg); color: white; margin: 0; overflow: hidden; height: 100vh; }
-        
-        /* Header & Stats */
-        .header { height: 65px; display: flex; align-items: center; padding: 0 15px; background: rgba(10,15,26,0.95); border-bottom: 1px solid rgba(100,255,218,0.1); }
-        .user-stats { flex-grow: 1; margin-left: 15px; }
-        .rank-text { font-weight: bold; font-size: 12px; color: var(--neon); text-transform: uppercase; }
-        .currency { font-size: 10px; color: #888; margin-top: 2px; }
-        
-        .icon-btn { width: 40px; height: 40px; background: var(--glass); border: 1px solid rgba(100,255,218,0.2); border-radius: 10px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--neon); }
+        :root {
+            --bg: #000000;
+            --glass: rgba(255, 255, 255, 0.05);
+            --neon: #64ffda;
+            --danger: #ff4d4d;
+            --admin: #ff0055;
+            --gold: #ffd700;
+            --panel: rgba(10, 15, 26, 0.98);
+        }
 
-        /* Settings Menu */
-        .menu { position: absolute; top: 70px; right: 15px; background: #0d1117; border: 1px solid #30363d; border-radius: 12px; width: 220px; display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            background-image: radial-gradient(circle at top right, #112240 0%, #000 75%);
+            color: #ccd6f6; margin: 0; padding: 0; display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            width: 100%; background: var(--panel); padding: 10px 15px;
+            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+            display: flex; align-items: center; box-sizing: border-box; z-index: 100;
+            height: 65px;
+        }
+
+        .icon-btn {
+            width: 38px; height: 38px; display: flex; justify-content: center; 
+            align-items: center; border-radius: 10px; background: var(--glass);
+            color: var(--neon); text-decoration: none; font-size: 18px;
+            border: 1px solid rgba(100, 255, 218, 0.2); cursor: pointer;
+        }
+
+        .user-stats { flex-grow: 1; margin: 0 12px; display: flex; align-items: center; overflow: hidden; }
+        .rank-badge {
+            min-width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon);
+            display: flex; justify-content: center; align-items: center; font-size: 12px;
+            margin-right: 8px; background: rgba(0,0,0,0.5); box-shadow: 0 0 8px var(--neon);
+        }
+
+        .rank-text { font-weight: 900; font-size: 10px; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+        .currency-row { font-size: 8.5px; margin-top: 2px; display: flex; gap: 8px; font-weight: bold; }
+
+        /* --- GRID --- */
+        .grid { 
+            flex-grow: 1; display: grid; grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; max-width: 420px; margin: 0 auto; width: 100%; 
+            padding: 15px; box-sizing: border-box; align-content: center;
+        }
+
+        .card {
+            aspect-ratio: 1 / 0.85; background: var(--glass); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; display: flex; flex-direction: column; justify-content: center;
+            align-items: center; text-decoration: none; color: white; transition: 0.2s;
+            backdrop-filter: blur(5px); font-size: 22px;
+        }
+        .card:active { transform: scale(0.95); border-color: var(--neon); background: rgba(100,255,218,0.05); }
+        .card span { font-size: 9px; font-weight: 800; margin-top: 6px; letter-spacing: 1px; color: #fff; }
+
+        /* --- MENU --- */
+        .menu {
+            position: absolute; top: 60px; right: 15px; background: #0d1117;
+            border: 1px solid #30363d; border-radius: 12px; width: 200px;
+            display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200; overflow: hidden;
+        }
         .menu.active { display: block; }
-        .menu-item { padding: 15px; border-bottom: 1px solid #21262d; color: white; text-decoration: none; display: block; font-size: 13px; font-weight: bold; transition: 0.2s; }
-        .menu-item:hover { background: rgba(255,255,255,0.05); }
+        .menu-item {
+            color: #fff; font-size: 12px; font-weight: bold; padding: 12px 18px;
+            cursor: pointer; display: block; text-decoration: none; border-bottom: 1px solid #21262d;
+        }
+        .menu-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--neon); }
 
-        /* Game Grid */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; max-width: 450px; margin: auto; height: calc(100vh - 100px); align-content: center; }
-        .card { aspect-ratio: 1; background: var(--glass); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none; color: white; transition: 0.3s; }
-        .card:active { transform: scale(0.95); background: rgba(100,255,218,0.1); }
-        .card span { font-size: 10px; margin-top: 10px; letter-spacing: 1px; color: #888; }
+        /* --- MODAL --- */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-box {
+            background: #0d1117; border: 2px solid var(--neon); padding: 20px;
+            border-radius: 18px; width: 85%; max-width: 300px; text-align: center;
+        }
+        .c-input { width: 100%; padding: 10px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="icon-btn" onclick="location.href='inbox.html'">📩</div>
+        <a href="index.html" class="icon-btn">🏠</a>
         <div class="user-stats">
-            <div class="rank-text" id="displayRank">LOADING...</div>
-            <div class="currency">XP: <span id="displayXP">0</span> | COINS: <span id="displayCoins">0</span></div>
+            <div class="rank-badge">⭐</div>
+            <div>
+                <div class="rank-text" id="displayRank">RECRUIT</div>
+                <div class="currency-row">
+                    <span style="color:var(--neon)">XP: <span id="displayXP">0</span></span>
+                    <span style="color:var(--gold)">COINS: <span id="displayCoins">0</span></span>
+                </div>
+            </div>
         </div>
-        <div class="icon-btn" id="settingsToggle">⚙️</div>
+        <div class="icon-btn" id="menuToggle">⚙️</div>
     </div>
 
-    <div class="menu" id="settingsMenu">
-        <a href="profile.html" class="menu-item">👤 MY PROFILE</a>
-        <a href="inbox.html" class="menu-item">📩 INBOX MESSAGES</a>
+    <div class="menu" id="mainMenu">
+        <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 EXCHANGE CENTER</div>
+        <a href="inbox.html" class="menu-item">📩 MY INBOX</a>
+        <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ RANK UP STORE</a>
+        <a href="profile.html" class="menu-item">👤 PROFILE</a>
         <a href="leaderboard.html" class="menu-item">🏆 LEADERBOARD</a>
-        <div id="adminArea"></div> 
-        <div class="menu-item" id="logoutBtn" style="color:#ff4d4d; border:none;">🚪 LOGOUT</div>
+        <div id="adminLinks"></div> <div class="menu-item" id="logoutBtn" style="color:var(--danger); border:none;">🚪 LOGOUT</div>
+    </div>
+
+    <div class="modal" id="exModal">
+        <div class="modal-box">
+            <h4 style="color:var(--neon); margin:0 0 10px 0;">EXCHANGE</h4>
+            <input type="number" id="exInput" class="c-input" placeholder="Amount">
+            <button onclick="doExchange()" style="background:var(--neon); color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">CONFIRM</button>
+            <p onclick="closeExchange()" style="color:#555; font-size:11px; margin-top:12px; cursor:pointer;">Cancel</p>
+        </div>
     </div>
 
     <div class="grid">
+        <a href="chart.html" class="card">📖<span>CHART</span></a>
         <a href="game1.html" class="card">⌨️<span>DECODE</span></a>
         <a href="game2.html" class="card">🧩<span>QUIZ</span></a>
         <a href="game3.html" class="card">🔎<span>MATCH</span></a>
-        <a href="scanner.html" class="card">📷<span>SCANNER</span></a>
+        <a href="game4.html" class="card">☄️<span>FALLING</span></a>
+        <a href="game5.html" class="card">🧠<span>RECALL</span></a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -73,50 +151,44 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Toggle Settings Menu
-        const menu = document.getElementById('settingsMenu');
-        document.getElementById('settingsToggle').onclick = (e) => {
-            e.stopPropagation();
-            menu.classList.toggle('active');
+        const toggle = document.getElementById('menuToggle');
+        const menu = document.getElementById('mainMenu');
+
+        toggle.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('active'); };
+        document.onclick = () => menu.classList.remove('active');
+        document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => location.href = "auth.html");
+
+        window.openExchange = () => document.getElementById('exModal').classList.add('active');
+        window.closeExchange = () => document.getElementById('exModal').classList.remove('active');
+
+        window.doExchange = async () => {
+            const amt = parseInt(document.getElementById('exInput').value);
+            if (!amt || amt <= 0) return;
+            const userRef = doc(db, "users", auth.currentUser.uid);
+            const snap = await getDoc(userRef);
+            if(snap.exists() && snap.data().coins >= amt) {
+                await updateDoc(userRef, { coins: increment(-amt), score: increment(amt*15) });
+                closeExchange();
+            } else { alert("Insufficient Coins!"); }
         };
-        window.onclick = () => menu.classList.remove('active');
 
-        // Logout
-        document.getElementById('logoutBtn').onclick = () => signOut(auth);
-
-        // Sync Data & Role Check
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 onSnapshot(doc(db, "users", user.uid), (snap) => {
-                    if (snap.exists()) {
-                        const data = snap.data();
-                        document.getElementById('displayRank').innerText = data.rank || "RECRUIT";
-                        document.getElementById('displayXP').innerText = data.score || 0;
-                        document.getElementById('displayCoins').innerText = data.coins || 0;
+                    const data = snap.data() || {};
+                    document.getElementById('displayRank').innerText = (data.rank || "recruit").toUpperCase();
+                    document.getElementById('displayXP').innerText = data.score || 0;
+                    document.getElementById('displayCoins').innerText = data.coins || 0;
 
-                        // Admin check for admin_email.html
-                        if (data.role === "admin" && !document.getElementById('adminEmailLink')) {
-                            const adminLink = document.createElement('a');
-                            adminLink.href = "admin_email.html";
-                            adminLink.id = "adminEmailLink";
-                            adminLink.className = "menu-item";
-                            adminLink.style.color = "var(--admin)";
-                            adminLink.innerText = "📧 SEND ADMIN EMAIL";
-                            document.getElementById('adminArea').appendChild(adminLink);
-                            
-                            // Also add link to original admin panel if needed
-                            const panelLink = document.createElement('a');
-                            panelLink.href = "admin.html";
-                            panelLink.className = "menu-item";
-                            panelLink.style.color = "var(--admin)";
-                            panelLink.innerText = "🛡️ ADMIN CONTROL";
-                            document.getElementById('adminArea').appendChild(panelLink);
-                        }
+                    if (data.role === "admin" && !document.getElementById('admMail')) {
+                        const adminArea = document.getElementById('adminLinks');
+                        adminArea.innerHTML = `
+                            <a href="admin_email.html" id="admMail" class="menu-item" style="color:var(--admin)">📧 ADMIN EMAIL SYSTEM</a>
+                            <a href="admin.html" id="admCmd" class="menu-item" style="color:var(--admin)">🛡️ COMMAND CENTER</a>
+                        `;
                     }
                 });
-            } else {
-                location.href = "auth.html";
-            }
+            } else { location.href = "auth.html"; }
         });
     </script>
 </body>
