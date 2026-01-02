@@ -47,15 +47,23 @@
         .rank-text { font-weight: 900; font-size: 10px; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
         .currency-row { font-size: 8.5px; margin-top: 2px; display: flex; gap: 8px; font-weight: bold; }
 
-        /* --- GRID --- */
+        /* --- GRID (SCREEN FIT) --- */
         .grid { 
-            flex-grow: 1; display: grid; grid-template-columns: repeat(2, 1fr); 
-            gap: 10px; max-width: 420px; margin: 0 auto; width: 100%; 
-            padding: 15px; box-sizing: border-box; align-content: center;
+            flex-grow: 1; 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+            max-width: 420px; 
+            margin: 0 auto; 
+            width: 100%; 
+            padding: 15px;
+            box-sizing: border-box; 
+            align-content: center;
         }
 
         .card {
-            aspect-ratio: 1 / 0.85; background: var(--glass); border: 1px solid rgba(255,255,255,0.08);
+            aspect-ratio: 1 / 0.85;
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px; display: flex; flex-direction: column; justify-content: center;
             align-items: center; text-decoration: none; color: white; transition: 0.2s;
             backdrop-filter: blur(5px); font-size: 22px;
@@ -86,6 +94,9 @@
             background: #0d1117; border: 2px solid var(--neon); padding: 20px;
             border-radius: 18px; width: 85%; max-width: 300px; text-align: center;
         }
+        .mode-selector { display: flex; gap: 6px; margin-bottom: 12px; }
+        .m-btn { flex: 1; padding: 8px; font-size: 9px; border-radius: 6px; border: 1px solid #333; background: none; color: #fff; cursor: pointer; }
+        .m-btn.active { background: var(--neon); color: #000; font-weight: bold; }
         .c-input { width: 100%; padding: 10px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; text-align: center; }
     </style>
 </head>
@@ -107,18 +118,23 @@
     </div>
 
     <div class="menu" id="mainMenu">
-        <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 EXCHANGE CENTER</div>
-        <a href="inbox.html" class="menu-item">📩 MY INBOX</a>
-        <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ RANK UP STORE</a>
+        <div id="adminLinks"></div> <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 EXCHANGE CENTER</div>
+        <a href="inbox.html" class="menu-item">📩 MY INBOX</a> <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ RANK UP STORE</a>
         <a href="profile.html" class="menu-item">👤 PROFILE</a>
         <a href="leaderboard.html" class="menu-item">🏆 LEADERBOARD</a>
-        <div id="adminLinks"></div> <div class="menu-item" id="logoutBtn" style="color:var(--danger); border:none;">🚪 LOGOUT</div>
+        <div class="menu-item" id="logoutBtn" style="color:var(--danger); border:none;">🚪 LOGOUT</div>
     </div>
 
     <div class="modal" id="exModal">
         <div class="modal-box">
             <h4 style="color:var(--neon); margin:0 0 10px 0;">EXCHANGE</h4>
+            <div class="mode-selector">
+                <button id="btnCtoX" class="m-btn active" onclick="setExMode('CtoX')">COIN ➔ XP</button>
+                <button id="btnXtoC" class="m-btn" onclick="setExMode('XtoC')">XP ➔ COIN</button>
+            </div>
+            <p id="rate" style="font-size: 10px; color: #888;">1 COIN = 15 XP</p>
             <input type="number" id="exInput" class="c-input" placeholder="Amount">
+            <div id="exPreview" style="font-size: 11px; color: var(--neon); margin-bottom: 12px;">You get: 0 XP</div>
             <button onclick="doExchange()" style="background:var(--neon); color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">CONFIRM</button>
             <p onclick="closeExchange()" style="color:#555; font-size:11px; margin-top:12px; cursor:pointer;">Cancel</p>
         </div>
@@ -151,6 +167,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        let exMode = 'CtoX';
         const toggle = document.getElementById('menuToggle');
         const menu = document.getElementById('mainMenu');
 
@@ -161,22 +178,43 @@
         window.openExchange = () => document.getElementById('exModal').classList.add('active');
         window.closeExchange = () => document.getElementById('exModal').classList.remove('active');
 
+        window.setExMode = (mode) => {
+            exMode = mode;
+            document.getElementById('btnCtoX').className = mode==='CtoX'?'m-btn active':'m-btn';
+            document.getElementById('btnXtoC').className = mode==='XtoC'?'m-btn active':'m-btn';
+            document.getElementById('rate').innerText = mode==='CtoX'?"1 COIN = 15 XP":"100 XP = 1 COIN";
+            updateExPreview();
+        };
+
+        const updateExPreview = () => {
+            const val = parseInt(document.getElementById('exInput').value) || 0;
+            document.getElementById('exPreview').innerText = "You get: " + (exMode==='CtoX' ? val*15+" XP" : Math.floor(val/100)+" Coins");
+        };
+        document.getElementById('exInput').oninput = updateExPreview;
+
         window.doExchange = async () => {
             const amt = parseInt(document.getElementById('exInput').value);
             if (!amt || amt <= 0) return;
             const userRef = doc(db, "users", auth.currentUser.uid);
             const snap = await getDoc(userRef);
-            if(snap.exists() && snap.data().coins >= amt) {
+            const data = snap.data();
+
+            if (exMode === 'CtoX') {
+                if ((data.coins||0) < amt) return alert("Low Coins!");
                 await updateDoc(userRef, { coins: increment(-amt), score: increment(amt*15) });
-                closeExchange();
-            } else { alert("Insufficient Coins!"); }
+            } else {
+                if (amt < 100) return alert("Min 100 XP!");
+                if ((data.score||0) < amt) return alert("Low XP!");
+                await updateDoc(userRef, { score: increment(-amt), coins: increment(Math.floor(amt/100)) });
+            }
+            closeExchange();
         };
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 onSnapshot(doc(db, "users", user.uid), (snap) => {
                     const data = snap.data() || {};
-                    document.getElementById('displayRank').innerText = (data.rank || "recruit").toUpperCase();
+                    document.getElementById('displayRank').innerText = (data.rank || "recruit").toUpperCase().replace('_', ' ');
                     document.getElementById('displayXP').innerText = data.score || 0;
                     document.getElementById('displayCoins').innerText = data.coins || 0;
 
