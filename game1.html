@@ -50,24 +50,25 @@
 
         .timer-circle { font-size: 24px; color: var(--danger); font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 10px var(--danger); }
 
-        /* FIXED CIPHER BOX - Optimized for 50 words without scroll */
+        /* FIXED CIPHER BOX - Optimized for 50 Letters */
         .cipher-box {
             background: rgba(0,0,0,0.6); 
             border: 1px solid var(--neon);
-            padding: 12px; 
+            padding: 15px; 
             border-radius: 12px; 
-            font-size: 12px; /* Adjusted for density */
+            font-size: 18px; /* Font size increased for letters */
             color: var(--neon);
-            height: 160px; /* Locked height */
+            height: 140px; 
             margin-bottom: 15px; 
             word-break: break-all;
             box-shadow: inset 0 0 15px rgba(100, 255, 218, 0.1); 
-            overflow: hidden; /* NO SCROLLING */
+            overflow: hidden; 
             display: flex;
             align-items: center; 
             justify-content: center; 
             text-align: center;
-            line-height: 1.4;
+            line-height: 1.6;
+            letter-spacing: 2px;
         }
 
         textarea {
@@ -102,7 +103,7 @@
 
             <div id="startScreen">
                 <div style="font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
-                    • 50 Words Random Decode<br>
+                    • 50 Letters Random Decode<br>
                     • 500 Seconds Time Limit<br>
                     • 50 XP Deducted Immediately
                 </div>
@@ -112,7 +113,7 @@
             <div id="missionScreen" style="display:none;">
                 <div class="timer-circle" id="timer">500s</div>
                 <div class="cipher-box" id="cipherBox"></div>
-                <textarea id="userInput" rows="4" placeholder="Type decoded English here..."></textarea>
+                <textarea id="userInput" rows="4" placeholder="Type 50 decoded letters here..."></textarea>
                 <button class="btn-main" id="submitBtn">CONFIRM TRANSMISSION</button>
             </div>
 
@@ -139,7 +140,7 @@
     const db = getFirestore(app);
 
     const hfcData = {'a':'+','b':'[]','c':'©','d':'÷','e':'=','f':'_','g':'>','h':'|','i':'!','j':'#','k':':','l':'<','m':'*','n':'°','o':'()','p':'¶','q':'?','r':'®','s':'$','t':'™','u':"'",'v':'^','w':'&','x':'`','y':'~','z':'℅'};
-    const wordBank = ["the", "quick", "brown", "fox", "jumps", "secret", "academy", "mission", "cipher", "ghost", "storm", "elite", "logic", "secure", "private", "rank", "master", "power", "system", "keyboard", "archive", "intelligence", "protocol", "umair", "khan", "shadow", "stealth", "crypto", "binary", "access"];
+    const alphabets = "abcdefghijklmnopqrstuvwxyz";
 
     let currentUser = null;
     let userXP = 0;
@@ -167,17 +168,18 @@
 
         targetEnglish = "";
         let cipherText = "";
+        
+        // Generating 50 random letters instead of words
         for(let i=0; i<50; i++) {
-            let w = wordBank[Math.floor(Math.random() * wordBank.length)];
-            targetEnglish += w + (i === 49 ? "" : " ");
-            for(let char of w) cipherText += hfcData[char] || char;
-            cipherText += " ";
+            let char = alphabets[Math.floor(Math.random() * alphabets.length)];
+            targetEnglish += char;
+            cipherText += hfcData[char] || char;
         }
 
         document.getElementById('cipherBox').innerText = cipherText;
         document.getElementById('startScreen').style.display = 'none';
         document.getElementById('missionScreen').style.display = 'block';
-        startTimer(500); // Updated to 500s
+        startTimer(500); 
     };
 
     function startTimer(seconds) {
@@ -195,15 +197,11 @@
 
     window.finishMission = async (timeout = false) => {
         clearInterval(timerInterval);
-        const input = document.getElementById('userInput').value.trim().toLowerCase();
+        const input = document.getElementById('userInput').value.trim().toLowerCase().replace(/\s/g, '');
         const msg = document.getElementById('statusMsg');
         const userRef = doc(db, "users", currentUser.uid);
 
-        // Normalize spaces for comparison
-        const normalizedTarget = targetEnglish.toLowerCase().replace(/\s+/g, ' ').trim();
-        const normalizedInput = input.replace(/\s+/g, ' ').trim();
-
-        if (!timeout && normalizedInput === normalizedTarget) {
+        if (!timeout && input === targetEnglish) {
             await updateDoc(userRef, { score: increment(150) });
             msg.style.color = "var(--neon)";
             msg.innerText = "SUCCESS! +150 XP SECURED.";
