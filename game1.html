@@ -50,13 +50,13 @@
 
         .timer-circle { font-size: 24px; color: var(--danger); font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 10px var(--danger); }
 
-        /* FIXED CIPHER BOX - Optimized for 50 Letters */
+        /* FIXED CIPHER BOX - No Scrolling, Centered Text */
         .cipher-box {
             background: rgba(0,0,0,0.6); 
             border: 1px solid var(--neon);
             padding: 15px; 
             border-radius: 12px; 
-            font-size: 18px; /* Font size increased for letters */
+            font-size: 17px; 
             color: var(--neon);
             height: 140px; 
             margin-bottom: 15px; 
@@ -67,7 +67,7 @@
             align-items: center; 
             justify-content: center; 
             text-align: center;
-            line-height: 1.6;
+            line-height: 1.5;
             letter-spacing: 2px;
         }
 
@@ -104,16 +104,16 @@
             <div id="startScreen">
                 <div style="font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
                     • 50 Letters Random Decode<br>
-                    • 500 Seconds Time Limit<br>
+                    • 300 Seconds Time Limit<br>
                     • 50 XP Deducted Immediately
                 </div>
                 <button class="btn-main" id="startBtn">START CHALLENGE</button>
             </div>
 
             <div id="missionScreen" style="display:none;">
-                <div class="timer-circle" id="timer">500s</div>
+                <div class="timer-circle" id="timer">300s</div>
                 <div class="cipher-box" id="cipherBox"></div>
-                <textarea id="userInput" rows="4" placeholder="Type 50 decoded letters here..."></textarea>
+                <textarea id="userInput" rows="4" placeholder="Type decoded letters here..."></textarea>
                 <button class="btn-main" id="submitBtn">CONFIRM TRANSMISSION</button>
             </div>
 
@@ -169,7 +169,6 @@
         targetEnglish = "";
         let cipherText = "";
         
-        // Generating 50 random letters instead of words
         for(let i=0; i<50; i++) {
             let char = alphabets[Math.floor(Math.random() * alphabets.length)];
             targetEnglish += char;
@@ -179,7 +178,7 @@
         document.getElementById('cipherBox').innerText = cipherText;
         document.getElementById('startScreen').style.display = 'none';
         document.getElementById('missionScreen').style.display = 'block';
-        startTimer(500); 
+        startTimer(300); 
     };
 
     function startTimer(seconds) {
@@ -215,7 +214,7 @@
             document.getElementById('startScreen').style.display = 'block';
             document.getElementById('userInput').value = "";
             msg.innerText = "";
-            document.getElementById('timer').innerText = "500s";
+            document.getElementById('timer').innerText = "300s";
         }, 3000);
     };
 
