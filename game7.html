@@ -3,120 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - Weekly Crypt</title>
+    <title>HFC Academy - Weekly Crypt</title>
     <style>
-        :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; text-align: center; }
-        .mission-box { background: rgba(255,255,255,0.05); border: 2px solid var(--gold); border-radius: 20px; padding: 30px; max-width: 500px; margin: 0 auto; }
-        .cipher-text { background: #111; padding: 20px; border-radius: 10px; color: var(--neon); font-size: 18px; word-break: break-all; margin: 20px 0; border: 1px dashed var(--neon); }
-        textarea { width: 100%; height: 120px; background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 10px; margin-bottom: 20px; outline: none; }
-        .btn-claim { background: var(--gold); color: #000; border: none; padding: 15px 30px; border-radius: 10px; font-weight: 900; cursor: pointer; width: 100%; }
-        .status-info { font-size: 12px; margin-top: 10px; color: #888; }
+        :root { 
+            --neon: #64ffda; 
+            --bg: #000; 
+            --gold: #ffd700; 
+            --danger: #ff4d4d; 
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
+            color: white; margin: 0; padding: 20px; text-align: center; min-height: 100vh;
+        }
+
+        .mission-container {
+            max-width: 500px; margin: 20px auto; background: var(--glass);
+            border: 2px solid var(--gold); border-radius: 25px; padding: 30px;
+            backdrop-filter: blur(15px); box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+        }
+
+        .cipher-display {
+            background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px;
+            color: var(--neon); font-size: 22px; letter-spacing: 3px;
+            line-height: 1.6; border: 1px dashed var(--neon); margin: 20px 0;
+            word-break: break-all; min-height: 100px;
+        }
+
+        textarea {
+            width: 100%; height: 120px; background: rgba(255,255,255,0.05);
+            border: 1px solid #333; border-radius: 15px; color: #fff;
+            padding: 15px; font-size: 16px; outline: none; transition: 0.3s;
+            box-sizing: border-box;
+        }
+        textarea:focus { border-color: var(--gold); }
+
+        .btn-main {
+            background: var(--gold); color: #000; border: none; padding: 18px;
+            border-radius: 15px; font-weight: 900; font-size: 16px; width: 100%;
+            cursor: pointer; text-transform: uppercase; margin-top: 10px;
+        }
+
+        .lock-screen { color: var(--danger); font-weight: 800; padding: 40px 0; }
+        .stats { font-size: 12px; color: #888; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-    <h1 style="color:var(--gold); letter-spacing:5px;">MEGA MISSION</h1>
-
-    <div class="mission-box" id="gameArea">
-        <div class="status-info">COST: 1000 XP | REWARD: 500 COINS</div>
-        <div id="lockMessage" style="display:none; color:var(--danger); padding:20px;">MISSION LOCKED: TRY AGAIN NEXT WEEK.</div>
-        
-        <div id="activeMission" style="display:none;">
-            <div class="cipher-text" id="cipherDisplay">Loading Secret Data...</div>
-            <p id="attemptsText" style="color:var(--neon)">ATTEMPTS LEFT: 2</p>
-            <textarea id="userTranslation" placeholder="Type English Translation here..."></textarea>
-            <button class="btn-claim" onclick="submitMission()">SUBMIT FOR 500 COINS</button>
-        </div>
-        
-        <button id="entryBtn" class="btn-claim" style="display:none;" onclick="enterMission()">ENTER MISSION (-1000 XP)</button>
-    </div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = { /* Apki Config */ };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let secretEnglish = "";
-    let attemptsLeft = 2;
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUser = user;
-            checkCooldown();
-        } else { window.location.href = "auth.html"; }
-    });
-
-    async function checkCooldown() {
-        const userRef = doc(db, "users", currentUser.uid);
-        const snap = await getDoc(userRef);
-        const data = snap.data();
-
-        const lastPlayed = data.lastWeeklyCrypt || 0;
-        const now = Date.now();
-        const oneWeek = 7 * 24 * 60 * 60 * 1000; // 7 Din
-
-        if (now - lastPlayed < oneWeek) {
-            document.getElementById('lockMessage').style.display = "block";
-            document.getElementById('lockMessage').innerText = "SYSTEM LOCKED. COME BACK AFTER 7 DAYS.";
-        } else {
-            document.getElementById('entryBtn').style.display = "block";
-        }
-    }
-
-    window.enterMission = async () => {
-        const userRef = doc(db, "users", currentUser.uid);
-        const snap = await getDoc(userRef);
-        if (snap.data().score < 1000) return alert("Low XP!");
-
-        await updateDoc(userRef, { score: increment(-1000) });
-        
-        // Fetch Admin Paragraph
-        const configSnap = await getDoc(doc(db, "game_configs", "weekly_crypt"));
-        secretEnglish = configSnap.data().secret_text;
-        
-        // Convert to HFC Symbols for Display
-        document.getElementById('cipherDisplay').innerText = convertToHFC(secretEnglish);
-        document.getElementById('entryBtn').style.display = "none";
-        document.getElementById('activeMission').style.display = "block";
-    };
-
-    window.submitMission = async () => {
-        const input = document.getElementById('userTranslation').value.trim();
-        const userRef = doc(db, "users", currentUser.uid);
-
-        if (input.toLowerCase() === secretEnglish.toLowerCase()) {
-            // Success Reward
-            await updateDoc(userRef, { 
-                coins: increment(500), 
-                lastWeeklyCrypt: Date.now() 
-            });
-            alert("MISSION SUCCESS! 500 COINS ADDED.");
-            location.reload();
-        } else {
-            attemptsLeft--;
-            if (attemptsLeft <= 0) {
-                await updateDoc(userRef, { lastWeeklyCrypt: Date.now() });
-                alert("MISSION FAILED. BOTH ATTEMPTS USED.");
-                location.reload();
-            } else {
-                document.getElementById('attemptsText').innerText = "ATTEMPTS LEFT: 1";
-                alert("INCORRECT! YOU HAVE 1 MORE TRY.");
-            }
-        }
-    };
-
-    function convertToHFC(text) {
-        const hfcMap = { 'a':'+','b':'[]','c':'©','d':'÷','e':'=','f':'_','g':'>','h':'|','i':'!','j':'#','k':':','l':'<','m':'*','n':'°','o':'()','p':'¶','q':'?','r':'®','s':'$','t':'™','u':"'",'v':'^','w':'&','x':'`','y':'~','z':'℅' };
-        return text.toLowerCase().split('').map(c => hfcMap[c] || c).join('');
-    }
-</script>
-</body>
-</html>
-
+    <h1 style="color:var(--gold); letter-spacing: 8px; margin-bottom: 0;">MEGA MISSION</h1>
+    <p style="font
