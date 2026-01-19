@@ -3,86 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Turbo Tunnel</title>
+    <title>HFC Academy - Turbo Tunnel Rewards</title>
     <style>
-        :root { --neon: #64ffda; --bg: #000; --danger: #ff4d4d; --gold: #ffd700; }
+        :root {
+            --neon: #64ffda;
+            --bg: #00050a;
+            --danger: #ff4d4d;
+            --glass: rgba(255, 255, 255, 0.03);
+            --gold: #ffd700;
+        }
+
         body { 
-            margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg);
+            margin: 0; font-family: 'Montserrat', sans-serif; background: var(--bg);
             color: white; overflow: hidden; height: 100vh;
         }
 
-        .header {
-            height: 65px; background: rgba(10, 15, 26, 0.98); display: flex;
-            align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(100, 255, 218, 0.1);
-            position: relative; z-index: 50;
+        /* HUD Display */
+        .hud-header {
+            position: absolute; top: 0; width: 100%; padding: 15px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            z-index: 100; box-sizing: border-box;
         }
-        .xp-val { color: var(--neon); font-weight: 900; margin-left: 10px; font-size: 14px; }
 
-        #game-world {
-            position: absolute; inset: 0; display: flex; justify-content: center; align-items: center;
-            perspective: 1000px; background: #000; overflow: hidden;
+        .hud-card {
+            background: var(--glass); border: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 10px 20px; border-radius: 15px; backdrop-filter: blur(10px);
+        }
+
+        .label { font-size: 9px; color: var(--neon); letter-spacing: 2px; font-weight: 800; display: block; }
+        .value { font-size: 18px; font-weight: 900; color: #fff; text-shadow: 0 0 10px var(--neon); }
+
+        /* Tunnel World */
+        #game-container {
+            position: absolute; inset: 0; perspective: 1000px;
+            background: radial-gradient(circle at center, #112240 0%, #000 80%);
+            display: flex; justify-content: center; align-items: center;
         }
 
         .wall {
-            position: absolute; width: 350px; height: 350px; border: 5px solid var(--neon);
-            display: flex; justify-content: center; align-items: center; font-size: 100px;
-            color: var(--neon); text-shadow: 0 0 30px var(--neon);
-            background: rgba(100, 255, 218, 0.1); border-radius: 30px;
-            transform: translateZ(-1500px);
+            position: absolute; width: 320px; height: 320px;
+            border: 2px solid var(--neon); border-radius: 20px;
+            background: linear-gradient(45deg, rgba(100, 255, 218, 0.05), transparent);
+            box-shadow: 0 0 40px rgba(100, 255, 218, 0.2);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 120px; font-weight: 900; color: #fff;
+            text-shadow: 0 0 30px var(--neon); transform: translateZ(-1500px);
         }
 
-        .ui-overlay {
-            position: absolute; inset: 0; z-index: 100; background: rgba(0,0,0,0.9);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        .overlay {
+            position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        .input-container {
-            position: absolute; bottom: 50px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 60;
-        }
-        input {
-            width: 200px; padding: 15px; border-radius: 20px; border: 3px solid var(--neon);
-            background: rgba(0,0,0,0.9); color: white; text-align: center; font-size: 30px; 
-            font-weight: bold; outline: none;
+        .menu-box {
+            background: var(--glass); border: 1px solid var(--neon);
+            padding: 40px; border-radius: 30px; text-align: center; width: 80%; max-width: 350px;
         }
 
-        .btn-start { background: var(--neon); color: black; padding: 18px 50px; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; }
-        .score-display { position: absolute; top: 85px; left: 20px; color: var(--gold); font-weight: 900; z-index: 60; }
-        
-        .rank-lock { color: var(--danger); font-size: 12px; margin-top: 10px; font-weight: bold; }
-
-        @keyframes shake {
-            0% { transform: translate(1px, 1px); }
-            50% { transform: translate(-3px, 2px); }
-            100% { transform: translate(1px, -2px); }
+        .btn-prime {
+            background: var(--neon); color: #000; border: none; padding: 15px 40px;
+            border-radius: 12px; font-weight: 900; cursor: pointer; width: 100%;
         }
-        .shake-active { animation: shake 0.2s infinite; }
+
+        .input-hud {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        #userInput {
+            width: 80px; height: 80px; background: rgba(0,0,0,0.8);
+            border: 3px solid var(--neon); border-radius: 20px; color: white;
+            font-size: 40px; font-weight: 900; text-align: center; outline: none;
+        }
+
+        #reward-pop {
+            position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+            color: var(--gold); font-weight: 900; font-size: 24px; display: none;
+            z-index: 150; text-shadow: 0 0 20px var(--gold);
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <a href="lobby.html" style="text-decoration:none; font-size:24px;">🏠</a>
-        <div class="xp-val">XP: <span id="headerXP">--</span></div>
-    </div>
+    <div id="reward-pop">+150 XP CHECKPOINT!</div>
 
-    <div id="game-world"></div>
-    <div class="score-display" id="scoreBoard">CLEARANCE: 0/5</div>
-
-    <div id="startMenu" class="ui-overlay">
-        <h1 style="color:var(--neon); letter-spacing: 5px;">TURBO TUNNEL</h1>
-        <p style="font-size: 12px; margin-bottom: 20px;">FEE: 50 XP | REWARD: 150 XP</p>
-        
-        <div id="rankCheckArea">
-            <p style="color:#666">Verifying Rank...</p>
+    <div class="hud-header">
+        <div class="hud-card">
+            <span class="label">WALLS BREACHED</span>
+            <span class="value" id="scoreUI">0</span>
+        </div>
+        <div class="hud-card">
+            <span class="label">WALLET XP</span>
+            <span class="value" id="xpUI">0</span>
         </div>
     </div>
 
-    <div id="deathScreen" class="ui-overlay" style="display:none;">
-        <h1 style="color:var(--danger)">IMPACT DETECTED</h1>
-        <button class="btn-start" onclick="location.reload()">RE-TRY</button>
+    <div id="game-container"></div>
+
+    <div id="startMenu" class="overlay">
+        <div class="menu-box">
+            <h1 style="color:var(--neon); letter-spacing:5px;">REWARD TUNNEL</h1>
+            <p style="font-size:10px; color:#888; margin-bottom:30px;">FEE: 50 XP | REWARD: +150 XP EVERY 5 WALLS</p>
+            <div id="authArea"><p>Checking Clearance...</p></div>
+        </div>
     </div>
 
-    <div class="input-container">
+    <div id="deathMenu" class="overlay" style="display:none;">
+        <div class="menu-box" style="border-color:var(--danger)">
+            <h1 style="color:var(--danger)">CRASHED</h1>
+            <p id="finalStat" style="font-size:12px; margin:20px 0;"></p>
+            <button class="btn-prime" style="background:var(--danger)" onclick="location.reload()">RE-TRY</button>
+            <a href="lobby.html" style="color:#555; font-size:10px; margin-top:20px; display:block; text-decoration:none;">EXIT MISSION</a>
+        </div>
+    </div>
+
+    <div class="input-hud">
         <input type="text" id="userInput" maxlength="1" autocomplete="off" disabled>
     </div>
 
@@ -105,86 +140,93 @@
     const db = getFirestore(app);
 
     const hfc = {'A':'+','B':'[]','C':'©','D':'÷','E':'=','F':'_','G':'>','H':'|','I':'!','J':'#','K':':','L':'<','M':'*','N':'°','O':'()','P':'¶','Q':'?','R':'®','S':'$','T':'™','U':"'",'V':'^','W':'&','X':'`','Y':'~','Z':'℅'};
-    const rankHierarchy = ['recruit', 'agent', 'operative', 'specialist', 'analyst', 'assassin', 'elite', 'commander', 'ghost', 'legend'];
+    const ranks = ['recruit', 'agent', 'operative', 'specialist', 'analyst', 'assassin', 'elite', 'commander', 'ghost', 'legend'];
 
-    let xp = 0, userRank = 'recruit', solved = 0, gameActive = false, zPos = -1500, currentWall = null;
+    let currentXP = 0, userRank = 'recruit', solved = 0, checkpointCounter = 0, z = -1500, gameActive = false, currentWall = null;
 
     onAuthStateChanged(auth, user => {
         if(user) onSnapshot(doc(db, "users", user.uid), snap => {
             const data = snap.data();
-            xp = data.score || 0;
+            currentXP = data.score || 0;
             userRank = data.rank || 'recruit';
-            document.getElementById('headerXP').innerText = xp;
-            checkRankAccess();
+            document.getElementById('xpUI').innerText = currentXP;
+            
+            const authArea = document.getElementById('authArea');
+            if(ranks.indexOf(userRank) >= 2) {
+                authArea.innerHTML = `<button class="btn-prime" onclick="startMission()">START MISSION (-50 XP)</button>`;
+            } else {
+                authArea.innerHTML = `<p style="color:var(--danger); font-weight:bold;">OPERATIVE CLEARANCE REQUIRED</p>`;
+            }
         });
     });
 
-    function checkRankAccess() {
-        const rankIndex = rankHierarchy.indexOf(userRank);
-        const area = document.getElementById('rankCheckArea');
-        if(rankIndex >= 2) { 
-            area.innerHTML = `<button class="btn-start" onclick="launchMission()">START MISSION</button>`;
-        } else {
-            area.innerHTML = `<p class="rank-lock">ACCESS DENIED: ${userRank.toUpperCase()}<br>OPERATIVE CLEARANCE REQUIRED</p>`;
-        }
-    }
-
-    window.launchMission = async () => {
-        if(xp < 50) return alert("Insufficient XP!");
+    window.startMission = async () => {
+        if(currentXP < 50) return alert("Low XP!");
         await updateDoc(doc(db, "users", auth.currentUser.uid), { score: increment(-50) });
+        
         document.getElementById('startMenu').style.display = 'none';
         document.getElementById('userInput').disabled = false;
         document.getElementById('userInput').focus();
         gameActive = true;
-        spawnWall();
-        runEngine();
+        spawn();
+        loop();
     };
 
-    function spawnWall() {
+    function spawn() {
         if(!gameActive) return;
         const keys = Object.keys(hfc);
-        const rand = keys[Math.floor(Math.random()*keys.length)];
+        const k = keys[Math.floor(Math.random()*keys.length)];
         const el = document.createElement('div');
         el.className = 'wall';
-        el.innerText = hfc[rand];
-        document.getElementById('game-world').appendChild(el);
-        zPos = -1500;
-        currentWall = { el, key: rand };
+        el.innerText = hfc[k];
+        document.getElementById('game-container').appendChild(el);
+        z = -1500;
+        currentWall = { el, k };
     }
 
-    function runEngine() {
+    function loop() {
         if(!gameActive) return;
-        zPos += 14 + (solved * 2); // Speed increases with each wall
-        currentWall.el.style.transform = `translateZ(${zPos}px)`;
+        z += 17 + (solved * 1.2); 
+        currentWall.el.style.transform = `translateZ(${z}px)`;
 
-        if(zPos > -400) document.body.classList.add('shake-active');
-        else document.body.classList.remove('shake-active');
-
-        if(zPos > 250) {
-            gameActive = false;
-            document.body.classList.remove('shake-active');
-            document.getElementById('deathScreen').style.display = 'flex';
+        if(z > 200) {
+            endGame("IMPACT DETECTED");
         }
-        requestAnimationFrame(runEngine);
+        requestAnimationFrame(loop);
     }
 
-    document.getElementById('userInput').oninput = function() {
-        if(!gameActive) return;
-        if(this.value.toUpperCase() === currentWall.key) {
+    document.getElementById('userInput').oninput = async function() {
+        if(this.value.toUpperCase() === currentWall.k) {
             currentWall.el.remove();
             solved++;
-            document.getElementById('scoreBoard').innerText = `CLEARANCE: ${solved}/5`;
+            checkpointCounter++;
+            document.getElementById('scoreUI').innerText = solved;
             this.value = "";
-            if(solved >= 5) win();
-            else spawnWall();
+            
+            // Reward every 5 walls
+            if(checkpointCounter === 5) {
+                checkpointCounter = 0;
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { score: increment(150) });
+                showRewardPop();
+            }
+            
+            spawn();
+        } else if(this.value.length > 0) {
+            endGame("DECODE ERROR");
         }
     };
 
-    async function win() {
+    function showRewardPop() {
+        const pop = document.getElementById('reward-pop');
+        pop.style.display = 'block';
+        setTimeout(() => pop.style.display = 'none', 1500);
+    }
+
+    async function endGame(reason) {
         gameActive = false;
-        await updateDoc(doc(db, "users", auth.currentUser.uid), { score: increment(150) });
-        alert("TUNNEL CLEARED! +150 XP AWARDED.");
-        location.reload();
+        document.getElementById('userInput').disabled = true;
+        document.getElementById('deathMenu').style.display = 'flex';
+        document.getElementById('finalStat').innerText = `${reason}\nTOTAL WALLS BREACHED: ${solved}`;
     }
 </script>
 </body>
