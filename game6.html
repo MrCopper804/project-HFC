@@ -66,20 +66,20 @@
     </div>
 
     <div id="game-world"></div>
-    <div class="score-display" id="scoreBoard">LEVEL: 0/25</div>
+    <div class="score-display" id="scoreBoard">CLEARANCE: 0/5</div>
 
     <div id="startMenu" class="ui-overlay">
         <h1 style="color:var(--neon); letter-spacing: 5px;">TURBO TUNNEL</h1>
-        <p style="font-size: 12px; margin-bottom: 20px;">STAKE: 50 XP | REQUIRED RANK: OPERATIVE+</p>
+        <p style="font-size: 12px; margin-bottom: 20px;">FEE: 50 XP | REWARD: 150 XP</p>
         
         <div id="rankCheckArea">
-            <p style="color:#666">Checking Clearance...</p>
+            <p style="color:#666">Verifying Rank...</p>
         </div>
     </div>
 
     <div id="deathScreen" class="ui-overlay" style="display:none;">
         <h1 style="color:var(--danger)">IMPACT DETECTED</h1>
-        <button class="btn-start" onclick="location.reload()">RE-INITIALIZE</button>
+        <button class="btn-start" onclick="location.reload()">RE-TRY</button>
     </div>
 
     <div class="input-container">
@@ -107,7 +107,7 @@
     const hfc = {'A':'+','B':'[]','C':'©','D':'÷','E':'=','F':'_','G':'>','H':'|','I':'!','J':'#','K':':','L':'<','M':'*','N':'°','O':'()','P':'¶','Q':'?','R':'®','S':'$','T':'™','U':"'",'V':'^','W':'&','X':'`','Y':'~','Z':'℅'};
     const rankHierarchy = ['recruit', 'agent', 'operative', 'specialist', 'analyst', 'assassin', 'elite', 'commander', 'ghost', 'legend'];
 
-    let xp = 0, userRank = 'recruit', level = 0, gameActive = false, zPos = -1500, currentWall = null;
+    let xp = 0, userRank = 'recruit', solved = 0, gameActive = false, zPos = -1500, currentWall = null;
 
     onAuthStateChanged(auth, user => {
         if(user) onSnapshot(doc(db, "users", user.uid), snap => {
@@ -122,15 +122,15 @@
     function checkRankAccess() {
         const rankIndex = rankHierarchy.indexOf(userRank);
         const area = document.getElementById('rankCheckArea');
-        if(rankIndex >= 2) { // 2 is 'operative'
-            area.innerHTML = `<button class="btn-start" onclick="launchMission()">LAUNCH MISSION</button>`;
+        if(rankIndex >= 2) { 
+            area.innerHTML = `<button class="btn-start" onclick="launchMission()">START MISSION</button>`;
         } else {
-            area.innerHTML = `<p class="rank-lock">ACCESS DENIED: ${userRank.toUpperCase()}<br>OPERATIVE RANK REQUIRED</p>`;
+            area.innerHTML = `<p class="rank-lock">ACCESS DENIED: ${userRank.toUpperCase()}<br>OPERATIVE CLEARANCE REQUIRED</p>`;
         }
     }
 
     window.launchMission = async () => {
-        if(xp < 50) return alert("Low XP!");
+        if(xp < 50) return alert("Insufficient XP!");
         await updateDoc(doc(db, "users", auth.currentUser.uid), { score: increment(-50) });
         document.getElementById('startMenu').style.display = 'none';
         document.getElementById('userInput').disabled = false;
@@ -154,7 +154,7 @@
 
     function runEngine() {
         if(!gameActive) return;
-        zPos += 12 + (level * 1.5);
+        zPos += 14 + (solved * 2); // Speed increases with each wall
         currentWall.el.style.transform = `translateZ(${zPos}px)`;
 
         if(zPos > -400) document.body.classList.add('shake-active');
@@ -172,10 +172,10 @@
         if(!gameActive) return;
         if(this.value.toUpperCase() === currentWall.key) {
             currentWall.el.remove();
-            level++;
-            document.getElementById('scoreBoard').innerText = `LEVEL: ${level}/25`;
+            solved++;
+            document.getElementById('scoreBoard').innerText = `CLEARANCE: ${solved}/5`;
             this.value = "";
-            if(level >= 25) win();
+            if(solved >= 5) win();
             else spawnWall();
         }
     };
@@ -183,7 +183,7 @@
     async function win() {
         gameActive = false;
         await updateDoc(doc(db, "users", auth.currentUser.uid), { score: increment(150) });
-        alert("TUNNEL CLEARED! +150 XP");
+        alert("TUNNEL CLEARED! +150 XP AWARDED.");
         location.reload();
     }
 </script>
