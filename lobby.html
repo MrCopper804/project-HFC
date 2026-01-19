@@ -19,10 +19,10 @@
             font-family: 'Segoe UI', sans-serif; background: var(--bg); 
             background-image: radial-gradient(circle at top right, #112240 0%, #000 75%);
             color: #ccd6f6; margin: 0; padding: 0; display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden; /* Prevent body scroll */
+            height: 100vh; overflow: hidden;
         }
 
-        /* --- HEADER (Fixed) --- */
+        /* --- HEADER --- */
         .header {
             width: 100%; background: var(--panel); padding: 10px 15px;
             backdrop-filter: blur(20px); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
@@ -47,14 +47,14 @@
         .rank-text { font-weight: 900; font-size: 10px; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
         .currency-row { font-size: 8.5px; margin-top: 2px; display: flex; gap: 8px; font-weight: bold; }
 
-        /* --- SCROLLABLE CONTENT --- */
-        .main-content {
+        /* --- SCROLLABLE AREA --- */
+        .scroll-container {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 15px;
-            scrollbar-width: none; /* Firefox */
+            padding: 20px 15px;
+            scrollbar-width: none; 
         }
-        .main-content::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .scroll-container::-webkit-scrollbar { display: none; }
 
         .grid { 
             display: grid; 
@@ -71,14 +71,14 @@
             background: var(--glass); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px; display: flex; flex-direction: column; justify-content: center;
             align-items: center; text-decoration: none; color: white; transition: 0.2s;
-            backdrop-filter: blur(5px); font-size: 22px;
+            backdrop-filter: blur(5px); font-size: 24px;
         }
         .card:active { transform: scale(0.95); border-color: var(--neon); background: rgba(100,255,218,0.05); }
-        .card span { font-size: 9px; font-weight: 800; margin-top: 6px; letter-spacing: 1px; color: #fff; }
+        .card span { font-size: 9px; font-weight: 800; margin-top: 6px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
 
-        /* Special States */
-        .storm-card { border-color: var(--neon); box-shadow: 0 0 15px rgba(100, 255, 218, 0.1); }
-        .soon-card { opacity: 0.4; filter: grayscale(1); cursor: not-allowed; border-style: dashed; }
+        /* Special highlights */
+        .new-card { border-color: var(--neon); box-shadow: 0 0 15px rgba(100, 255, 218, 0.1); }
+        .soon-card { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; border-style: dashed; }
 
         /* --- MENU --- */
         .menu {
@@ -87,22 +87,13 @@
             display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200; overflow: hidden;
         }
         .menu.active { display: block; }
-        .menu-item {
-            color: #fff; font-size: 12px; font-weight: bold; padding: 12px 18px;
-            cursor: pointer; display: block; text-decoration: none; border-bottom: 1px solid #21262d;
-        }
+        .menu-item { color: #fff; font-size: 12px; font-weight: bold; padding: 12px 18px; cursor: pointer; display: block; text-decoration: none; border-bottom: 1px solid #21262d; }
         .menu-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--neon); }
 
         /* --- MODAL --- */
-        .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            display: none; justify-content: center; align-items: center; z-index: 1000;
-        }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal.active { display: flex; }
-        .modal-box {
-            background: #0d1117; border: 2px solid var(--neon); padding: 20px;
-            border-radius: 18px; width: 85%; max-width: 300px; text-align: center;
-        }
+        .modal-box { background: #0d1117; border: 2px solid var(--neon); padding: 20px; border-radius: 18px; width: 85%; max-width: 300px; text-align: center; }
         .mode-selector { display: flex; gap: 6px; margin-bottom: 12px; }
         .m-btn { flex: 1; padding: 8px; font-size: 9px; border-radius: 6px; border: 1px solid #333; background: none; color: #fff; cursor: pointer; }
         .m-btn.active { background: var(--neon); color: #000; font-weight: bold; }
@@ -126,7 +117,7 @@
         <div class="icon-btn" id="menuToggle">⚙️</div>
     </div>
 
-    <div class="main-content">
+    <div class="scroll-container">
         <div class="grid">
             <a href="chart.html" class="card">📖<span>CHART</span></a>
             <a href="game1.html" class="card">⌨️<span>DECODE</span></a>
@@ -134,7 +125,8 @@
             <a href="game3.html" class="card">🔎<span>MATCH</span></a>
             <a href="game4.html" class="card">☄️<span>FALLING</span></a>
             <a href="game5.html" class="card">🧠<span>RECALL</span></a>
-            <a href="game6.html" class="card storm-card">⛈️<span>XP STORM</span></a>
+            <a href="game6.html" class="card new-card">⛈️<span>XP STORM</span></a>
+            <a href="game7.html" class="card new-card">🌀<span>VORTEX</span></a>
             <div class="card soon-card">🔒<span>COMING SOON</span></div>
         </div>
     </div>
