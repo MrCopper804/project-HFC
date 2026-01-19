@@ -19,15 +19,15 @@
             font-family: 'Segoe UI', sans-serif; background: var(--bg); 
             background-image: radial-gradient(circle at top right, #112240 0%, #000 75%);
             color: #ccd6f6; margin: 0; padding: 0; display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
+            height: 100vh; overflow: hidden; /* Prevent body scroll */
         }
 
-        /* --- HEADER --- */
+        /* --- HEADER (Fixed) --- */
         .header {
             width: 100%; background: var(--panel); padding: 10px 15px;
             backdrop-filter: blur(20px); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
             display: flex; align-items: center; box-sizing: border-box; z-index: 100;
-            height: 65px;
+            height: 65px; flex-shrink: 0;
         }
 
         .icon-btn {
@@ -47,18 +47,23 @@
         .rank-text { font-weight: 900; font-size: 10px; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
         .currency-row { font-size: 8.5px; margin-top: 2px; display: flex; gap: 8px; font-weight: bold; }
 
-        /* --- GRID (SCREEN FIT) --- */
+        /* --- SCROLLABLE CONTENT --- */
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .main-content::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
         .grid { 
-            flex-grow: 1; 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
-            gap: 10px; 
+            gap: 12px; 
             max-width: 420px; 
             margin: 0 auto; 
             width: 100%; 
-            padding: 15px;
             box-sizing: border-box; 
-            align-content: center;
         }
 
         .card {
@@ -70,6 +75,10 @@
         }
         .card:active { transform: scale(0.95); border-color: var(--neon); background: rgba(100,255,218,0.05); }
         .card span { font-size: 9px; font-weight: 800; margin-top: 6px; letter-spacing: 1px; color: #fff; }
+
+        /* Special States */
+        .storm-card { border-color: var(--neon); box-shadow: 0 0 15px rgba(100, 255, 218, 0.1); }
+        .soon-card { opacity: 0.4; filter: grayscale(1); cursor: not-allowed; border-style: dashed; }
 
         /* --- MENU --- */
         .menu {
@@ -117,6 +126,19 @@
         <div class="icon-btn" id="menuToggle">⚙️</div>
     </div>
 
+    <div class="main-content">
+        <div class="grid">
+            <a href="chart.html" class="card">📖<span>CHART</span></a>
+            <a href="game1.html" class="card">⌨️<span>DECODE</span></a>
+            <a href="game2.html" class="card">🧩<span>QUIZ</span></a>
+            <a href="game3.html" class="card">🔎<span>MATCH</span></a>
+            <a href="game4.html" class="card">☄️<span>FALLING</span></a>
+            <a href="game5.html" class="card">🧠<span>RECALL</span></a>
+            <a href="game6.html" class="card storm-card">⛈️<span>XP STORM</span></a>
+            <div class="card soon-card">🔒<span>COMING SOON</span></div>
+        </div>
+    </div>
+
     <div class="menu" id="mainMenu">
         <div id="adminLinks"></div> <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 EXCHANGE CENTER</div>
         <a href="inbox.html" class="menu-item">📩 MY INBOX</a> <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ RANK UP STORE</a>
@@ -138,15 +160,6 @@
             <button onclick="doExchange()" style="background:var(--neon); color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">CONFIRM</button>
             <p onclick="closeExchange()" style="color:#555; font-size:11px; margin-top:12px; cursor:pointer;">Cancel</p>
         </div>
-    </div>
-
-    <div class="grid">
-        <a href="chart.html" class="card">📖<span>CHART</span></a>
-        <a href="game1.html" class="card">⌨️<span>DECODE</span></a>
-        <a href="game2.html" class="card">🧩<span>QUIZ</span></a>
-        <a href="game3.html" class="card">🔎<span>MATCH</span></a>
-        <a href="game4.html" class="card">☄️<span>FALLING</span></a>
-        <a href="game5.html" class="card">🧠<span>RECALL</span></a>
     </div>
 
     <script type="module">
