@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Mega Mission Edit</title>
+    <title>HFC Academy - Mega Mission</title>
     <style>
         :root { 
             --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.05);
@@ -27,54 +27,52 @@
         textarea {
             width: 100%; height: 140px; background: rgba(255,255,255,0.05);
             border: 1px solid #333; border-radius: 15px; color: #fff;
-            padding: 12px; outline: none; box-sizing: border-box; font-size: 13px;
+            padding: 12px; outline: none; box-sizing: border-box; font-size: 14px;
         }
         .btn-main {
             background: var(--gold); color: #000; border: none; padding: 18px;
             border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase;
         }
-        /* Admin Edit Styles */
         #adminEditBtn {
-            position: absolute; top: 10px; right: 10px; background: #ff0055;
-            color: white; border: none; border-radius: 8px; padding: 5px 10px;
-            font-size: 10px; cursor: pointer; display: none; font-weight: bold;
+            position: absolute; top: -10px; right: 10px; background: #ff0055;
+            color: white; border: none; border-radius: 8px; padding: 8px 15px;
+            font-size: 10px; cursor: pointer; display: none; font-weight: bold; z-index: 10;
         }
         .admin-modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.98);
             z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px;
         }
     </style>
 </head>
 <body>
 
-    <h1 style="color:var(--gold); letter-spacing: 5px; margin-top: 20px;">MEGA MISSION</h1>
+    <h1 style="color:var(--gold); letter-spacing: 5px; margin-top: 30px;">MEGA MISSION</h1>
 
     <div class="mission-container">
-        <button id="adminEditBtn" onclick="openAdminModal()">🛠️ EDIT MISSION</button>
+        <button id="adminEditBtn">🛠️ EDIT MISSION</button>
 
-        <div id="lockUI" style="display:none; color:var(--danger); padding:50px 0;">
+        <div id="lockUI" style="display:none; color:var(--danger); padding:50px 0; font-weight: bold;">
             ⚠️ SECURITY LOCKOUT<br>ACCESS GRANTED EVERY 7 DAYS
         </div>
 
         <div id="entryUI" style="display:none;">
-            <p style="font-size: 12px; margin-bottom: 20px;">FEE: 1000 XP | REWARD: 500 COINS</p>
-            <button class="btn-main" onclick="startMegaMission()">INITIALIZE MISSION (-1000 XP)</button>
+            <p style="font-size: 12px; margin-bottom: 20px; color: #aaa;">FEE: 1000 XP | REWARD: 500 COINS</p>
+            <button class="btn-main" id="startBtn">INITIALIZE MISSION (-1000 XP)</button>
         </div>
 
         <div id="missionUI" style="display:none;">
             <div id="attemptStatus" style="color: var(--danger); font-weight: bold; margin-bottom: 10px; font-size: 11px;">ATTEMPT: 1 / 2</div>
-            <div class="cipher-display" id="cipherText">DECRYPTING...</div>
-            <textarea id="userInput" placeholder="Type the English translation here..."></textarea>
-            <button class="btn-main" onclick="verifyMission()">VERIFY DATA</button>
+            <div class="cipher-display" id="cipherText">DECRYPTING ARCHIVES...</div>
+            <textarea id="userInput" placeholder="Type the decrypted English translation here..."></textarea>
+            <button class="btn-main" id="verifyBtn">VERIFY DATA</button>
         </div>
     </div>
 
     <div id="adminModal" class="admin-modal">
         <h2 style="color:var(--gold)">ADMIN MISSION CONTROL</h2>
-        <p style="font-size:12px;">Update the secret 30-word paragraph here:</p>
-        <textarea id="newMissionText" style="height:200px; margin-bottom:20px;"></textarea>
-        <button class="btn-main" onclick="saveMissionText()">SAVE & UPDATE MISSION</button>
-        <p onclick="closeAdminModal()" style="margin-top:20px; cursor:pointer; color:#555;">Cancel</p>
+        <textarea id="newMissionText" style="height:200px; margin-bottom:20px;" placeholder="Paste 30-word paragraph here..."></textarea>
+        <button class="btn-main" id="saveMissionBtn">SAVE & UPDATE MISSION</button>
+        <p id="closeModal" style="margin-top:20px; cursor:pointer; color:#888;">Cancel / Close</p>
     </div>
 
 <script type="module">
@@ -92,7 +90,7 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(auth);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
     let selectedText = "";
@@ -103,12 +101,12 @@
         if (user) {
             currentAgent = user;
             syncMissionData();
-            checkRoleAndStatus(user.uid);
+            checkAccess(user.uid);
         } else { window.location.href = "auth.html"; }
     });
 
-    // 1. Admin Detection & Cooldown
-    async function checkRoleAndStatus(uid) {
+    // 1. Check Role & Cooldown
+    async function checkAccess(uid) {
         const snap = await getDoc(doc(db, "users", uid));
         const data = snap.data();
         
@@ -117,14 +115,16 @@
         }
 
         const lastRun = data.lastWeeklyCrypt || 0;
-        if (Date.now() - lastRun < (7 * 24 * 60 * 60 * 1000)) {
+        const oneWeek = 7 * 24 * 60 * 60 * 1000;
+        
+        if (Date.now() - lastRun < oneWeek) {
             document.getElementById('lockUI').style.display = "block";
         } else {
             document.getElementById('entryUI').style.display = "block";
         }
     }
 
-    // 2. Real-time Mission Text Sync
+    // 2. Sync Mission Text
     function syncMissionData() {
         onSnapshot(doc(db, "game_configs", "weekly_crypt"), (snap) => {
             if (snap.exists()) {
@@ -133,26 +133,24 @@
         });
     }
 
-    // 3. Admin Modal Functions
-    window.openAdminModal = () => document.getElementById('adminModal').style.display = "flex";
-    window.closeAdminModal = () => document.getElementById('adminModal').style.display = "none";
-
-    window.saveMissionText = async () => {
-        const text = document.getElementById('newMissionText').value.trim();
-        if (!text) return alert("Text is empty!");
-        try {
-            await setDoc(doc(db, "game_configs", "weekly_crypt"), { secret_text: text });
-            alert("Mission Paragraph Updated!");
-            closeAdminModal();
-        } catch (e) { alert("Error updating database."); }
+    // 3. Admin UI Logic
+    document.getElementById('adminEditBtn').onclick = () => document.getElementById('adminModal').style.display = "flex";
+    document.getElementById('closeModal').onclick = () => document.getElementById('adminModal').style.display = "none";
+    
+    document.getElementById('saveMissionBtn').onclick = async () => {
+        const txt = document.getElementById('newMissionText').value.trim();
+        if(!txt) return alert("Empty field!");
+        await setDoc(doc(db, "game_configs", "weekly_crypt"), { secret_text: txt });
+        alert("Mission Updated!");
+        document.getElementById('adminModal').style.display = "none";
     };
 
     // 4. Mission Logic
-    window.startMegaMission = async () => {
+    document.getElementById('startBtn').onclick = async () => {
         const userRef = doc(db, "users", currentAgent.uid);
         const snap = await getDoc(userRef);
-        if ((snap.data().score || 0) < 1000) return alert("1000 XP Required.");
-        if (!selectedText) return alert("Admin hasn't set the mission text yet.");
+        if (snap.data().score < 1000) return alert("1000 XP Required!");
+        if (!selectedText) return alert("Admin has not set a paragraph yet.");
 
         await updateDoc(userRef, { score: increment(-1000) });
         document.getElementById('cipherText').innerText = encodeHFC(selectedText);
@@ -160,32 +158,7 @@
         document.getElementById('missionUI').style.display = "block";
     };
 
-    window.verifyMission = async () => {
+    document.getElementById('verifyBtn').onclick = async () => {
         const input = document.getElementById('userInput').value.trim().toLowerCase();
         if (input === selectedText.toLowerCase()) {
-            await updateDoc(doc(db, "users", currentAgent.uid), { 
-                coins: increment(500), 
-                lastWeeklyCrypt: Date.now() 
-            });
-            alert("SUCCESS: 500 COINS AWARDED.");
-            location.reload();
-        } else {
-            tries--;
-            if (tries <= 0) {
-                await updateDoc(doc(db, "users", currentAgent.uid), { lastWeeklyCrypt: Date.now() });
-                alert("TERMINATED: Access locked for 7 days.");
-                location.reload();
-            } else {
-                document.getElementById('attemptStatus').innerText = "ATTEMPT: 2 / 2 (WARNING)";
-                alert("INCORRECT DATA.");
-            }
-        }
-    };
-
-    function encodeHFC(text) {
-        const map = { 'a':'+','b':'[]','c':'©','d':'÷','e':'=','f':'_','g':'>','h':'|','i':'!','j':'#','k':':','l':'<','m':'*','n':'°','o':'()','p':'¶','q':'?','r':'®','s':'$','t':'™','u':"'",'v':'^','w':'&','x':'`','y':'~','z':'℅',' ': '  ' };
-        return text.toLowerCase().split('').map(c => map[c] || c).join('');
-    }
-</script>
-</body>
-</html>
+            await updateDoc(doc(db, "users",
