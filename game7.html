@@ -76,14 +76,35 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // --- 30-WORD PARAGRAPH BANK ---
+    // --- 30-WORD RANDOM PARAGRAPH BANK ---
     const PARAGRAPHS = [
         "The elite agents of the academy must learn to decode complex symbols quickly to secure the secret network from unauthorized access and protect the private data of all members involved",
         "Practice your skills every day to master the ancient art of cryptography because only the most dedicated students will earn the rank of legend within this highly secure digital environment",
         "A true master of hidden messages can identify patterns in any stream of data without using external tools and will always maintain the highest level of security for the system",
         "To earn five hundred coins you must translate this entire thirty word paragraph accurately on your first or second try or you will have to wait another seven full days",
-        "Security is the most important part of our mission here so never share your private login details or account information with anyone even if they claim to be the admin"
+        "Security is the most important part of our mission here so never share your private login details or account information with anyone even if they claim to be the admin",
+        "The digital world is full of hidden dangers and only those who can master the art of secret writing will be able to survive the upcoming challenges in the academy",
+        "Every single symbol you see on the screen represents a letter in the English alphabet so you must use your training to decipher the message before the time runs out",
+        "Your mission as an operative is to maintain the integrity of the database by ensuring that all incoming data streams are correctly translated and verified against our highly secure protocols",
+        "Learning to read these complex characters requires patience and many hours of dedicated study but the rewards for reaching the highest rank are well worth the effort in the end",
+        "Hidden deep within the code of this website is a secret message that only a few talented agents will ever be able to find and translate using their special skills",
+        "The academy was built to protect the freedom of information while ensuring that only authorized personnel have access to the most sensitive parts of our global digital communication network infrastructure",
+        "Always be on the lookout for suspicious activity within the tunnel and report any errors in the decryption process to the master administrator so that we can fix the system",
+        "A thousand experience points is a large amount to pay for entry so you must be absolutely certain of your decoding abilities before you attempt this difficult weekly mega mission",
+        "Advanced cryptography is not just about changing letters but also about understanding the logic behind the patterns that govern how information is stored and transmitted across the vast internet today",
+        "The legend rank is reserved for those who have proven their worth through countless hours of hard work and have shown a deep understanding of the core principles of decryption",
+        "Do not be discouraged if you fail on your first attempt because even the best agents started as simple recruits before they worked their way up to the top level",
+        "A secure future starts with a well trained mind so focus on your studies and never stop learning new ways to protect yourself and your data from those who wish",
+        "The symbol for the letter A is a plus sign and the symbol for B is a square bracket but you must memorize the entire chart to be effective here",
+        "Every week a new challenge is presented to the agents of this school to test their mental strength and their ability to work under extreme pressure during a high stakes",
+        "The rewards for success are high but the cost of failure is losing your entry fee and being locked out of the system for an entire week of training time",
+        "Coding and decoding are the two sides of the same coin and a professional agent must be proficient in both areas to successfully complete all the missions assigned to them",
+        "The speed of the tunnel will increase as you progress further into the game so you must develop fast reflexes and a sharp eye for detail to avoid crashing now",
+        "This thirty word paragraph is designed to test your focus and your ability to correctly identify every single character without making even a small mistake in your final written answer",
+        "Information is power in the modern age and those who can control the flow of data will be the ones who lead the world into a new era of security",
+        "The master administrator is watching your progress closely and will reward those who show exceptional talent in the field of secret communication and digital security within our elite private academy"
     ];
+
     
     let selectedText = "";
     let currentAgent = null;
