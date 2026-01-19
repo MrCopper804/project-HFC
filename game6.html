@@ -3,207 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - XP STORM</title>
+    <title>HFC 3D Ghost Decoder | Umair Khan</title>
     <style>
-        :root {
-            --bg: #000000;
-            --glass: rgba(255, 255, 255, 0.05);
-            --neon: #64ffda;
-            --danger: #ff4d4d;
-            --gold: #ffd700;
-            --panel: rgba(10, 15, 26, 0.98);
-        }
-
-        body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
-            background-image: radial-gradient(circle at top right, #112240 0%, #000 75%);
-            color: #ccd6f6; margin: 0; padding: 0; display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
-        }
-
-        .header {
-            width: 100%; background: var(--panel); padding: 10px 15px;
-            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
-            display: flex; align-items: center; box-sizing: border-box; height: 65px;
-        }
-
-        .icon-btn {
-            width: 38px; height: 38px; display: flex; justify-content: center; 
-            align-items: center; border-radius: 10px; background: var(--glass);
-            color: var(--neon); text-decoration: none; font-size: 18px;
-            border: 1px solid rgba(100, 255, 218, 0.2); cursor: pointer;
-        }
-
-        .user-stats { flex-grow: 1; margin: 0 12px; display: flex; align-items: center; }
-        .xp-display { color: var(--neon); font-weight: 900; font-size: 14px; letter-spacing: 1px; }
-
-        .container {
-            flex-grow: 1; padding: 15px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; max-width: 420px; margin: 0 auto; width: 100%; box-sizing: border-box;
-        }
-
-        .game-card {
-            width: 100%; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); box-sizing: border-box;
-            text-align: center; border-top: 4px solid var(--neon);
-        }
-
-        .timer-circle { font-size: 24px; color: var(--danger); font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 10px var(--danger); }
-
-        .cipher-box {
-            background: rgba(0,0,0,0.6); border: 1px solid var(--neon);
-            padding: 15px; border-radius: 12px; font-size: 16px; color: var(--neon);
-            height: 120px; margin-bottom: 15px; word-break: break-all;
-            box-shadow: inset 0 0 15px rgba(100, 255, 218, 0.1); overflow-y: auto; text-align: left;
-        }
-
-        textarea {
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid #333;
-            border-radius: 12px; padding: 12px; color: white; font-size: 14px;
-            resize: none; margin-bottom: 15px; box-sizing: border-box; outline: none;
-        }
-
-        .btn-main {
-            background: var(--neon); color: #000; border: none; padding: 12px;
-            border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer;
-            width: 100%; text-transform: uppercase;
-        }
-
-        .status-msg { font-size: 12px; margin-top: 10px; font-weight: bold; }
+        :root { --neon: #64ffda; --danger: #ff4d4d; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        
+        #game-ui { position: absolute; top: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; color: var(--neon); z-index: 10; pointer-events: none; }
+        
+        #decoding-zone { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; text-align: center; z-index: 20; }
+        
+        .symbol-bubble { font-size: 40px; color: #fff; text-shadow: 0 0 15px var(--neon); margin-bottom: 10px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%; border: 2px solid var(--neon); display: inline-block; width: 60px; height: 60px; line-height: 60px; }
+        
+        input { width: 100%; padding: 15px; border-radius: 10px; border: 2px solid var(--neon); background: rgba(10, 25, 47, 0.9); color: #fff; font-size: 18px; text-align: center; pointer-events: auto; outline: none; }
+        
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 100; color: white; text-align: center; }
+        .btn-start { background: var(--neon); color: #000; border: none; padding: 15px 40px; font-weight: bold; border-radius: 5px; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <a href="lobby.html" class="icon-btn">🏠</a>
-        <div class="user-stats">
-            <div class="xp-display" id="syncStatus">XP: --</div>
-        </div>
-        <div class="icon-btn" style="color:var(--gold)">⚡</div>
+    <div id="game-ui">
+        <div>XP: <span id="xpDisplay">--</span></div>
+        <div id="timer">60s</div>
     </div>
 
-    <div class="container">
-        <div class="game-card">
-            <h2 style="color:var(--neon); margin: 0; font-size: 24px; letter-spacing: 2px;">XP STORM</h2>
-            <p style="font-size: 10px; color: #888; margin-bottom: 15px;">FEE: 50 XP | REWARD: 150 XP</p>
-
-            <div id="startScreen">
-                <div style="font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
-                    • 50 Words Random Decode<br>
-                    • 300 Seconds Time Limit<br>
-                    • 50 XP Deducted Immediately
-                </div>
-                <button class="btn-main" id="startBtn">START CHALLENGE</button>
-            </div>
-
-            <div id="missionScreen" style="display:none;">
-                <div class="timer-circle" id="timer">300s</div>
-                <div class="cipher-box" id="cipherBox"></div>
-                <textarea id="userInput" rows="4" placeholder="Type decoded English here..."></textarea>
-                <button class="btn-main" id="submitBtn">CONFIRM TRANSMISSION</button>
-            </div>
-
-            <div id="statusMsg" class="status-msg"></div>
+    <div id="overlay">
+        <div>
+            <h1 style="color:var(--neon)">HFC 3D DECODER</h1>
+            <p>Entry: 50 XP | Reward: 150 XP</p>
+            <p style="font-size: 12px; color: #888;">Decode the 3D falling symbols to survive.</p>
+            <button class="btn-start" id="startBtn">START MISSION</button>
         </div>
     </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <div id="decoding-zone" style="display:none;">
+        <div class="symbol-bubble" id="currentSymbol">?</div>
+        <input type="text" id="answerInput" placeholder="TYPE LETTER" autocomplete="off">
+    </div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
-        authDomain: "hfc-academy.firebaseapp.com",
-        projectId: "hfc-academy",
-        storageBucket: "hfc-academy.firebasestorage.app",
-        messagingSenderId: "84006497196",
-        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
-    };
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const hfcData = {'a':'+','b':'[]','c':'©','d':'÷','e':'=','f':'_','g':'>','h':'|','i':'!','j':'#','k':':','l':'<','m':'*','n':'°','o':'()','p':'¶','q':'?','r':'®','s':'$','t':'™','u':"'",'v':'^','w':'&','x':'`','y':'~','z':'℅'};
-    const wordBank = ["the", "quick", "brown", "fox", "jumps", "secret", "academy", "mission", "cipher", "ghost", "storm", "elite", "logic", "secure", "private", "rank", "master", "power", "system", "keyboard", "archive", "intelligence", "protocol", "umair", "khan", "shadow", "stealth", "crypto", "binary", "access"];
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+            authDomain: "hfc-academy.firebaseapp.com",
+            projectId: "hfc-academy",
+            storageBucket: "hfc-academy.firebasestorage.app",
+            messagingSenderId: "84006497196",
+            appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+        };
 
-    let currentUser = null;
-    let userXP = 0;
-    let targetEnglish = "";
-    let timerInterval = null;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            onSnapshot(doc(db, "users", user.uid), (snap) => {
-                const data = snap.data();
-                userXP = data.score || 0;
-                document.getElementById('syncStatus').innerText = "XP: " + userXP;
-            });
-        } else { window.location.href = "auth.html"; }
-    });
+        const hfcData = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
+        
+        let scene, camera, renderer, starField;
+        let currentUser = null;
+        let userXP = 0;
+        let targetLetter = "";
+        let gameActive = false;
 
-    window.startMission = async () => {
-        if (userXP < 50) return alert("Insufficient XP!");
+        // --- Firebase Sync ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onSnapshot(doc(db, "users", user.uid), (snap) => {
+                    userXP = snap.data().score || 0;
+                    document.getElementById('xpDisplay').innerText = userXP;
+                });
+            } else { window.location.href = "auth.html"; }
+        });
 
-        const userRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userRef, { score: increment(-50) });
+        // --- 3D Background Setup ---
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
 
-        targetEnglish = "";
-        let cipherText = "";
-        for(let i=0; i<50; i++) {
-            let w = wordBank[Math.floor(Math.random() * wordBank.length)];
-            targetEnglish += w + (i === 49 ? "" : " ");
-            for(let char of w) cipherText += hfcData[char] || char;
-            cipherText += " ";
-        }
-
-        document.getElementById('cipherBox').innerText = cipherText;
-        document.getElementById('startScreen').style.display = 'none';
-        document.getElementById('missionScreen').style.display = 'block';
-        startTimer(300);
-    };
-
-    function startTimer(seconds) {
-        let timeLeft = seconds;
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer').innerText = timeLeft + "s";
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                finishMission(true); // Auto-fail on timeout
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 5000; i++) {
+                vertices.push(THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000));
             }
-        }, 1000);
-    }
-
-    window.finishMission = async (timeout = false) => {
-        clearInterval(timerInterval);
-        const input = document.getElementById('userInput').value.trim().toLowerCase();
-        const msg = document.getElementById('statusMsg');
-        const userRef = doc(db, "users", currentUser.uid);
-
-        if (!timeout && input === targetEnglish.toLowerCase()) {
-            await updateDoc(userRef, { score: increment(150) });
-            msg.style.color = "var(--neon)";
-            msg.innerText = "SUCCESS! +150 XP SECURED.";
-        } else {
-            msg.style.color = "var(--danger)";
-            msg.innerText = timeout ? "TIME EXPIRED! MISSION FAILED." : "INCORRECT DECODE! XP LOST.";
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0x64ffda, size: 2 });
+            starField = new THREE.Points(geometry, material);
+            scene.add(starField);
+            camera.position.z = 5;
         }
 
-        setTimeout(() => {
-            document.getElementById('missionScreen').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'block';
-            document.getElementById('userInput').value = "";
-            msg.innerText = "";
-        }, 3000);
-    };
+        function animate() {
+            requestAnimationFrame(animate);
+            starField.rotation.y += 0.002;
+            starField.rotation.z += 0.001;
+            renderer.render(scene, camera);
+        }
 
-    document.getElementById('startBtn').onclick = startMission;
-    document.getElementById('submitBtn').onclick = () => finishMission(false);
+        // --- Game Logic ---
+        async function startMission() {
+            if (userXP < 50) return alert("Low XP!");
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, { score: increment(-50) });
 
-</script>
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('decoding-zone').style.display = 'block';
+            gameActive = true;
+            nextSymbol();
+        }
+
+        function nextSymbol() {
+            const letters = Object.keys(hfcData);
+            targetLetter = letters[Math.floor(Math.random() * letters.length)];
+            document.getElementById('currentSymbol').innerText = hfcData[targetLetter];
+            document.getElementById('answerInput').value = "";
+            document.getElementById('answerInput').focus();
+        }
+
+        document.getElementById('answerInput').oninput = async function(e) {
+            if (this.value.toUpperCase() === targetLetter) {
+                const userRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userRef, { score: increment(5) }); // Small reward per letter
+                nextSymbol();
+            }
+        };
+
+        document.getElementById('startBtn').onclick = startMission;
+        init3D();
+        animate();
+    </script>
 </body>
 </html>
-
