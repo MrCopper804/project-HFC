@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Mega Mission 30</title>
+    <title>HFC Academy - Mega Mission Edit</title>
     <style>
         :root { 
             --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.05);
@@ -16,7 +16,7 @@
         .mission-container {
             max-width: 550px; margin: 10px auto; background: var(--glass);
             border: 2px solid var(--gold); border-radius: 25px; padding: 25px;
-            backdrop-filter: blur(15px); box-sizing: border-box;
+            backdrop-filter: blur(15px); box-sizing: border-box; position: relative;
         }
         .cipher-display {
             background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px;
@@ -27,41 +27,60 @@
         textarea {
             width: 100%; height: 140px; background: rgba(255,255,255,0.05);
             border: 1px solid #333; border-radius: 15px; color: #fff;
-            padding: 12px; outline: none; box-sizing: border-box; font-size: 13px; line-height: 1.5;
+            padding: 12px; outline: none; box-sizing: border-box; font-size: 13px;
         }
         .btn-main {
             background: var(--gold); color: #000; border: none; padding: 18px;
-            border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer;
-            text-transform: uppercase; margin-top: 10px;
+            border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase;
         }
-        .lock-screen { color: var(--danger); font-weight: 800; padding: 50px 0; letter-spacing: 1px; line-height: 1.5; }
+        /* Admin Edit Styles */
+        #adminEditBtn {
+            position: absolute; top: 10px; right: 10px; background: #ff0055;
+            color: white; border: none; border-radius: 8px; padding: 5px 10px;
+            font-size: 10px; cursor: pointer; display: none; font-weight: bold;
+        }
+        .admin-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <h1 style="color:var(--gold); letter-spacing: 5px; margin: 10px 0 0 0;">MEGA MISSION</h1>
-    <p style="font-size: 10px; color: var(--neon); letter-spacing: 2px;">30-WORD DECRYPTION CHALLENGE</p>
+    <h1 style="color:var(--gold); letter-spacing: 5px; margin-top: 20px;">MEGA MISSION</h1>
 
     <div class="mission-container">
-        <div id="lockUI" style="display:none;" class="lock-screen">⚠️ SECURITY LOCKOUT<br>SYSTEM GRANTS ACCESS EVERY 7 DAYS</div>
+        <button id="adminEditBtn" onclick="openAdminModal()">🛠️ EDIT MISSION</button>
+
+        <div id="lockUI" style="display:none; color:var(--danger); padding:50px 0;">
+            ⚠️ SECURITY LOCKOUT<br>ACCESS GRANTED EVERY 7 DAYS
+        </div>
 
         <div id="entryUI" style="display:none;">
-            <p style="font-size: 12px; margin-bottom: 20px; color: #ccc;">FEE: 1000 XP | REWARD: 500 COINS<br>Authorized attempts per cycle: 2</p>
+            <p style="font-size: 12px; margin-bottom: 20px;">FEE: 1000 XP | REWARD: 500 COINS</p>
             <button class="btn-main" onclick="startMegaMission()">INITIALIZE MISSION (-1000 XP)</button>
         </div>
 
         <div id="missionUI" style="display:none;">
             <div id="attemptStatus" style="color: var(--danger); font-weight: bold; margin-bottom: 10px; font-size: 11px;">ATTEMPT: 1 / 2</div>
-            <div class="cipher-display" id="cipherText">DECRYPTING ARCHIVES...</div>
-            <textarea id="userInput" placeholder="Type the 30-word English translation here..."></textarea>
+            <div class="cipher-display" id="cipherText">DECRYPTING...</div>
+            <textarea id="userInput" placeholder="Type the English translation here..."></textarea>
             <button class="btn-main" onclick="verifyMission()">VERIFY DATA</button>
         </div>
+    </div>
+
+    <div id="adminModal" class="admin-modal">
+        <h2 style="color:var(--gold)">ADMIN MISSION CONTROL</h2>
+        <p style="font-size:12px;">Update the secret 30-word paragraph here:</p>
+        <textarea id="newMissionText" style="height:200px; margin-bottom:20px;"></textarea>
+        <button class="btn-main" onclick="saveMissionText()">SAVE & UPDATE MISSION</button>
+        <p onclick="closeAdminModal()" style="margin-top:20px; cursor:pointer; color:#555;">Cancel</p>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -73,18 +92,9 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    const auth = getAuth(auth);
     const db = getFirestore(app);
 
-    // --- 30-WORD PARAGRAPH BANK ---
-    const PARAGRAPHS = [
-        "The elite agents of the academy must learn to decode complex symbols quickly to secure the secret network from unauthorized access and protect the private data of all members involved",
-        "Practice your skills every day to master the ancient art of cryptography because only the most dedicated students will earn the rank of legend within this highly secure digital environment",
-        "A true master of hidden messages can identify patterns in any stream of data without using external tools and will always maintain the highest level of security for the system",
-        "To earn five hundred coins you must translate this entire thirty word paragraph accurately on your first or second try or you will have to wait another seven full days",
-        "Security is the most important part of our mission here so never share your private login details or account information with anyone even if they claim to be the admin"
-    ];
-    
     let selectedText = "";
     let currentAgent = null;
     let tries = 2;
@@ -92,27 +102,59 @@
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentAgent = user;
-            const snap = await getDoc(doc(db, "users", user.uid));
-            const data = snap.data();
-            const lastRun = data.lastWeeklyCrypt || 0;
-            const oneWeek = 7 * 24 * 60 * 60 * 1000;
-
-            if (Date.now() - lastRun < oneWeek) {
-                document.getElementById('lockUI').style.display = "block";
-            } else {
-                document.getElementById('entryUI').style.display = "block";
-            }
+            syncMissionData();
+            checkRoleAndStatus(user.uid);
         } else { window.location.href = "auth.html"; }
     });
 
+    // 1. Admin Detection & Cooldown
+    async function checkRoleAndStatus(uid) {
+        const snap = await getDoc(doc(db, "users", uid));
+        const data = snap.data();
+        
+        if (data.role === "admin") {
+            document.getElementById('adminEditBtn').style.display = "block";
+        }
+
+        const lastRun = data.lastWeeklyCrypt || 0;
+        if (Date.now() - lastRun < (7 * 24 * 60 * 60 * 1000)) {
+            document.getElementById('lockUI').style.display = "block";
+        } else {
+            document.getElementById('entryUI').style.display = "block";
+        }
+    }
+
+    // 2. Real-time Mission Text Sync
+    function syncMissionData() {
+        onSnapshot(doc(db, "game_configs", "weekly_crypt"), (snap) => {
+            if (snap.exists()) {
+                selectedText = snap.data().secret_text;
+            }
+        });
+    }
+
+    // 3. Admin Modal Functions
+    window.openAdminModal = () => document.getElementById('adminModal').style.display = "flex";
+    window.closeAdminModal = () => document.getElementById('adminModal').style.display = "none";
+
+    window.saveMissionText = async () => {
+        const text = document.getElementById('newMissionText').value.trim();
+        if (!text) return alert("Text is empty!");
+        try {
+            await setDoc(doc(db, "game_configs", "weekly_crypt"), { secret_text: text });
+            alert("Mission Paragraph Updated!");
+            closeAdminModal();
+        } catch (e) { alert("Error updating database."); }
+    };
+
+    // 4. Mission Logic
     window.startMegaMission = async () => {
         const userRef = doc(db, "users", currentAgent.uid);
         const snap = await getDoc(userRef);
-        if ((snap.data().score || 0) < 1000) return alert("Insufficient XP! 1000 XP Required.");
+        if ((snap.data().score || 0) < 1000) return alert("1000 XP Required.");
+        if (!selectedText) return alert("Admin hasn't set the mission text yet.");
 
         await updateDoc(userRef, { score: increment(-1000) });
-        selectedText = PARAGRAPHS[Math.floor(Math.random() * PARAGRAPHS.length)];
-        
         document.getElementById('cipherText').innerText = encodeHFC(selectedText);
         document.getElementById('entryUI').style.display = "none";
         document.getElementById('missionUI').style.display = "block";
@@ -120,25 +162,22 @@
 
     window.verifyMission = async () => {
         const input = document.getElementById('userInput').value.trim().toLowerCase();
-        const userRef = doc(db, "users", currentAgent.uid);
-
-        // Remove extra spaces for better validation
-        const cleanInput = input.replace(/\s+/g, ' ');
-        const cleanTarget = selectedText.toLowerCase().replace(/\s+/g, ' ');
-
-        if (cleanInput === cleanTarget) {
-            await updateDoc(userRef, { coins: increment(500), lastWeeklyCrypt: Date.now() });
-            alert("MISSION SUCCESS: 500 COINS GRANTED.");
+        if (input === selectedText.toLowerCase()) {
+            await updateDoc(doc(db, "users", currentAgent.uid), { 
+                coins: increment(500), 
+                lastWeeklyCrypt: Date.now() 
+            });
+            alert("SUCCESS: 500 COINS AWARDED.");
             location.reload();
         } else {
             tries--;
             if (tries <= 0) {
-                await updateDoc(userRef, { lastWeeklyCrypt: Date.now() });
-                alert("CRITICAL ERROR: Access revoked. System locked for 7 days.");
+                await updateDoc(doc(db, "users", currentAgent.uid), { lastWeeklyCrypt: Date.now() });
+                alert("TERMINATED: Access locked for 7 days.");
                 location.reload();
             } else {
-                document.getElementById('attemptStatus').innerText = "ATTEMPT: 2 / 2 (WARNING: FINAL CHANCE)";
-                alert("DECRYPTION FAILED: The data provided does not match the encrypted archives.");
+                document.getElementById('attemptStatus').innerText = "ATTEMPT: 2 / 2 (WARNING)";
+                alert("INCORRECT DATA.");
             }
         }
     };
