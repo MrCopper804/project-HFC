@@ -3,54 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Weekly Crypt</title>
+    <title>HFC Academy - Mega Mission 30</title>
     <style>
         :root { 
-            --neon: #64ffda; 
-            --bg: #000; 
-            --gold: #ffd700; 
-            --danger: #ff4d4d; 
-            --glass: rgba(255, 255, 255, 0.05);
+            --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.05);
         }
-
         body { 
             font-family: 'Segoe UI', sans-serif; background: var(--bg); 
             background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
-            color: white; margin: 0; padding: 20px; text-align: center; min-height: 100vh;
+            color: white; margin: 0; padding: 15px; text-align: center; min-height: 100vh;
         }
-
         .mission-container {
-            max-width: 500px; margin: 20px auto; background: var(--glass);
-            border: 2px solid var(--gold); border-radius: 25px; padding: 30px;
-            backdrop-filter: blur(15px); box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+            max-width: 550px; margin: 10px auto; background: var(--glass);
+            border: 2px solid var(--gold); border-radius: 25px; padding: 25px;
+            backdrop-filter: blur(15px); box-sizing: border-box;
         }
-
         .cipher-display {
-            background: rgba(0,0,0,0.8); padding: 25px; border-radius: 15px;
-            color: var(--neon); font-size: 22px; letter-spacing: 3px;
-            line-height: 1.6; border: 1px dashed var(--neon); margin: 20px 0;
-            word-break: break-all; min-height: 100px;
+            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px;
+            color: var(--neon); font-size: 16px; letter-spacing: 1.5px;
+            line-height: 1.8; border: 1px dashed var(--neon); margin: 15px 0;
+            word-break: break-all; text-align: left; height: 180px; overflow-y: auto;
         }
-
         textarea {
-            width: 100%; height: 120px; background: rgba(255,255,255,0.05);
+            width: 100%; height: 140px; background: rgba(255,255,255,0.05);
             border: 1px solid #333; border-radius: 15px; color: #fff;
-            padding: 15px; font-size: 16px; outline: none; transition: 0.3s;
-            box-sizing: border-box;
+            padding: 12px; outline: none; box-sizing: border-box; font-size: 13px; line-height: 1.5;
         }
-        textarea:focus { border-color: var(--gold); }
-
         .btn-main {
             background: var(--gold); color: #000; border: none; padding: 18px;
-            border-radius: 15px; font-weight: 900; font-size: 16px; width: 100%;
-            cursor: pointer; text-transform: uppercase; margin-top: 10px;
+            border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer;
+            text-transform: uppercase; margin-top: 10px;
         }
-
-        .lock-screen { color: var(--danger); font-weight: 800; padding: 40px 0; }
-        .stats { font-size: 12px; color: #888; margin-bottom: 15px; }
+        .lock-screen { color: var(--danger); font-weight: 800; padding: 50px 0; letter-spacing: 1px; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <h1 style="color:var(--gold); letter-spacing: 8px; margin-bottom: 0;">MEGA MISSION</h1>
-    <p style="font
+    <h1 style="color:var(--gold); letter-spacing: 5px; margin: 10px 0 0 0;">MEGA MISSION</h1>
+    <p style="font-size: 10px; color: var(--neon); letter-spacing: 2px;">30-WORD DECRYPTION CHALLENGE</p>
+
+    <div class="mission-container">
+        <div id="lockUI" style="display:none;" class="lock-screen">⚠️ SECURITY LOCKOUT<br>SYSTEM GRANTS ACCESS EVERY 7 DAYS</div>
+
+        <div id="entryUI" style="display:none;">
+            <p style="font-size: 12px; margin-bottom: 20px; color: #ccc;">FEE: 1000 XP | REWARD: 500 COINS<br>Authorized attempts per cycle: 2</p>
+            <button class="btn-main" onclick="startMegaMission()">INITIALIZE MISSION (-1000 XP)</button>
+        </div>
+
+        <div id="missionUI" style="display:none;">
+            <div id="attemptStatus" style="color: var(--danger); font-weight: bold; margin-bottom: 10px; font-size: 11px;">ATTEMPT: 1 / 2</div>
+            <div class="cipher-display" id="cipherText">DECRYPTING ARCHIVES...</div>
+            <textarea id="userInput" placeholder="Type the 30-word English translation here..."></textarea>
+            <button class="btn-main" onclick="verifyMission()">VERIFY DATA</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- 30-WORD PARAGRAPH BANK ---
+    const PARAGRAPHS = [
+        "The elite agents of the academy must learn to decode complex symbols quickly to secure the secret network from unauthorized access and protect the private data of all members involved",
+        "Practice your skills every day to master the ancient art of cryptography because only the most dedicated students will earn the rank of legend within this highly secure digital environment",
+        "A true master of hidden messages can identify patterns in any stream of data without using external tools and will always maintain the highest level of security for the system",
+        "To earn five hundred coins you must translate this entire thirty word paragraph accurately on your first or second try or you will have to wait another seven full days",
+        "Security is the most important part of our mission here so never share your private login details or account information with anyone even if they claim to be the admin"
+    ];
+    
+    let selectedText = "";
+    let currentAgent = null;
+    let tries = 2;
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentAgent = user;
+            const snap = await getDoc(doc(db, "users", user.uid));
+            const data = snap.data();
+            const lastRun = data.lastWeeklyCrypt || 0;
+            const oneWeek = 7 * 24 * 60 * 60 * 1000;
+
+            if (Date.now() - lastRun < oneWeek) {
+                document.getElementById('lockUI').style.display = "block";
+            } else {
+                document.getElementById('entryUI').style.display = "block";
+            }
+        } else { window.location.href = "auth.html"; }
+    });
+
+    window.startMegaMission = async () => {
+        const userRef = doc(db, "users", currentAgent.uid);
+        const snap = await getDoc(userRef);
+        if ((snap.data().score || 0) < 1000) return alert("Insufficient XP! 1000 XP Required.");
+
+        await updateDoc(userRef, { score: increment(-1000) });
+        selectedText = PARAGRAPHS[Math.floor(Math.random() * PARAGRAPHS.length)];
+        
+        document.getElementById('cipherText').innerText = encodeHFC(selectedText);
+        document.getElementById('entryUI').style.display = "none";
+        document.getElementById('missionUI').style.display = "block";
+    };
+
+    window.verifyMission = async () => {
+        const input = document.getElementById('userInput').value.trim().toLowerCase();
+        const userRef = doc(db, "users", currentAgent.uid);
+
+        // Remove extra spaces for better validation
+        const cleanInput = input.replace(/\s+/g, ' ');
+        const cleanTarget = selectedText.toLowerCase().replace(/\s+/g, ' ');
+
+        if (cleanInput === cleanTarget) {
+            await updateDoc(userRef, { coins: increment(500), lastWeeklyCrypt: Date.now() });
+            alert("MISSION SUCCESS: 500 COINS GRANTED.");
+            location.reload();
+        } else {
+            tries--;
+            if (tries <= 0) {
+                await updateDoc(userRef, { lastWeeklyCrypt: Date.now() });
+                alert("CRITICAL ERROR: Access revoked. System locked for 7 days.");
+                location.reload();
+            } else {
+                document.getElementById('attemptStatus').innerText = "ATTEMPT: 2 / 2 (WARNING: FINAL CHANCE)";
+                alert("DECRYPTION FAILED: The data provided does not match the encrypted archives.");
+            }
+        }
+    };
+
+    function encodeHFC(text) {
+        const map = { 'a':'+','b':'[]','c':'©','d':'÷','e':'=','f':'_','g':'>','h':'|','i':'!','j':'#','k':':','l':'<','m':'*','n':'°','o':'()','p':'¶','q':'?','r':'®','s':'$','t':'™','u':"'",'v':'^','w':'&','x':'`','y':'~','z':'℅',' ': '  ' };
+        return text.toLowerCase().split('').map(c => map[c] || c).join('');
+    }
+</script>
+</body>
+</html>
