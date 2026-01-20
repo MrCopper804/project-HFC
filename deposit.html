@@ -8,24 +8,23 @@
         :root { --bg: #000; --neon: #64ffda; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --danger: #ff4d4d; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); background-image: radial-gradient(circle at top, #112240 0%, #000 90%); color: white; margin: 0; padding: 20px; min-height: 100vh; }
         .card { background: var(--glass); border: 1px solid rgba(100, 255, 218, 0.1); padding: 25px; border-radius: 24px; backdrop-filter: blur(15px); max-width: 400px; margin: 0 auto; }
-        input, .file-input { width: 100%; padding: 15px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 12px; box-sizing: border-box; outline: none; }
+        input { width: 100%; padding: 15px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 12px; box-sizing: border-box; }
         .btn-deposit { width: 100%; padding: 18px; background: var(--neon); color: #000; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
         .status-msg { font-size: 12px; text-align: center; margin-top: 15px; font-weight: bold; }
-        .calc-box { font-size: 14px; color: var(--neon); margin: 15px 0; font-weight: 900; text-align: center; }
     </style>
 </head>
 <body>
 
     <div style="text-align:center; margin-bottom:20px;">
-        <h2 style="color:var(--neon); letter-spacing: 3px;">DEPOSIT COINS</h2>
+        <h2 style="color:var(--neon); letter-spacing: 3px;">DEPOSIT FUNDS</h2>
         <p style="color:var(--gold); font-size:11px;">SADAPAY: 03018858303 (1 PKR = 30 Coins)</p>
     </div>
 
     <div class="card">
-        <div class="calc-box" id="calcDisplay">RECEIVE: 0 COINS</div>
+        <div id="calcDisplay" style="text-align:center; color:var(--neon); font-weight:900; margin-bottom:10px;">RECEIVE: 0 COINS</div>
         <input type="number" id="pkrInput" placeholder="PKR Amount" oninput="document.getElementById('calcDisplay').innerText = 'RECEIVE: ' + (this.value * 30) + ' COINS'">
         <input type="text" id="transID" placeholder="Transaction ID (TID)">
-        <label style="font-size:10px; color:var(--gold)">Upload Payment Screenshot:</label>
+        <label style="font-size:10px; color:var(--gold)">Payment Screenshot (SS):</label>
         <input type="file" id="proofSS" accept="image/*">
         <button class="btn-deposit" id="submitReq">SUBMIT DEPOSIT</button>
         <p id="msg" class="status-msg"></p>
@@ -41,7 +40,7 @@
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
         authDomain: "hfc-academy.firebaseapp.com",
         projectId: "hfc-academy",
-        storageBucket: "hfc-academy.appspot.com", // storageBucket updated
+        storageBucket: "hfc-academy.firebasestorage.app", // standard bucket name
         messagingSenderId: "84006497196",
         appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
     };
@@ -61,25 +60,23 @@
         const statusMsg = document.getElementById('msg');
 
         if (!pkr || !tid || !ssFile) {
-            statusMsg.innerText = "Error: All fields required!";
-            statusMsg.style.color = "var(--danger)";
+            alert("Error: Fill all fields and upload SS!");
             return;
         }
 
         try {
-            statusMsg.innerText = "Processing... Please wait.";
+            statusMsg.innerText = "Step 1: Uploading Screenshot...";
             statusMsg.style.color = "var(--gold)";
 
-            // 1. Upload Screenshot to Storage
-            console.log("Starting SS Upload...");
+            // 1. Upload to Storage
             const storagePath = `deposit_proofs/${currentUser.uid}_${Date.now()}`;
             const storageRef = ref(storage, storagePath);
             const uploadTask = await uploadBytes(storageRef, ssFile);
             const ssURL = await getDownloadURL(uploadTask.ref);
-            console.log("SS Uploaded: " + ssURL);
 
-            // 2. Save Request to Firestore
-            console.log("Saving to Firestore...");
+            statusMsg.innerText = "Step 2: Saving to Database...";
+
+            // 2. Save to Firestore
             await addDoc(collection(db, "deposit_requests"), {
                 uid: currentUser.uid,
                 email: currentUser.email,
@@ -91,17 +88,15 @@
                 timestamp: serverTimestamp()
             });
 
-            statusMsg.innerText = "SUCCESS! REQUEST SENT TO ADMIN.";
+            statusMsg.innerText = "SUCCESS! REQUEST SENT.";
             statusMsg.style.color = "var(--neon)";
-            
-            // Clear inputs
-            document.getElementById('pkrInput').value = "";
-            document.getElementById('transID').value = "";
-            document.getElementById('proofSS').value = "";
+            alert("Deposit Request Sent Successfully!");
+            location.reload();
 
         } catch (error) {
-            console.error("Critical Error:", error);
-            statusMsg.innerText = "Error: Check Browser Console (F12)";
+            console.error(error);
+            alert("CRITICAL ERROR: " + error.message); // This will show you the exact error
+            statusMsg.innerText = "Upload Failed. See Alert.";
             statusMsg.style.color = "red";
         }
     };
