@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC - Transaction History</title>
+    <style>
+        :root { --bg: #000; --neon: #64ffda; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
+            color: white; margin: 0; padding: 15px; min-height: 100vh; 
+        }
+        .header { text-align: center; margin-bottom: 20px; }
+        
+        /* Tabs Styling */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .tab-btn { 
+            flex: 1; padding: 12px; background: var(--glass); border: 1px solid #333; 
+            color: #888; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 12px;
+        }
+        .tab-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(100, 255, 218, 0.05); }
+
+        .list-container { max-width: 500px; margin: 0 auto; }
+        .history-card { 
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.05); 
+            padding: 15px; border-radius: 15px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .info b { display: block; font-size: 14px; margin-bottom: 4px; }
+        .info span { font-size: 10px; color: #666; }
+        
+        .status { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; }
+        .status-pending { background: #332b00; color: var(--gold); }
+        .status-approved { background: #002b1a; color: var(--neon); }
+
+        .back-btn { display: block; text-align: center; margin-top: 30px; color: #555; text-decoration: none; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2 style="color:var(--neon); letter-spacing: 2px;">MISSION LOGS</h2>
+        <p style="font-size: 10px; color: #888;">DEPOSIT & WITHDRAWAL HISTORY</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('deposits')">DEPOSITS</button>
+        <button class="tab-btn" onclick="switchTab('withdrawals')">WITHDRAWALS</button>
+    </div>
+
+    <div class="list-container" id="historyList">
+        <p style="text-align:center; color:#444; margin-top:50px;">Loading logs...</p>
+    </div>
+
+    <a href="lobby.html" class="back-btn">← RETURN TO LOBBY</a>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentTab = 'deposits';
+    let currentUser = null;
+
+    onAuthStateChanged(auth, u => {
+        if(u) {
+            currentUser = u;
+            loadHistory();
+        } else { window.location.href="auth.html"; }
+    });
+
+    window.switchTab = (tab) => {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        loadHistory();
+    };
+
+    function loadHistory() {
+        const container = document.getElementById('historyList');
+        const collectionName = currentTab === 'deposits' ? 'deposit_requests' : 'withdraw_requests';
+        
+        const q = query(
+            collection(db, collectionName), 
+            where("uid", "==", currentUser.uid),
+            orderBy("timestamp", "desc")
+        );
+
+        onSnapshot(q, (snap) => {
+            container.innerHTML = snap.empty ? `<p style="text-align:center; color:#444; margin-top:50px;">No ${currentTab} found.</p>` : '';
+            
+            snap.forEach((doc) => {
+                const d = doc.data();
+                const date = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleDateString() : 'Pending...';
+                
+                // PKR and Coins calculation based on type
+                const amountText = currentTab === 'deposits' 
+                    ? `PKR: ${d.pkrAmount} ➔ ${d.coinsRequested} Coins`
+                    : `${d.coinsAmount} Coins ➔ PKR: ${d.pkrAmount}`;
+
+                container.innerHTML += `
+                    <div class="history-card">
+                        <div class="info">
+                            <b>${amountText}</b>
+                            <span>Date: ${date} | Status: ${d.status}</span>
+                        </div>
+                        <div class="status status-${d.status}">${d.status}</div>
+                    </div>
+                `;
+            });
+        });
+    }
+</script>
+</body>
+</html>
+
