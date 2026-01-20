@@ -42,6 +42,7 @@
         .btn-group { display: flex; gap: 10px; }
         .btn-approve { background: var(--neon); color: #000; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
         .btn-cancel { background: var(--danger); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
+        .withdraw-card { border-color: var(--gold); background: rgba(255, 215, 0, 0.02); }
     </style>
 </head>
 <body>
@@ -70,9 +71,16 @@
     </div>
 
     <div class="table-container" style="padding: 20px;">
-        <span class="section-title" style="text-align: left;">PENDING DEPOSITS</span>
-        <div id="requestContainer">
-            <p style="color: #444; text-align: center;">No pending requests...</p>
+        <span class="section-title" style="text-align: left; color: var(--neon);">PENDING DEPOSITS</span>
+        <div id="depositContainer">
+            <p style="color: #444; text-align: center;">No pending deposits...</p>
+        </div>
+    </div>
+
+    <div class="table-container" style="padding: 20px; border-color: var(--gold);">
+        <span class="section-title" style="text-align: left; color: var(--gold);">PENDING WITHDRAWALS</span>
+        <div id="withdrawContainer">
+            <p style="color: #444; text-align: center;">No pending withdrawals...</p>
         </div>
     </div>
 
@@ -107,80 +115,87 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- WEEKLY COOLDOWN RESET LOGIC ---
+        // --- LISTEN TO DEPOSITS ---
+        onSnapshot(query(collection(db, "deposit_requests"), where("status", "==", "pending")), (snap) => {
+            const container = document.getElementById('depositContainer');
+            container.innerHTML = snap.empty ? '<p style="color:#444; text-align:center;">No pending deposits.</p>' : '';
+            snap.forEach((req) => {
+                const d = req.data();
+                container.innerHTML += `
+                    <div class="req-card">
+                        <div class="req-info">
+                            <b style="color:var(--neon)">${d.email}</b><br>
+                            PKR: ${d.pkrAmount} ➔ <b>${d.coinsRequested} Coins</b><br>
+                            TID: <span style="color:#fff">${d.transactionID}</span>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-approve" onclick="approveDeposit('${req.id}', '${d.uid}', ${d.coinsRequested})">APPROVE</button>
+                            <button class="btn-cancel" onclick="cancelRequest('deposit_requests', '${req.id}')">CANCEL</button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        // --- LISTEN TO WITHDRAWALS ---
+        onSnapshot(query(collection(db, "withdraw_requests"), where("status", "==", "pending")), (snap) => {
+            const container = document.getElementById('withdrawContainer');
+            container.innerHTML = snap.empty ? '<p style="color:#444; text-align:center;">No pending withdrawals.</p>' : '';
+            snap.forEach((req) => {
+                const d = req.data();
+                container.innerHTML += `
+                    <div class="req-card withdraw-card">
+                        <div class="req-info">
+                            <b style="color:var(--gold)">${d.method}: ${d.accountNumber}</b><br>
+                            Name: ${d.accountName} | User: ${d.email}<br>
+                            Coins: ${d.coinsAmount} ➔ <b style="color:#fff">PKR: ${d.pkrAmount}</b>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-approve" style="background:var(--gold)" onclick="approveWithdraw('${req.id}')">PAID</button>
+                            <button class="btn-cancel" onclick="rejectWithdraw('${req.id}', '${d.uid}', ${d.coinsAmount})">REJECT</button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        // --- FUNCTIONS ---
+        window.approveDeposit = async (id, uid, coins) => {
+            if(!confirm("Approve and add coins?")) return;
+            await updateDoc(doc(db, "users", uid), { coins: increment(coins) });
+            await deleteDoc(doc(db, "deposit_requests", id));
+            alert("Deposit Approved!");
+        };
+
+        window.approveWithdraw = async (id) => {
+            if(!confirm("Mark as PAID? (Make sure you sent the money first)")) return;
+            await deleteDoc(doc(db, "withdraw_requests", id));
+            alert("Withdrawal Closed.");
+        };
+
+        window.rejectWithdraw = async (id, uid, coins) => {
+            if(!confirm("Reject and REFUND coins to user?")) return;
+            await updateDoc(doc(db, "users", uid), { coins: increment(coins) });
+            await deleteDoc(doc(db, "withdraw_requests", id));
+            alert("Rejected and Refunded.");
+        };
+
+        window.cancelRequest = async (col, id) => {
+            if(!confirm("Delete this request?")) return;
+            await deleteDoc(doc(db, col, id));
+        };
+
+        // Agent management & list logic remains same...
         document.getElementById('resetCooldownBtn').onclick = async () => {
             const email = document.getElementById('targetEmail').value.trim().toLowerCase();
-            const status = document.getElementById('status');
-            if(!email) return alert("Enter Agent Email first!");
-
-            try {
-                const q = query(collection(db, "users"), where("email", "==", email));
-                const snap = await getDocs(q);
-                if(!snap.empty) {
-                    await updateDoc(doc(db, "users", snap.docs[0].id), { 
-                        lastWeeklyCrypt: 0 
-                    });
-                    status.innerText = "MISSION LOCK RESET FOR: " + email;
-                    status.style.color = "var(--neon)";
-                } else { alert("Agent not found!"); }
-            } catch (e) { alert("Reset failed!"); }
-        };
-
-        // --- DEPOSIT REQUESTS LISTENER ---
-        function listenToRequests() {
-            const container = document.getElementById('requestContainer');
-            const q = query(collection(db, "deposit_requests"), where("status", "==", "pending"));
-            
-            onSnapshot(q, (snap) => {
-                container.innerHTML = snap.empty ? '<p style="color:#444; text-align:center;">No pending requests.</p>' : '';
-                snap.forEach((req) => {
-                    const d = req.data();
-                    const reqId = req.id;
-                    
-                    container.innerHTML += `
-                        <div class="req-card">
-                            <div class="req-info">
-                                <b style="color:var(--neon)">${d.email}</b><br>
-                                PKR: ${d.pkrAmount} ➔ <b>${d.coinsRequested} Coins</b><br>
-                                TID: <span style="color:#fff">${d.transactionID}</span>
-                            </div>
-                            <div class="btn-group">
-                                <button class="btn-approve" onclick="approveDeposit('${reqId}', '${d.uid}', ${d.coinsRequested})">APPROVE</button>
-                                <button class="btn-cancel" onclick="cancelDeposit('${reqId}')">CANCEL</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-        }
-
-        // --- APPROVE DEPOSIT FUNCTION ---
-        window.approveDeposit = async (reqId, uid, coins) => {
-            if(!confirm("Approve this deposit and add coins?")) return;
-            
-            try {
-                const userRef = doc(db, "users", uid);
-                await updateDoc(userRef, { coins: increment(coins) });
-                await deleteDoc(doc(db, "deposit_requests", reqId));
-                alert("Deposit Approved! User credited.");
-            } catch (e) {
-                alert("Approval failed: " + e.message);
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                await updateDoc(doc(db, "users", snap.docs[0].id), { lastWeeklyCrypt: 0 });
+                alert("Mission Unlocked!");
             }
         };
 
-        // --- CANCEL DEPOSIT FUNCTION ---
-        window.cancelDeposit = async (reqId) => {
-            if(!confirm("Are you sure you want to CANCEL and delete this request?")) return;
-            
-            try {
-                await deleteDoc(doc(db, "deposit_requests", reqId));
-                alert("Request Cancelled and Removed.");
-            } catch (e) {
-                alert("Cancellation failed!");
-            }
-        };
-
-        // --- LIVE USER SYNC ---
         onSnapshot(query(collection(db, "users"), orderBy("score", "desc")), (snap) => {
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = "";
@@ -190,27 +205,20 @@
             });
         });
 
-        // --- AGENT UPDATE LOGIC ---
         document.getElementById('execBtn').onclick = async () => {
             const email = document.getElementById('targetEmail').value.trim().toLowerCase();
             const xp = parseInt(document.getElementById('giveXP').value) || 0;
             const coins = parseInt(document.getElementById('giveCoins').value) || 0;
             const rank = document.getElementById('setRank').value;
-            
-            try {
-                const q = query(collection(db, "users"), where("email", "==", email));
-                const snap = await getDocs(q);
-                if(!snap.empty) {
-                    const upData = { score: increment(xp), coins: increment(coins) };
-                    if(rank) upData.rank = rank;
-                    await updateDoc(doc(db, "users", snap.docs[0].id), upData);
-                    document.getElementById('status').innerText = "AGENT UPDATED";
-                    document.getElementById('status').style.color = "var(--neon)";
-                } else { alert("User not found!"); }
-            } catch (e) { alert("Update failed"); }
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                const upData = { score: increment(xp), coins: increment(coins) };
+                if(rank) upData.rank = rank;
+                await updateDoc(doc(db, "users", snap.docs[0].id), upData);
+                alert("Updated!");
+            }
         };
-
-        listenToRequests();
     </script>
 </body>
 </html>
