@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFC Admin - Master Controller</title>
     <style>
-        :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; --gold: #ffd700; }
+        :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; --gold: #ffd700; --danger: #ff4d4d; }
         body { 
             background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
             padding: 10px; margin: 0; min-height: 100vh;
@@ -15,7 +15,7 @@
             border: 1px solid var(--admin); max-width: 500px; margin: 10px auto; 
             box-sizing: border-box;
         }
-        input, select, textarea { 
+        input, select { 
             width: 100%; padding: 12px; margin: 8px 0; background: #111; 
             border: 1px solid #333; color: white; border-radius: 10px; 
             box-sizing: border-box; outline: none;
@@ -25,18 +25,23 @@
             border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
             margin-top: 10px; transition: 0.3s;
         }
-        button:active { transform: scale(0.98); }
-        .reset-btn { background: #444; margin-top: 5px; font-size: 11px; padding: 10px; }
-        .reset-btn:hover { background: var(--danger); }
+        .reset-btn { background: #333; font-size: 11px; padding: 10px; margin-top: 5px; border: 1px solid #444; }
+        .reset-btn:hover { background: var(--danger); border-color: var(--danger); }
         
         .table-container { 
-            margin: 20px auto; max-width: 800px; overflow-x: auto; 
+            margin: 20px auto; max-width: 900px; overflow-x: auto; 
             background: #0a0a0a; border-radius: 15px; border: 1px solid #222; 
         }
         table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
-        th { background: #111; color: var(--neon); padding: 12px; border-bottom: 1px solid #222; }
+        th { background: #111; color: var(--neon); padding: 12px; border-bottom: 1px solid #222; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #111; color: #ccc; }
-        .section-title { color: var(--gold); font-size: 14px; letter-spacing: 2px; text-align: center; margin-bottom: 10px; display: block; }
+        .section-title { color: var(--gold); font-size: 14px; letter-spacing: 2px; text-align: center; margin-bottom: 15px; display: block; font-weight: 900; }
+        
+        .req-card { background: #050505; border: 1px solid #222; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .req-info { font-size: 11px; line-height: 1.6; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn-approve { background: var(--neon); color: #000; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
+        .btn-cancel { background: var(--danger); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -60,15 +65,15 @@
             <option value="legend">Legend</option>
         </select>
         <button id="execBtn">EXECUTE UPDATE</button>
-        <button class="reset-btn" id="resetCooldownBtn">RESET WEEKLY COOLDOWN</button>
-        <p id="status" style="text-align:center; font-size:12px; margin-top:10px;">System Ready</p>
+        <button class="reset-btn" id="resetCooldownBtn">RESET WEEKLY MISSION LOCK</button>
+        <p id="status" style="text-align:center; font-size:12px; margin-top:10px; color:#888;">System Ready</p>
     </div>
 
-    <div class="box" style="border-color: var(--gold);">
-        <span class="section-title">WEEKLY MISSION CONTROL</span>
-        <textarea id="missionText" rows="3" placeholder="Enter Secret Text for Game 7..."></textarea>
-        <button id="updateMissionBtn" style="background: var(--gold); color: #000;">UPDATE MISSION TEXT</button>
-        <p id="missionStatus" style="text-align:center; font-size:12px; margin-top:10px;">Waiting...</p>
+    <div class="table-container" style="padding: 20px;">
+        <span class="section-title" style="text-align: left;">PENDING DEPOSITS</span>
+        <div id="requestContainer">
+            <p style="color: #444; text-align: center;">No pending requests...</p>
+        </div>
     </div>
 
     <div class="table-container">
@@ -88,7 +93,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, increment, orderBy, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, increment, orderBy, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -102,43 +107,82 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- RESET COOLDOWN LOGIC ---
+        // --- WEEKLY COOLDOWN RESET LOGIC ---
         document.getElementById('resetCooldownBtn').onclick = async () => {
             const email = document.getElementById('targetEmail').value.trim().toLowerCase();
             const status = document.getElementById('status');
-            if(!email) return alert("Enter Email first!");
+            if(!email) return alert("Enter Agent Email first!");
 
             try {
                 const q = query(collection(db, "users"), where("email", "==", email));
                 const snap = await getDocs(q);
                 if(!snap.empty) {
                     await updateDoc(doc(db, "users", snap.docs[0].id), { 
-                        lastWeeklyCrypt: 0 // Cooldown reset
+                        lastWeeklyCrypt: 0 
                     });
-                    status.innerText = "COOLDOWN RESET SUCCESSFUL";
+                    status.innerText = "MISSION LOCK RESET FOR: " + email;
                     status.style.color = "var(--neon)";
-                } else { alert("User not found!"); }
-            } catch (e) { console.error(e); }
+                } else { alert("Agent not found!"); }
+            } catch (e) { alert("Reset failed!"); }
         };
 
-        // --- MISSION UPDATE LOGIC ---
-        document.getElementById('updateMissionBtn').onclick = async () => {
-            const text = document.getElementById('missionText').value.trim();
-            if(!text) return;
-            try {
-                await setDoc(doc(db, "game_configs", "weekly_crypt"), {
-                    secret_text: text,
-                    last_updated: Date.now()
+        // --- DEPOSIT REQUESTS LISTENER ---
+        function listenToRequests() {
+            const container = document.getElementById('requestContainer');
+            const q = query(collection(db, "deposit_requests"), where("status", "==", "pending"));
+            
+            onSnapshot(q, (snap) => {
+                container.innerHTML = snap.empty ? '<p style="color:#444; text-align:center;">No pending requests.</p>' : '';
+                snap.forEach((req) => {
+                    const d = req.data();
+                    const reqId = req.id;
+                    
+                    container.innerHTML += `
+                        <div class="req-card">
+                            <div class="req-info">
+                                <b style="color:var(--neon)">${d.email}</b><br>
+                                PKR: ${d.pkrAmount} ➔ <b>${d.coinsRequested} Coins</b><br>
+                                TID: <span style="color:#fff">${d.transactionID}</span>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn-approve" onclick="approveDeposit('${reqId}', '${d.uid}', ${d.coinsRequested})">APPROVE</button>
+                                <button class="btn-cancel" onclick="cancelDeposit('${reqId}')">CANCEL</button>
+                            </div>
+                        </div>
+                    `;
                 });
-                document.getElementById('missionStatus').innerText = "MISSION TEXT UPDATED!";
-                document.getElementById('missionStatus').style.color = "var(--neon)";
-                document.getElementById('missionText').value = "";
-            } catch (e) { alert("Error updating mission"); }
+            });
+        }
+
+        // --- APPROVE DEPOSIT FUNCTION ---
+        window.approveDeposit = async (reqId, uid, coins) => {
+            if(!confirm("Approve this deposit and add coins?")) return;
+            
+            try {
+                const userRef = doc(db, "users", uid);
+                await updateDoc(userRef, { coins: increment(coins) });
+                await deleteDoc(doc(db, "deposit_requests", reqId));
+                alert("Deposit Approved! User credited.");
+            } catch (e) {
+                alert("Approval failed: " + e.message);
+            }
+        };
+
+        // --- CANCEL DEPOSIT FUNCTION ---
+        window.cancelDeposit = async (reqId) => {
+            if(!confirm("Are you sure you want to CANCEL and delete this request?")) return;
+            
+            try {
+                await deleteDoc(doc(db, "deposit_requests", reqId));
+                alert("Request Cancelled and Removed.");
+            } catch (e) {
+                alert("Cancellation failed!");
+            }
         };
 
         // --- LIVE USER SYNC ---
-        const tbody = document.getElementById('userTableBody');
         onSnapshot(query(collection(db, "users"), orderBy("score", "desc")), (snap) => {
+            const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = "";
             snap.forEach(u => {
                 const d = u.data();
@@ -146,7 +190,7 @@
             });
         });
 
-        // --- GENERAL UPDATE LOGIC ---
+        // --- AGENT UPDATE LOGIC ---
         document.getElementById('execBtn').onclick = async () => {
             const email = document.getElementById('targetEmail').value.trim().toLowerCase();
             const xp = parseInt(document.getElementById('giveXP').value) || 0;
@@ -161,9 +205,12 @@
                     if(rank) upData.rank = rank;
                     await updateDoc(doc(db, "users", snap.docs[0].id), upData);
                     document.getElementById('status').innerText = "AGENT UPDATED";
-                }
+                    document.getElementById('status').style.color = "var(--neon)";
+                } else { alert("User not found!"); }
             } catch (e) { alert("Update failed"); }
         };
+
+        listenToRequests();
     </script>
 </body>
 </html>
