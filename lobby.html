@@ -138,7 +138,6 @@
     <div class="menu" id="mainMenu">
         <div id="adminLinks"></div> 
         <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 EXCHANGE CENTER</div>
-        <a href="history.html" class="menu-item" style="color:#a5adcb">📜 TRANSACTION HISTORY</a>
         <a href="inbox.html" class="menu-item">📩 MY INBOX</a> 
         <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ RANK UP STORE</a>
         <a href="profile.html" class="menu-item">👤 PROFILE</a>
@@ -183,10 +182,12 @@
         const toggle = document.getElementById('menuToggle');
         const menu = document.getElementById('mainMenu');
 
+        // Menu Toggle
         toggle.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('active'); };
         document.onclick = () => menu.classList.remove('active');
         document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => location.href = "auth.html");
 
+        // Exchange Functions
         window.openExchange = () => document.getElementById('exModal').classList.add('active');
         window.closeExchange = () => document.getElementById('exModal').classList.remove('active');
 
@@ -223,6 +224,7 @@
             document.getElementById('exInput').value = "";
         };
 
+        // Real-time Data Sync
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 onSnapshot(doc(db, "users", user.uid), (snap) => {
