@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC - Withdraw Center</title>
+    <style>
+        :root { --bg: #000; --neon: #64ffda; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
+            color: white; margin: 0; padding: 20px; min-height: 100vh; 
+        }
+        .card { 
+            background: var(--glass); border: 1px solid rgba(255, 215, 0, 0.1); 
+            padding: 25px; border-radius: 24px; backdrop-filter: blur(15px); 
+            max-width: 400px; margin: 0 auto; 
+        }
+        input, select { 
+            width: 100%; padding: 15px; margin: 10px 0; background: #111; 
+            border: 1px solid #333; color: white; border-radius: 12px; 
+            box-sizing: border-box; outline: none; font-size: 16px;
+        }
+        .btn-withdraw { 
+            width: 100%; padding: 18px; background: var(--gold); color: #000; 
+            border: none; border-radius: 15px; font-weight: 900; cursor: pointer; 
+            text-transform: uppercase; margin-top: 10px; 
+        }
+        .calc-box { 
+            font-size: 16px; color: var(--gold); margin: 15px 0; 
+            font-weight: 900; text-align: center; border: 1px dashed var(--gold);
+            padding: 10px; border-radius: 10px;
+        }
+        .balance-info { text-align: center; font-size: 13px; color: var(--neon); margin-bottom: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div style="text-align:center; margin-bottom:20px;">
+        <h2 style="color:var(--gold); letter-spacing: 3px; margin-bottom: 5px;">WITHDRAW CENTER</h2>
+        <p style="color:#888; font-size:11px;">Rate: 50 Coins = 1 PKR</p>
+    </div>
+
+    <div class="card">
+        <div class="balance-info">CURRENT BALANCE: <span id="myCoins">0</span> COINS</div>
+        
+        <div id="calcDisplay" class="calc-box">YOU WILL GET: 0 PKR</div>
+        
+        <input type="number" id="coinInput" placeholder="Enter Coins" oninput="updateCalc(this.value)">
+        
+        <select id="method">
+            <option value="EasyPaisa">EasyPaisa</option>
+            <option value="JazzCash">JazzCash</option>
+            <option value="SadaPay">SadaPay</option>
+        </select>
+        
+        <input type="text" id="accNumber" placeholder="Account Number (03xx...)">
+        <input type="text" id="accName" placeholder="Account Holder Name">
+        
+        <button class="btn-withdraw" id="submitWithdraw">REQUEST CASH OUT</button>
+        <p id="msg" style="text-align:center; font-size:12px; margin-top:15px;"></p>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userCoins = 0;
+    let currentUser = null;
+
+    // Rate definition: 50 Coins = 1 PKR
+    window.updateCalc = (val) => {
+        const coins = parseInt(val) || 0;
+        const pkr = Math.floor(coins / 50); 
+        document.getElementById('calcDisplay').innerText = `YOU WILL GET: ${pkr} PKR`;
+    };
+
+    onAuthStateChanged(auth, u => {
+        if(u) {
+            currentUser = u;
+            onSnapshot(doc(db, "users", u.uid), s => {
+                const data = s.data();
+                userCoins = data.coins || 0;
+                document.getElementById('myCoins').innerText = userCoins;
+            });
+        } else { window.location.href="auth.html"; }
+    });
+
+    document.getElementById('submitWithdraw').onclick = async () => {
+        const coins = parseInt(document.getElementById('coinInput').value);
+        const method = document.getElementById('method').value;
+        const num = document.getElementById('accNumber').value.trim();
+        const name = document.getElementById('accName').value.trim();
+
+        if (!coins || coins < 50) return alert("Minimum withdrawal is 50 coins (1 PKR)");
+        if (coins > userCoins) return alert("Insufficient coins in your vault!");
+        if (!num || !name) return alert("Please provide account details!");
+
+        try {
+            // Deduct coins from user profile
+            await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(-coins) });
+
+            // Create withdrawal request for Admin
+            await addDoc(collection(db, "withdraw_requests"), {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                coinsAmount: coins,
+                pkrAmount: Math.floor(coins / 50),
+                method: method,
+                accountNumber: num,
+                accountName: name,
+                status: "pending",
+                timestamp: serverTimestamp()
+            });
+
+            alert("SUCCESS: Withdrawal request sent! Coins have been locked.");
+            location.href = "lobby.html";
+        } catch (e) {
+            alert("System Error: " + e.message);
+        }
+    };
+</script>
+</body>
+</html>
+
