@@ -8,9 +8,10 @@
         :root { --bg: #000; --neon: #64ffda; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --danger: #ff4d4d; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); background-image: radial-gradient(circle at top, #112240 0%, #000 90%); color: white; margin: 0; padding: 20px; min-height: 100vh; }
         .card { background: var(--glass); border: 1px solid rgba(100, 255, 218, 0.1); padding: 25px; border-radius: 24px; backdrop-filter: blur(15px); max-width: 400px; margin: 0 auto; }
-        input { width: 100%; padding: 15px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 12px; box-sizing: border-box; }
+        input { width: 100%; padding: 15px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 12px; box-sizing: border-box; outline: none; }
         .btn-deposit { width: 100%; padding: 18px; background: var(--neon); color: #000; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
         .status-msg { font-size: 12px; text-align: center; margin-top: 15px; font-weight: bold; }
+        .calc-box { font-size: 14px; color: var(--neon); margin: 15px 0; font-weight: 900; text-align: center; }
     </style>
 </head>
 <body>
@@ -21,12 +22,11 @@
     </div>
 
     <div class="card">
-        <div id="calcDisplay" style="text-align:center; color:var(--neon); font-weight:900; margin-bottom:10px;">RECEIVE: 0 COINS</div>
-        <input type="number" id="pkrInput" placeholder="PKR Amount" oninput="document.getElementById('calcDisplay').innerText = 'RECEIVE: ' + (this.value * 30) + ' COINS'">
-        <input type="text" id="transID" placeholder="Transaction ID (TID)">
-        <label style="font-size:10px; color:var(--gold)">Payment Screenshot (SS):</label>
-        <input type="file" id="proofSS" accept="image/*">
-        <button class="btn-deposit" id="submitReq">SUBMIT DEPOSIT</button>
+        <div id="calcDisplay" class="calc-box">RECEIVE: 0 COINS</div>
+        <input type="number" id="pkrInput" placeholder="Enter PKR Amount" oninput="document.getElementById('calcDisplay').innerText = 'RECEIVE: ' + (this.value * 30) + ' COINS'">
+        <input type="text" id="transID" placeholder="Enter Transaction ID (TID)">
+        
+        <button class="btn-deposit" id="submitReq">SUBMIT REQUEST</button>
         <p id="msg" class="status-msg"></p>
     </div>
 
@@ -34,13 +34,12 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
         authDomain: "hfc-academy.firebaseapp.com",
         projectId: "hfc-academy",
-        storageBucket: "hfc-academy.firebasestorage.app", // standard bucket name
+        storageBucket: "hfc-academy.firebasestorage.app",
         messagingSenderId: "84006497196",
         appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
     };
@@ -48,7 +47,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     let currentUser = null;
     onAuthStateChanged(auth, u => { if(u) currentUser = u; else window.location.href="auth.html"; });
@@ -56,47 +54,39 @@
     document.getElementById('submitReq').onclick = async () => {
         const pkr = document.getElementById('pkrInput').value;
         const tid = document.getElementById('transID').value.trim();
-        const ssFile = document.getElementById('proofSS').files[0];
         const statusMsg = document.getElementById('msg');
 
-        if (!pkr || !tid || !ssFile) {
-            alert("Error: Fill all fields and upload SS!");
+        if (!pkr || pkr <= 0 || !tid) {
+            alert("Please fill all fields correctly!");
             return;
         }
 
         try {
-            statusMsg.innerText = "Step 1: Uploading Screenshot...";
+            statusMsg.innerText = "Submitting to HFC Database...";
             statusMsg.style.color = "var(--gold)";
 
-            // 1. Upload to Storage
-            const storagePath = `deposit_proofs/${currentUser.uid}_${Date.now()}`;
-            const storageRef = ref(storage, storagePath);
-            const uploadTask = await uploadBytes(storageRef, ssFile);
-            const ssURL = await getDownloadURL(uploadTask.ref);
-
-            statusMsg.innerText = "Step 2: Saving to Database...";
-
-            // 2. Save to Firestore
+            // Direct Save to Firestore
             await addDoc(collection(db, "deposit_requests"), {
                 uid: currentUser.uid,
                 email: currentUser.email,
                 pkrAmount: parseInt(pkr),
                 coinsRequested: pkr * 30,
                 transactionID: tid,
-                screenshotURL: ssURL,
                 status: "pending",
                 timestamp: serverTimestamp()
             });
 
-            statusMsg.innerText = "SUCCESS! REQUEST SENT.";
+            statusMsg.innerText = "SUCCESS! REQUEST SENT TO ADMIN.";
             statusMsg.style.color = "var(--neon)";
-            alert("Deposit Request Sent Successfully!");
-            location.reload();
+            alert("Deposit Request Submitted! Admin will verify your TID.");
+            
+            document.getElementById('pkrInput').value = "";
+            document.getElementById('transID').value = "";
 
         } catch (error) {
             console.error(error);
-            alert("CRITICAL ERROR: " + error.message); // This will show you the exact error
-            statusMsg.innerText = "Upload Failed. See Alert.";
+            alert("Error: " + error.message);
+            statusMsg.innerText = "Submission Failed.";
             statusMsg.style.color = "red";
         }
     };
