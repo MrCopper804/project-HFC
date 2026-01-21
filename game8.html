@@ -2,54 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HFC - Coin Flip Arena</title>
     <style>
-        :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); }
+        :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --danger: #ff4d4d; }
         body { 
             font-family: 'Segoe UI', sans-serif; background: var(--bg); 
             background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
-            color: white; padding: 20px; min-height: 100vh;
+            color: white; margin: 0; padding: 15px; min-height: 100vh;
         }
         .wallet-card {
-            background: rgba(100, 255, 218, 0.1); border: 1px solid var(--neon);
-            padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;
+            background: rgba(100, 255, 218, 0.08); border: 1px solid var(--neon);
+            padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
         }
-        .card { background: var(--glass); border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #444; color: white; border-radius: 8px; outline: none; }
-        .btn { width: 100%; padding: 15px; background: var(--neon); color: #000; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
-        .cf-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding: 12px 0; }
-        #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .card { background: var(--glass); border: 1px solid #222; padding: 20px; border-radius: 20px; margin-bottom: 20px; backdrop-filter: blur(10px); }
+        input, select { width: 100%; padding: 14px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; border-radius: 10px; outline: none; box-sizing: border-box; }
+        .btn { width: 100%; padding: 16px; background: var(--neon); color: #000; border: none; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .cf-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; 
+            margin-bottom: 10px; border: 1px solid #222;
+        }
+        .status-tag { font-size: 10px; color: var(--gold); font-weight: bold; border: 1px solid var(--gold); padding: 2px 8px; border-radius: 4px; }
+        
+        #loader { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; justify-content: center; align-items: center; font-weight: bold; color: var(--neon); letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <div id="loadingOverlay">
-        <div style="color:var(--neon); letter-spacing: 2px;">SYNCING WALLET...</div>
-    </div>
+    <div id="loader">INITIALIZING ARENA...</div>
 
     <div class="wallet-card">
-        <span style="font-size: 10px; color: var(--neon); letter-spacing: 1px;">YOUR BALANCE</span>
-        <div id="balanceDisplay" style="font-size: 24px; font-weight: 900; color: #fff;">---</div>
+        <span style="font-size: 10px; color: var(--neon); letter-spacing: 2px;">VAULT BALANCE</span>
+        <div id="balanceDisplay" style="font-size: 28px; font-weight: 900;">0</div>
     </div>
 
     <div class="card">
-        <span style="font-size: 11px; color: var(--gold);">CREATE NEW BATTLE</span>
-        <input type="number" id="betInput" placeholder="Bet Amount (Coins)">
+        <h3 style="margin:0 0 15px 0; font-size:14px; color:var(--gold);">CREATE A CHALLENGE</h3>
+        <input type="number" id="betInput" placeholder="Enter Bet Amount">
         <select id="sideInput">
-            <option value="Heads">Heads</option>
-            <option value="Tails">Tails</option>
+            <option value="Heads">I Choose Heads</option>
+            <option value="Tails">I Choose Tails</option>
         </select>
-        <button class="btn" onclick="createFlip()">Deploy Challenge</button>
+        <button class="btn" onclick="createFlip()">Deploy Battle</button>
     </div>
 
-    <h3>ACTIVE BATTLES</h3>
-    <div class="card" id="flipList">Searching for challenges...</div>
+    <h4 style="letter-spacing: 2px; color: var(--neon); font-size: 12px; margin-left: 5px;">ACTIVE BATTLES</h4>
+    <div id="flipList"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, runTransaction, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
@@ -64,30 +70,27 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let currentUser = null;
     let userCoins = 0;
+    let currentUser = null;
 
-    // Check Auth and Sync Wallet Immediately
     onAuthStateChanged(auth, u => {
         if(u) {
             currentUser = u;
-            // Immediate Snapshot for Wallet
             onSnapshot(doc(db, "users", u.uid), s => {
-                if(s.exists()){
-                    userCoins = s.data().coins || 0;
-                    document.getElementById('balanceDisplay').innerText = userCoins + " COINS";
-                    document.getElementById('loadingOverlay').style.display = 'none'; // Hide loader once data is in
-                }
+                userCoins = s.data().coins || 0;
+                document.getElementById('balanceDisplay').innerText = userCoins;
+                document.getElementById('loader').style.display = 'none';
             });
             listenToFlips();
         } else { window.location.href="auth.html"; }
     });
 
-    // --- Create Logic ---
+    // --- CREATE BATTLE ---
     window.createFlip = async () => {
         const bet = parseInt(document.getElementById('betInput').value);
         const side = document.getElementById('sideInput').value;
-        if(!bet || bet < 1 || bet > userCoins) return alert("Invalid Amount or Low Balance!");
+        if(!bet || bet < 1) return alert("Enter valid amount!");
+        if(bet > userCoins) return alert("Insufficient coins!");
 
         try {
             await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(-bet) });
@@ -99,52 +102,73 @@
                 status: "pending",
                 timestamp: serverTimestamp()
             });
-            alert("Flip Created!");
             document.getElementById('betInput').value = "";
-        } catch (e) { alert("Deployment Failed!"); }
+            alert("Battle Deployed!");
+        } catch (e) { alert("Error: " + e.message); }
     };
 
-    // --- List Active Flips ---
+    // --- LIVE LISTENER (FIXED) ---
     function listenToFlips() {
-        const q = query(collection(db, "coinflips"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
+        const q = query(collection(db, "coinflips"), where("status", "==", "pending"));
+        
         onSnapshot(q, (snap) => {
             const list = document.getElementById('flipList');
-            list.innerHTML = snap.empty ? "No active battles." : "";
-            snap.forEach(flip => {
-                const d = flip.data();
-                if(d.creatorId === currentUser.uid) return;
+            if(snap.empty) {
+                list.innerHTML = "<p style='text-align:center; color:#444; font-size:12px;'>No active challenges found.</p>";
+                return;
+            }
 
+            let flips = [];
+            snap.forEach(d => flips.push({ id: d.id, ...d.data() }));
+
+            // Manual Sort Newest First
+            flips.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+            list.innerHTML = "";
+            flips.forEach(f => {
+                const isMine = f.creatorId === currentUser.uid;
                 list.innerHTML += `
-                    <div class="cf-item">
-                        <div><b style="color:var(--neon)">${d.creatorName}</b><br><small>${d.betAmount} Coins</small></div>
-                        <button onclick="joinFlip('${flip.id}', ${d.betAmount})" style="background:var(--gold); border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">ACCEPT</button>
+                    <div class="cf-item" style="${isMine ? 'border-left: 3px solid var(--neon)' : ''}">
+                        <div>
+                            <b style="color:${isMine ? 'var(--neon)' : '#fff'}">${isMine ? 'YOUR BATTLE' : f.creatorName}</b><br>
+                            <small style="color:var(--gold)">STAKE: ${f.betAmount} COINS</small>
+                        </div>
+                        ${isMine ? '<span class="status-tag">WAITING</span>' : 
+                        `<button class="btn" style="padding:8px 15px; width:auto; font-size:10px;" onclick="joinFlip('${f.id}', ${f.betAmount})">PLAY</button>`}
                     </div>
                 `;
             });
         });
     }
 
-    // --- Join & Result Transaction ---
+    // --- JOIN & WINNER LOGIC ---
     window.joinFlip = async (flipId, betAmount) => {
-        if(userCoins < betAmount) return alert("Low Balance!");
+        if(userCoins < betAmount) return alert("You need more coins to join!");
 
         try {
             await runTransaction(db, async (transaction) => {
                 const flipRef = doc(db, "coinflips", flipId);
                 const flipSnap = await transaction.get(flipRef);
-                if (flipSnap.data().status !== "pending") throw "Already filled!";
-
-                const result = Math.random() < 0.5 ? "Heads" : "Tails";
                 const d = flipSnap.data();
+
+                if(d.status !== "pending") throw "This battle is already over!";
+
+                // Generate Secure Random Result
+                const result = Math.random() < 0.5 ? "Heads" : "Tails";
                 const winnerId = (d.creatorSide === result) ? d.creatorId : currentUser.uid;
 
-                // Deduct Joiner, Add to Winner
+                // Transactional Updates
                 transaction.update(doc(db, "users", currentUser.uid), { coins: increment(-betAmount) });
                 transaction.update(doc(db, "users", winnerId), { coins: increment(betAmount * 2) });
-                transaction.update(flipRef, { status: "completed", winnerId: winnerId, result: result });
+                transaction.update(flipRef, { 
+                    status: "completed", 
+                    winnerId: winnerId, 
+                    result: result,
+                    joinerId: currentUser.uid 
+                });
             });
-            alert("Battle Finished!");
-        } catch (e) { alert("Join Failed: " + e); }
+            alert("Battle Completed! Check your vault.");
+        } catch (e) { alert("Join Error: " + e); }
     };
 </script>
 </body>
