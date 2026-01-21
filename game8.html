@@ -3,42 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC - Coin Flip (PvP)</title>
+    <title>HFC - Coin Flip Arena</title>
     <style>
         :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 20px; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
+            color: white; padding: 20px; min-height: 100vh;
+        }
+        .wallet-card {
+            background: rgba(100, 255, 218, 0.1); border: 1px solid var(--neon);
+            padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;
+        }
         .card { background: var(--glass); border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #444; color: white; border-radius: 8px; }
-        .btn { width: 100%; padding: 15px; background: var(--neon); color: #000; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        .cf-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding: 15px 0; }
-        .winner-tag { color: var(--gold); font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #444; color: white; border-radius: 8px; outline: none; }
+        .btn { width: 100%; padding: 15px; background: var(--neon); color: #000; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        .cf-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding: 12px 0; }
+        #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
     </style>
 </head>
 <body>
 
-    <h2>🪙 COIN FLIP ARENA</h2>
-    <div id="balanceDisplay" style="color:var(--gold); margin-bottom:20px;">Wallet: Loading...</div>
+    <div id="loadingOverlay">
+        <div style="color:var(--neon); letter-spacing: 2px;">SYNCING WALLET...</div>
+    </div>
+
+    <div class="wallet-card">
+        <span style="font-size: 10px; color: var(--neon); letter-spacing: 1px;">YOUR BALANCE</span>
+        <div id="balanceDisplay" style="font-size: 24px; font-weight: 900; color: #fff;">---</div>
+    </div>
 
     <div class="card">
-        <label>BET AMOUNT (1 - 99M)</label>
-        <input type="number" id="betInput" placeholder="Enter coins...">
-        <label>CHOOSE YOUR SIDE</label>
+        <span style="font-size: 11px; color: var(--gold);">CREATE NEW BATTLE</span>
+        <input type="number" id="betInput" placeholder="Bet Amount (Coins)">
         <select id="sideInput">
             <option value="Heads">Heads</option>
             <option value="Tails">Tails</option>
         </select>
-        <button class="btn" onclick="createFlip()">CREATE FLIP</button>
+        <button class="btn" onclick="createFlip()">Deploy Challenge</button>
     </div>
 
     <h3>ACTIVE BATTLES</h3>
-    <div class="card" id="flipList">Searching for active battles...</div>
+    <div class="card" id="flipList">Searching for challenges...</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, getDoc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, runTransaction, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = { /* Aapka Config */ };
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -46,99 +67,85 @@
     let currentUser = null;
     let userCoins = 0;
 
+    // Check Auth and Sync Wallet Immediately
     onAuthStateChanged(auth, u => {
         if(u) {
             currentUser = u;
+            // Immediate Snapshot for Wallet
             onSnapshot(doc(db, "users", u.uid), s => {
-                userCoins = s.data().coins || 0;
-                document.getElementById('balanceDisplay').innerText = `Wallet: ${userCoins} Coins`;
+                if(s.exists()){
+                    userCoins = s.data().coins || 0;
+                    document.getElementById('balanceDisplay').innerText = userCoins + " COINS";
+                    document.getElementById('loadingOverlay').style.display = 'none'; // Hide loader once data is in
+                }
             });
             listenToFlips();
         } else { window.location.href="auth.html"; }
     });
 
-    // --- CREATE COIN FLIP ---
+    // --- Create Logic ---
     window.createFlip = async () => {
         const bet = parseInt(document.getElementById('betInput').value);
         const side = document.getElementById('sideInput').value;
-
-        if(!bet || bet < 1 || bet > 99999999) return alert("Invalid Bet!");
-        if(bet > userCoins) return alert("Insufficient Balance!");
+        if(!bet || bet < 1 || bet > userCoins) return alert("Invalid Amount or Low Balance!");
 
         try {
-            // Lock coins first
             await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(-bet) });
-            
             await addDoc(collection(db, "coinflips"), {
                 creatorId: currentUser.uid,
-                creatorName: currentUser.displayName || "Agent",
+                creatorName: currentUser.email.split('@')[0],
                 betAmount: bet,
                 creatorSide: side,
                 status: "pending",
                 timestamp: serverTimestamp()
             });
-            alert("Flip Created! Waiting for opponent...");
-        } catch (e) { alert("Error creating flip."); }
+            alert("Flip Created!");
+            document.getElementById('betInput').value = "";
+        } catch (e) { alert("Deployment Failed!"); }
     };
 
-    // --- LISTEN TO ACTIVE FLIPS ---
+    // --- List Active Flips ---
     function listenToFlips() {
-        const q = query(collection(db, "coinflips"), where("status", "==", "pending"));
+        const q = query(collection(db, "coinflips"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
         onSnapshot(q, (snap) => {
             const list = document.getElementById('flipList');
             list.innerHTML = snap.empty ? "No active battles." : "";
             snap.forEach(flip => {
                 const d = flip.data();
-                if(d.creatorId === currentUser.uid) return; // Don't join your own flip
+                if(d.creatorId === currentUser.uid) return;
 
                 list.innerHTML += `
                     <div class="cf-item">
-                        <div><b>${d.creatorName}</b><br>${d.betAmount} Coins</div>
-                        <button onclick="joinFlip('${flip.id}', ${d.betAmount})" style="background:var(--gold); border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">JOIN</button>
+                        <div><b style="color:var(--neon)">${d.creatorName}</b><br><small>${d.betAmount} Coins</small></div>
+                        <button onclick="joinFlip('${flip.id}', ${d.betAmount})" style="background:var(--gold); border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">ACCEPT</button>
                     </div>
                 `;
             });
         });
     }
 
-    // --- JOIN & EXECUTE FLIP (CORE LOGIC) ---
+    // --- Join & Result Transaction ---
     window.joinFlip = async (flipId, betAmount) => {
         if(userCoins < betAmount) return alert("Low Balance!");
 
-        const flipRef = doc(db, "coinflips", flipId);
-        const userRef = doc(db, "users", currentUser.uid);
-
         try {
             await runTransaction(db, async (transaction) => {
+                const flipRef = doc(db, "coinflips", flipId);
                 const flipSnap = await transaction.get(flipRef);
-                const d = flipSnap.data();
+                if (flipSnap.data().status !== "pending") throw "Already filled!";
 
-                if (d.status !== "pending") throw "Already joined!";
-
-                // Determine Winner (50/50 Server-side Logic)
                 const result = Math.random() < 0.5 ? "Heads" : "Tails";
+                const d = flipSnap.data();
                 const winnerId = (d.creatorSide === result) ? d.creatorId : currentUser.uid;
-                const loserId = (winnerId === d.creatorId) ? currentUser.uid : d.creatorId;
 
-                // 1. Update Joiner Balance (Staked)
-                transaction.update(userRef, { coins: increment(-betAmount) });
-
-                // 2. Award Winner (Total Pot)
-                const winnerRef = doc(db, "users", winnerId);
-                transaction.update(winnerRef, { coins: increment(betAmount * 2) });
-
-                // 3. Mark Flip as Completed
-                transaction.update(flipRef, {
-                    status: "completed",
-                    joinerId: currentUser.uid,
-                    result: result,
-                    winnerId: winnerId
-                });
+                // Deduct Joiner, Add to Winner
+                transaction.update(doc(db, "users", currentUser.uid), { coins: increment(-betAmount) });
+                transaction.update(doc(db, "users", winnerId), { coins: increment(betAmount * 2) });
+                transaction.update(flipRef, { status: "completed", winnerId: winnerId, result: result });
             });
-            alert("Flip Done! Result updated in history.");
-        } catch (e) { alert("Game Failed: " + e); }
+            alert("Battle Finished!");
+        } catch (e) { alert("Join Failed: " + e); }
     };
 </script>
 </body>
 </html>
-
