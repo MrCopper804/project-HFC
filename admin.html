@@ -43,6 +43,19 @@
         .btn-approve { background: var(--neon); color: #000; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
         .btn-cancel { background: var(--danger); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
         .withdraw-card { border-color: var(--gold); background: rgba(255, 215, 0, 0.02); }
+        
+        /* Custom Link Style */
+        .manage-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--admin);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .manage-link:hover { color: var(--neon); }
     </style>
 </head>
 <body>
@@ -67,6 +80,9 @@
         </select>
         <button id="execBtn">EXECUTE UPDATE</button>
         <button class="reset-btn" id="resetCooldownBtn">RESET WEEKLY MISSION LOCK</button>
+        
+        <a href="userdata.html" class="manage-link">👥 MANAGE ALL USERS (Full DB)</a>
+
         <p id="status" style="text-align:center; font-size:12px; margin-top:10px; color:#888;">System Ready</p>
     </div>
 
@@ -185,7 +201,6 @@
             await deleteDoc(doc(db, col, id));
         };
 
-        // Agent management & list logic remains same...
         document.getElementById('resetCooldownBtn').onclick = async () => {
             const email = document.getElementById('targetEmail').value.trim().toLowerCase();
             const q = query(collection(db, "users"), where("email", "==", email));
