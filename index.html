@@ -3,90 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy - Pro Translator</title>
+    <title>HFC Academy | Neural Link</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #000;
+            --bg: #05070a;
             --neon: #64ffda;
-            --glass: rgba(255, 255, 255, 0.05);
-            --panel: rgba(10, 15, 26, 0.95);
+            --accent: #00e5ff;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(100, 255, 218, 0.15);
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
-            color: #fff; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
+            font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #fff;
+            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
+            overflow: hidden;
         }
 
-        .xp-counter {
-            position: fixed; top: 15px; right: 15px;
+        /* HFC TOP BRANDING */
+        header {
+            padding: 20px; text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+        }
+
+        .hfc-logo {
+            font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900;
+            letter-spacing: 6px; color: var(--neon); margin: 0;
+            text-shadow: 0 0 15px rgba(100, 255, 218, 0.4);
+        }
+
+        .xp-chip {
+            display: inline-block; margin-top: 8px; padding: 3px 15px;
             background: rgba(100, 255, 218, 0.1); border: 1px solid var(--neon);
-            padding: 8px 15px; border-radius: 20px; font-weight: 900;
-            color: var(--neon); font-size: 12px; z-index: 1000;
-            backdrop-filter: blur(10px);
+            border-radius: 4px; font-size: 12px; font-weight: 700; color: var(--neon);
         }
 
-        .main-container { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-top: 50px; }
+        main {
+            flex: 1; padding: 20px; overflow-y: auto;
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+
+        .glass-card {
+            width: 100%; max-width: 400px; background: var(--card-bg);
+            border: 1px solid var(--border); border-radius: 15px; padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .label { font-size: 11px; color: var(--neon); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; opacity: 0.7; }
 
         textarea {
-            width: 100%; height: 110px; background: var(--glass); border: 1px solid #333;
-            border-radius: 15px; color: #fff; padding: 15px; font-size: 16px; outline: none;
-            resize: none; box-sizing: border-box;
+            width: 100%; height: 110px; background: #000; border: 1px solid #222;
+            border-radius: 10px; color: #fff; padding: 12px; font-size: 17px; outline: none;
+            resize: none; box-sizing: border-box; font-family: 'Rajdhani', sans-serif;
         }
 
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
 
-        .trans-btn {
-            padding: 14px; border-radius: 12px; border: none; font-weight: bold;
-            cursor: pointer; transition: 0.2s; font-size: 11px;
+        .btn {
+            padding: 14px; border-radius: 8px; border: none; font-weight: 700;
+            font-family: 'Orbitron', sans-serif; font-size: 10px; cursor: pointer;
+            transition: 0.2s; text-transform: uppercase;
         }
 
-        .eng-hfc { background: var(--neon); color: #000; }
-        .hfc-eng { background: #fff; color: #000; }
-        .cost-tag { display: block; font-size: 8px; opacity: 0.8; margin-top: 3px; }
+        .btn-encrypt { background: var(--neon); color: #000; }
+        .btn-decrypt { background: transparent; color: #fff; border: 1px solid #fff; }
 
-        .output-box {
-            background: rgba(100, 255, 218, 0.03); border: 1px solid rgba(100, 255, 218, 0.2);
-            padding: 20px; border-radius: 15px; min-height: 60px; word-break: break-all;
-            font-size: 20px; line-height: 1.5; position: relative;
+        .result-box {
+            width: 100%; max-width: 400px; text-align: center;
+            background: rgba(0, 229, 255, 0.02); border-radius: 15px;
+            padding: 25px 15px; border: 1px dashed var(--border); box-sizing: border-box;
+            position: relative;
         }
 
-        .copy-btn {
-            position: absolute; bottom: 10px; right: 10px; background: var(--neon);
-            color: #000; border: none; padding: 5px 10px; border-radius: 5px;
-            font-size: 10px; font-weight: bold; cursor: pointer;
+        #outputArea {
+            font-size: 26px; font-weight: 700; color: var(--accent);
+            word-break: break-all; display: block;
+        }
+
+        .copy-link {
+            font-size: 10px; color: #555; margin-top: 10px; cursor: pointer; text-decoration: underline;
+        }
+
+        /* UMAIR KHAN PREMIUM BRANDING (BOTTOM) */
+        footer {
+            padding: 25px 15px; text-align: center;
+            background: #000; border-top: 2px solid var(--neon);
         }
 
         .lobby-link {
-            text-align: center; margin-top: auto; padding: 20px;
-            color: var(--neon); text-decoration: none; font-weight: bold; font-size: 13px;
+            color: var(--neon); text-decoration: none; font-weight: 700;
+            font-size: 12px; letter-spacing: 2px; display: block; margin-bottom: 15px;
+        }
+
+        .dev-badge {
+            display: inline-block; padding: 8px 25px; border-radius: 4px;
+            background: linear-gradient(145deg, rgba(100,255,218,0.1), transparent);
+            border-left: 3px solid var(--neon); border-right: 3px solid var(--neon);
+        }
+
+        .dev-title {
+            font-size: 10px; color: #666; letter-spacing: 4px; margin: 0;
+            text-transform: uppercase; font-weight: 500;
+        }
+
+        .dev-name {
+            font-family: 'Orbitron', sans-serif; font-size: 16px; color: #fff;
+            letter-spacing: 2px; margin-top: 4px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
     </style>
 </head>
 <body>
 
-    <div class="xp-counter">XP: <span id="displayXP">...</span></div>
+    <header>
+        <h1 class="hfc-logo">HFC ACADEMY</h1>
+        <div class="xp-chip">CORE XP: <span id="displayXP">0</span></div>
+    </header>
 
-    <div class="main-container">
-        <div style="font-weight: 900; color: var(--neon); letter-spacing: 2px;">INPUT DATA</div>
-        <textarea id="inputArea" placeholder="Enter English or HFC Symbols..."></textarea>
-
-        <div class="btn-group">
-            <button class="trans-btn eng-hfc" onclick="startTranslation('toHFC')">
-                ENGLISH TO HFC <span class="cost-tag">10 XP DEDUCTION</span>
-            </button>
-            <button class="trans-btn hfc-eng" onclick="startTranslation('toENG')">
-                HFC TO ENGLISH <span class="cost-tag">20 XP DEDUCTION</span>
-            </button>
+    <main>
+        <div class="glass-card">
+            <div class="label">Signal Input</div>
+            <textarea id="inputArea" placeholder="Waiting for data..."></textarea>
+            
+            <div class="btn-box">
+                <button class="btn btn-encrypt" onclick="startTranslation('toHFC')">To HFC</button>
+                <button class="btn btn-decrypt" onclick="startTranslation('toENG')">To Eng</button>
+            </div>
         </div>
 
-        <div style="font-weight: 900; color: #888; letter-spacing: 2px; margin-top: 10px;">DECRYPTED RESULTS</div>
-        <div class="output-box">
-            <span id="outputArea">Ready...</span>
-            <button class="copy-btn" onclick="copyText()">COPY</button>
+        <div class="result-box">
+            <div class="label" style="opacity: 0.4;">Processed Data</div>
+            <span id="outputArea">Ready_</span>
+            <div class="copy-link" onclick="copyText()">Copy To Clipboard</div>
         </div>
+    </main>
 
-        <a href="lobby.html" class="lobby-link">OPEN MISSION LOBBY</a>
-    </div>
+    <footer>
+        <a href="lobby.html" class="lobby-link">_MISSION LOBBY_</a>
+        <div class="dev-badge">
+            <p class="dev-title">System Developer</p>
+            <div class="dev-name">UMAIR KHAN</div>
+        </div>
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -127,10 +186,7 @@
             if (!input.trim()) return;
 
             const cost = (mode === 'toHFC') ? 10 : 20;
-            if (currentXP < cost) {
-                alert("Insufficient XP! Go play games.");
-                return;
-            }
+            if (currentXP < cost) { alert("Insufficient XP!"); return; }
 
             try {
                 await updateDoc(doc(db, "users", currentUID), { score: increment(-cost) });
@@ -141,11 +197,8 @@
                 if (mode === 'toHFC') {
                     finalResult = input.split('').map(char => hfcMap[char] || char).join('');
                 } else {
-                    // --- ADVANCED REVERSE LOGIC ---
                     let tempText = input;
-                    // Sort symbols by length (longest first) to avoid partial matching
                     let items = Object.entries(hfcMap).sort((a,b) => b[1].length - a[1].length);
-                    
                     let decoded = "";
                     while (tempText.length > 0) {
                         let found = false;
@@ -157,10 +210,7 @@
                                 break;
                             }
                         }
-                        if (!found) {
-                            decoded += tempText[0];
-                            tempText = tempText.slice(1);
-                        }
+                        if (!found) { decoded += tempText[0]; tempText = tempText.slice(1); }
                     }
                     finalResult = decoded;
                 }
@@ -171,7 +221,7 @@
         window.copyText = () => {
             const text = document.getElementById('outputArea').innerText;
             navigator.clipboard.writeText(text);
-            alert("Copied to clipboard!");
+            alert("Signal Copied!");
         };
     </script>
 </body>
