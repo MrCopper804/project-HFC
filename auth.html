@@ -20,6 +20,7 @@
         <h2 id="authTitle" style="color: var(--neon);">LOGIN</h2>
         <div id="regFields" style="display: none;">
             <input type="text" id="username" placeholder="Username">
+            <input type="tel" id="whatsapp" placeholder="WhatsApp Number (e.g. 0300...)">
         </div>
         <input type="email" id="email" placeholder="Email Address">
         <input type="password" id="password" placeholder="Password">
@@ -49,7 +50,6 @@
 
         let isLogin = true;
 
-        // Toggle Login/Register UI
         document.getElementById('toggleAuth').onclick = () => {
             isLogin = !isLogin;
             document.getElementById('authTitle').innerText = isLogin ? "LOGIN" : "REGISTER";
@@ -57,11 +57,11 @@
             document.getElementById('toggleAuth').innerText = isLogin ? "New here? Create an Account" : "Already have an account? Login";
         };
 
-        // Main Auth Function
         document.getElementById('authBtn').onclick = async () => {
             const email = document.getElementById('email').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
             const username = document.getElementById('username').value.trim();
+            const whatsapp = document.getElementById('whatsapp').value.trim();
             const status = document.getElementById('statusMsg');
 
             if(!email || !password) return alert("Fill all fields!");
@@ -69,22 +69,20 @@
 
             try {
                 if (isLogin) {
-                    // --- LOGIN LOGIC ---
                     await signInWithEmailAndPassword(auth, email, password);
                     location.href = "lobby.html";
                 } else {
-                    // --- REGISTER LOGIC ---
-                    if(!username) return alert("Enter Username!");
+                    if(!username || !whatsapp) return alert("All fields are required for Registration!");
                     
                     const res = await createUserWithEmailAndPassword(auth, email, password);
                     const user = res.user;
 
                     status.innerText = "Saving Data to Database...";
 
-                    // Yahan data hamesha Number format mein save hoga
                     await setDoc(doc(db, "users", user.uid), {
                         username: username,
                         email: email,
+                        whatsapp: whatsapp, // SAVING WHATSAPP TO FIRESTORE
                         score: 0,
                         coins: 0,
                         rank: "recruit",
@@ -92,19 +90,15 @@
                     });
 
                     status.innerText = "Account Created Successfully!";
-                    // Data save hone ke baad hi lobby par bhejega
                     setTimeout(() => { location.href = "lobby.html"; }, 1000);
                 }
             } catch (error) {
                 status.innerText = "Error: " + error.message;
-                console.error(error);
             }
         };
 
-        // Auto-redirect if already logged in
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Check if user has data in firestore before redirecting
                 getDoc(doc(db, "users", user.uid)).then(snap => {
                     if(snap.exists()) location.href = "lobby.html";
                 });
