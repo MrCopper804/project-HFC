@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFC Admin - Super Control</title>
+    <style>
+        :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; --gold: #ffd700; --danger: #ff4d4d; }
+        body { 
+            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
+            padding: 10px; margin: 0; min-height: 100vh;
+            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
+        }
+        .container { max-width: 900px; margin: 20px auto; }
+        .search-box { margin-bottom: 25px; }
+        input { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid #333; color: white; border-radius: 12px; outline: none; box-sizing: border-box; }
+        
+        .user-card { 
+            background: rgba(10, 25, 47, 0.7); border: 1px solid #222; padding: 20px; 
+            border-radius: 18px; margin-bottom: 15px; border-left: 4px solid var(--neon);
+            transition: 0.3s;
+        }
+        .user-card:hover { border-color: var(--admin); transform: scale(1.01); }
+        
+        .grid-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .item { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .item b { display: block; font-size: 14px; color: #fff; margin-top: 4px; text-transform: none; }
+        
+        .edit-link { color: var(--neon); font-size: 10px; cursor: pointer; text-decoration: underline; margin-left: 5px; }
+        
+        .action-bar { border-top: 1px solid #222; padding-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
+        .btn-role { background: var(--gold); color: #000; }
+        .btn-del { background: var(--danger); color: #fff; }
+        
+        .badge { background: var(--admin); padding: 2px 6px; border-radius: 4px; font-size: 9px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 style="color: var(--neon); text-align:center; letter-spacing: 4px;">SYSTEM COMMANDER</h2>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search Agent by Email, Name or WhatsApp..." oninput="searchUsers()">
+        </div>
+
+        <div id="userList">
+            <p style="text-align:center; color:#555;">Scanning Database...</p>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let allUsers = [];
+
+    // --- Database Fetch ---
+    onSnapshot(query(collection(db, "users"), orderBy("score", "desc")), (snap) => {
+        allUsers = [];
+        snap.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+        renderUsers(allUsers);
+    });
+
+    function renderUsers(users) {
+        const list = document.getElementById('userList');
+        list.innerHTML = users.empty ? "<p>No agents found.</p>" : "";
+        
+        users.forEach(u => {
+            list.innerHTML += `
+                <div class="user-card">
+                    <div class="grid-info">
+                        <div class="item">Username <span class="edit-link" onclick="changeValue('${u.id}', 'username', '${u.username}')">EDIT</span>
+                            <b>${u.username} ${u.role==='admin' ? '<span class="badge">ADMIN</span>':''}</b>
+                        </div>
+                        <div class="item">WhatsApp <span class="edit-link" onclick="changeValue('${u.id}', 'whatsapp', '${u.whatsapp||""}')">EDIT</span>
+                            <b>${u.whatsapp || 'N/A'}</b>
+                        </div>
+                        <div class="item">XP / Score <span class="edit-link" onclick="changeValue('${u.id}', 'score', ${u.score}, true)">EDIT</span>
+                            <b>${u.score || 0}</b>
+                        </div>
+                        <div class="item">HFC Coins <span class="edit-link" onclick="changeValue('${u.id}', 'coins', ${u.coins}, true)">EDIT</span>
+                            <b>${u.coins || 0}</b>
+                        </div>
+                        <div class="item">Current Rank <span class="edit-link" onclick="changeValue('${u.id}', 'rank', '${u.rank}')">EDIT</span>
+                            <b>${(u.rank || "recruit").toUpperCase()}</b>
+                        </div>
+                    </div>
+                    
+                    <div class="action-bar">
+                        <button class="btn btn-role" onclick="setRole('${u.id}', '${u.role}')">
+                            ${u.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
+                        </button>
+                        <button class="btn btn-del" onclick="wipeUser('${u.id}')">Delete Agent</button>
+                        <span style="font-size:10px; color:#444; margin-left:auto;">UID: ${u.id}</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // --- Power Edit Function ---
+    window.changeValue = async (uid, field, currentVal, isNumber = false) => {
+        let newVal = prompt(`Enter new value for ${field.toUpperCase()}:`, currentVal);
+        
+        if (newVal !== null && newVal !== "") {
+            const userRef = doc(db, "users", uid);
+            try {
+                let finalVal = isNumber ? Number(newVal) : newVal;
+                await updateDoc(userRef, { [field]: finalVal });
+                alert("Database Updated Successfully!");
+            } catch (e) { alert("Error: " + e.message); }
+        }
+    };
+
+    // --- Search Logic ---
+    window.searchUsers = () => {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allUsers.filter(u => 
+            u.email.toLowerCase().includes(term) || 
+            u.username.toLowerCase().includes(term) ||
+            (u.whatsapp && u.whatsapp.includes(term))
+        );
+        renderUsers(filtered);
+    };
+
+    // --- Role & Wipe Logic ---
+    window.setRole = async (uid, currentRole) => {
+        const newRole = currentRole === 'admin' ? 'user' : 'admin';
+        if(confirm(`Change this agent's authority to ${newRole.toUpperCase()}?`)) {
+            await updateDoc(doc(db, "users", uid), { role: newRole });
+        }
+    };
+
+    window.wipeUser = async (uid) => {
+        if(confirm("DANGER! This will permanently erase this agent's history and balance. Continue?")) {
+            await deleteDoc(doc(db, "users", uid));
+        }
+    };
+</script>
+</body>
+</html>
+
