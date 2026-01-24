@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - The Impossible Vault (Synced)</title>
+    <title>HFC - The Impossible Vault (Official)</title>
     <style>
         :root { --neon: #64ffda; --bg: #030712; --gold: #ffd700; --danger: #ff4d4d; }
         body { 
@@ -13,7 +13,8 @@
         }
         .header { display: flex; justify-content: space-between; font-size: 11px; color: var(--neon); margin-bottom: 30px; border: 1px solid #112240; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.5); }
         .vault-ui { background: rgba(255,255,255,0.02); border: 1px solid #222; padding: 30px; border-radius: 20px; box-shadow: inset 0 0 20px #000; }
-        .symbol-box { font-size: 30px; letter-spacing: 6px; margin: 25px 0; color: var(--gold); min-height: 50px; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); line-height: 1.2; word-break: break-all; }
+        /* Symbols display styling */
+        .symbol-box { font-size: 28px; letter-spacing: 5px; margin: 25px 0; color: var(--gold); min-height: 50px; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); word-break: break-all; line-height: 1.4; }
         .timer-container { width: 100%; height: 8px; background: #000; border-radius: 10px; margin-bottom: 25px; border: 1px solid #222; overflow: hidden; }
         #timerBar { width: 100%; height: 100%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
         input { width: 100%; padding: 18px; background: #050505; border: 1px solid #333; color: white; border-radius: 12px; text-align: center; font-size: 22px; outline: none; box-sizing: border-box; text-transform: uppercase; }
@@ -24,7 +25,7 @@
 </head>
 <body>
 
-    <div id="statusOverlay">SYNCING SECURE DATA...</div>
+    <div id="statusOverlay">SECURE CONNECTION...</div>
 
     <div class="header">
         <span>AGENT: <b id="userRank">---</b></span>
@@ -33,7 +34,7 @@
 
     <div id="startScreen">
         <h1 style="color:var(--danger); letter-spacing: 8px; margin-bottom: 10px;">IMPOSSIBLE VAULT</h1>
-        <p style="font-size: 11px; color: #555; margin-bottom: 30px;">FEE: 10 COINS | REWARD: 25 COINS<br>REVERSED RANK DIFFICULTY ACTIVE</p>
+        <p style="font-size: 11px; color: #555; margin-bottom: 30px;">FEE: 10 COINS | REWARD: 25 COINS<br>SYSTEM: REVERSED RANK DIFFICULTY</p>
         <button class="btn-start" id="payBtn">ENTER THE VOID</button>
     </div>
 
@@ -65,19 +66,26 @@
     const db = getFirestore(app);
 
     let userData = null;
-    let target = "";
-    let gameClock;
-    let isGameRunning = false;
+    let targetWord = "";
+    let clock;
+    let playing = false;
 
-    const hfcChart = { 'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '}', 'K': '{', 'L': '(', 'M': ')', 'N': '^', 'O': '*', 'P': '&', 'Q': '%', 'R': '$', 'S': '#', 'T': '@', 'U': '?', 'V': '/', 'W': '\\', 'X': '×', 'Y': '¥', 'Z': '§' };
+    // --- OFFICIAL HFC CHART (A-Z) ---
+    const hfcChart = {
+        'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|',
+        'I': '!', 'J': '}', 'K': '{', 'L': '(', 'M': ')', 'N': '^', 'O': '*', 'P': '&',
+        'Q': '%', 'R': '$', 'S': '#', 'T': '@', 'U': '?', 'V': '/', 'W': '\\', 'X': '×',
+        'Y': '¥', 'Z': '§'
+    };
     
-    const reversedWords = {
-        recruit: ["DECRYPTED", "SECURITY", "ALGORITHM", "DATABASE", "OPERATIVE"],
-        agent: ["MASTER", "VORTEX", "MISSION", "SYSTEM"],
-        operative: ["BRAIN", "LIGHT", "STORM", "WOLF"],
-        specialist: ["FIRE", "GOLD", "DARK", "BANK"],
-        commander: ["CAT", "DOG", "SKY", "BOX"],
-        legend: ["ACE", "TOP", "KEY", "VIP"]
+    // --- REVERSED WORD BANK ---
+    const words = {
+        recruit: ["ACADEMY", "SECURITY", "PROTOCOL", "DATABASE", "OPERATIVE", "UPGRADE"],
+        agent: ["VORTEX", "MISSION", "SYSTEM", "DECODE"],
+        operative: ["STORM", "WOLF", "BRAIN", "DARK"],
+        specialist: ["GOLD", "BANK", "FIRE", "KEY"],
+        commander: ["SKY", "BOX", "CAT", "DOG"],
+        legend: ["ACE", "VIP", "TOP", "GO"]
     };
 
     onAuthStateChanged(auth, u => {
@@ -92,64 +100,59 @@
     });
 
     document.getElementById('payBtn').onclick = async () => {
-        if(isGameRunning) return;
-        if(userData.coins < 10) return alert("VAULT DENIED: LOW COINS");
+        if(playing) return;
+        if(userData.coins < 10) return alert("VAULT ACCESS DENIED: LOW COINS");
         
         try {
-            // Instant Sync with Firebase
             await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-10) });
-            
-            isGameRunning = true;
+            playing = true;
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
             document.getElementById('userInput').focus();
-            loadChallenge();
-        } catch (e) {
-            alert("Connection Lost!");
-            location.reload();
-        }
+            generateMission();
+        } catch (e) { location.reload(); }
     };
 
-    function loadChallenge() {
+    function generateMission() {
         const rank = userData.rank || "recruit";
-        const words = reversedWords[rank] || reversedWords.recruit;
-        target = words[Math.floor(Math.random() * words.length)];
+        const pool = words[rank] || words.recruit;
+        targetWord = pool[Math.floor(Math.random() * pool.length)];
         
-        let syms = "";
-        for(let l of target) { syms += hfcChart[l] || "?"; }
-        document.getElementById('symbolDisplay').innerText = syms;
+        let symbols = "";
+        for(let char of targetWord) {
+            symbols += hfcChart[char] || char; 
+        }
+        document.getElementById('symbolDisplay').innerText = symbols;
 
-        // Sync Difficulty
-        let time = 6000; 
+        // Difficulty: Recruit (2s) to Legend (6s)
+        let time = 6000;
         if(rank === "commander") time = 5000;
         if(rank === "specialist") time = 4000;
         if(rank === "operative") time = 3000;
         if(rank === "agent") time = 2500;
-        if(rank === "recruit") time = 2000; 
+        if(rank === "recruit") time = 2000;
 
-        document.getElementById('diffLabel').innerText = `CRITICAL: ${rank.toUpperCase()} LEVEL - ${time/1000}s`;
+        document.getElementById('diffLabel').innerText = `MODIFIER: ${rank.toUpperCase()} | TIME: ${time/1000}s`;
         
         let start = Date.now();
-        gameClock = setInterval(() => {
+        clock = setInterval(() => {
             let left = 100 - ((Date.now() - start) / time * 100);
             document.getElementById('timerBar').style.width = left + "%";
-            if(left <= 0) { 
-                clearInterval(gameClock); 
-                isGameRunning = false;
-                alert("MISSION FAILED: VAULT LOCKED"); 
+            if(left <= 0) {
+                clearInterval(clock);
+                playing = false;
+                alert("ACCESS DENIED: VAULT LOCKED");
                 location.reload();
             }
         }, 30);
     }
 
     document.getElementById('userInput').oninput = async function() {
-        if(this.value.toUpperCase() === target) {
-            clearInterval(gameClock);
-            isGameRunning = false;
-            
-            // Sync Win with Firebase
+        if(this.value.toUpperCase() === targetWord) {
+            clearInterval(clock);
+            playing = false;
             await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(25) });
-            alert("SUCCESS! +25 COINS ADDED TO VAULT");
+            alert("VAULT BREACHED! REWARD CREDITED.");
             location.reload();
         }
     };
