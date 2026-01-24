@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML EDITOR - Developed by Umair Khan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08080a;
+            --panel: #111116;
+            --text: #e0e0e0;
+            --accent: #00f2ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--panel);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+            z-index: 100;
+        }
+
+        .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; color: #fff; }
+        .logo span { color: var(--accent); text-shadow: 0 0 15px var(--accent); }
+
+        .controls { display: flex; gap: 8px; }
+
+        button {
+            padding: 6px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: 0.3s;
+            color: white;
+        }
+
+        .btn-run { background: #007bff; }
+        .btn-full { background: #6f42c1; }
+        .btn-red { background: #d90429; }
+        button:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+        main {
+            display: flex;
+            flex: 1;
+            padding: 15px;
+            gap: 10px;
+            height: calc(100vh - 60px);
+            position: relative;
+            align-items: center;
+        }
+
+        /* Center Branding */
+        .mid-branding {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+            white-space: nowrap;
+            padding: 10px 0;
+            background: linear-gradient(180deg, #ff0000, #00ff00, #0000ff, #ff0000);
+            background-size: 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rgb-text 5s linear infinite;
+            transform: rotate(180deg);
+        }
+
+        @keyframes rgb-text {
+            0% { background-position: 0%; }
+            100% { background-position: 400%; }
+        }
+
+        .rgb-box {
+            position: relative;
+            flex: 1;
+            height: 100%;
+            background: var(--panel);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            padding: 2px;
+            overflow: hidden;
+        }
+
+        .rgb-box::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(#ff0000, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            animation: rotate 4s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        .inner-content {
+            position: relative;
+            z-index: 1;
+            background: var(--panel);
+            width: 100%; height: 100%;
+            border-radius: 10px;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        .label {
+            background: #1c1c24;
+            padding: 10px 15px;
+            font-size: 0.7rem;
+            color: #aaa;
+            border-bottom: 1px solid #222;
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            color: #00ffcc;
+            padding: 15px;
+            border: none;
+            outline: none;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        iframe { width: 100%; height: 100%; background: white; border: none; }
+
+        /* Full Screen Preview Mode */
+        .preview-full {
+            position: fixed !important;
+            top: 0; left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999;
+            border-radius: 0 !important;
+        }
+
+        .exit-full {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 10000;
+            display: none;
+            background: #ff4757;
+        }
+
+        @media (max-width: 768px) {
+            main { flex-direction: column; overflow-y: auto; align-items: stretch; }
+            .rgb-box { height: 45%; min-height: 300px; flex: none; }
+            .mid-branding { 
+                writing-mode: horizontal-tb; 
+                transform: none; 
+                text-align: center; 
+                padding: 5px; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">⚡ HTML <span>EDITOR</span></div>
+    <div class="controls">
+        <button class="btn-run" onclick="copyCode()">Copy</button>
+        <button class="btn-full" onclick="toggleFull()">Full Screen</button>
+        <button class="btn-red" onclick="clearAll()">Clear</button>
+    </div>
+</header>
+
+<button id="exitBtn" class="exit-full" onclick="toggleFull()">Exit Full Screen</button>
+
+<main>
+    <div class="rgb-box">
+        <div class="inner-content">
+            <div class="label">Source Code</div>
+            <textarea id="editor" spellcheck="false" oninput="run()"></textarea>
+        </div>
+    </div>
+
+    <div class="mid-branding">Developed by Umair Khan</div>
+
+    <div id="previewBox" class="rgb-box">
+        <div class="inner-content">
+            <div class="label">Live Result</div>
+            <iframe id="preview"></iframe>
+        </div>
+    </div>
+</main>
+
+<script>
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const previewBox = document.getElementById('previewBox');
+    const exitBtn = document.getElementById('exitBtn');
+
+    function run() {
+        const code = editor.value;
+        const iframeDoc = preview.contentDocument || preview.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(code);
+        iframeDoc.close();
+        localStorage.setItem('umair_editor_final', code);
+    }
+
+    function toggleFull() {
+        previewBox.classList.toggle('preview-full');
+        exitBtn.style.display = previewBox.classList.contains('preview-full') ? 'block' : 'none';
+    }
+
+    function clearAll() {
+        if(confirm("Delete all code?")) {
+            editor.value = "";
+            run();
+        }
+    }
+
+    function copyCode() {
+        navigator.clipboard.writeText(editor.value);
+        alert("Code copied!");
+    }
+
+    window.onload = () => {
+        const saved = localStorage.getItem('umair_editor_final');
+        editor.value = saved || "\n<h1 style='text-align:center; color:cyan;'>HTML EDITOR</h1>";
+        run();
+    };
+</script>
+
+</body>
+</html>
