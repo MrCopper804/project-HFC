@@ -1,1 +1,161 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC - The Impossible Vault (Official)</title>
+    <style>
+        :root { --neon: #64ffda; --bg: #030712; --gold: #ffd700; --danger: #ff4d4d; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
+            margin: 0; padding: 20px; text-align: center;
+            background-image: radial-gradient(circle at top, #112240 0%, #030712 90%);
+        }
+        .header { display: flex; justify-content: space-between; font-size: 11px; color: var(--neon); margin-bottom: 30px; border: 1px solid #112240; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.5); }
+        .vault-ui { background: rgba(255,255,255,0.02); border: 1px solid #222; padding: 30px; border-radius: 20px; box-shadow: inset 0 0 20px #000; }
+        .symbol-box { font-size: 28px; letter-spacing: 5px; margin: 25px 0; color: var(--gold); min-height: 50px; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); word-break: break-all; line-height: 1.4; }
+        .timer-container { width: 100%; height: 8px; background: #000; border-radius: 10px; margin-bottom: 25px; border: 1px solid #222; overflow: hidden; }
+        #timerBar { width: 100%; height: 100%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        input { width: 100%; padding: 18px; background: #050505; border: 1px solid #333; color: white; border-radius: 12px; text-align: center; font-size: 22px; outline: none; box-sizing: border-box; text-transform: uppercase; }
+        input:focus { border-color: var(--danger); }
+        .btn-start { padding: 20px 45px; background: var(--danger); color: #fff; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
+        #statusOverlay { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="statusOverlay">SECURE CONNECTION...</div>
+
+    <div class="header">
+        <span>AGENT: <b id="userRank">---</b></span>
+        <span>VAULT: <b id="userCoins">0</b></span>
+    </div>
+
+    <div id="startScreen">
+        <h1 style="color:var(--danger); letter-spacing: 8px; margin-bottom: 10px;">IMPOSSIBLE VAULT</h1>
+        <p style="font-size: 11px; color: #555; margin-bottom: 30px;">FEE: 10 COINS | REWARD: 25 COINS<br>OFFICIAL HFC CIPHER ACTIVE</p>
+        <button class="btn-start" id="payBtn">ENTER THE VOID</button>
+    </div>
+
+    <div id="gameScreen" style="display: none;">
+        <div class="timer-container"><div id="timerBar"></div></div>
+        <div class="vault-ui">
+            <div id="diffLabel" style="font-size: 10px; color: var(--danger); margin-bottom: 10px; font-weight: bold;"></div>
+            <div class="symbol-box" id="symbolDisplay"></div>
+            <input type="text" id="userInput" placeholder="DECRYPT NOW" autocomplete="off">
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+        authDomain: "hfc-academy.firebaseapp.com",
+        projectId: "hfc-academy",
+        storageBucket: "hfc-academy.firebasestorage.app",
+        messagingSenderId: "84006497196",
+        appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userData = null;
+    let targetWord = "";
+    let clock;
+    let playing = false;
+
+    // --- OFFICIAL HFC CHART FROM ARCHIVE ---
+    const hfcChart = {
+        'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|',
+        'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶',
+        'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`',
+        'Y': '~', 'Z': '℅'
+    };
+    
+    // --- REVERSED DIFFICULTY WORD BANK ---
+    const words = {
+        recruit: ["ACADEMY", "SECURITY", "PROTOCOL", "DATABASE", "OPERATIVE", "UPGRADE"],
+        agent: ["VORTEX", "MISSION", "SYSTEM", "DECODE"],
+        operative: ["STORM", "WOLF", "BRAIN", "DARK"],
+        specialist: ["GOLD", "BANK", "FIRE", "KEY"],
+        commander: ["SKY", "BOX", "CAT", "DOG"],
+        legend: ["ACE", "VIP", "TOP", "GO"]
+    };
+
+    onAuthStateChanged(auth, u => {
+        if(u) {
+            onSnapshot(doc(db, "users", u.uid), s => {
+                userData = s.data();
+                document.getElementById('userRank').innerText = userData.rank.toUpperCase();
+                document.getElementById('userCoins').innerText = userData.coins;
+                document.getElementById('statusOverlay').style.display = 'none';
+            });
+        }
+    });
+
+    document.getElementById('payBtn').onclick = async () => {
+        if(playing) return;
+        if(userData.coins < 10) return alert("VAULT ACCESS DENIED: LOW COINS");
+        
+        try {
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-10) });
+            playing = true;
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            document.getElementById('userInput').focus();
+            generateMission();
+        } catch (e) { location.reload(); }
+    };
+
+    function generateMission() {
+        const rank = userData.rank || "recruit";
+        const pool = words[rank] || words.recruit;
+        targetWord = pool[Math.floor(Math.random() * pool.length)];
+        
+        let symbols = "";
+        for(let char of targetWord) {
+            symbols += hfcChart[char] || char; 
+        }
+        document.getElementById('symbolDisplay').innerText = symbols;
+
+        // Reversed Difficulty: Recruit gets 2s, Legend gets 6s
+        let time = 6000;
+        if(rank === "commander") time = 5000;
+        if(rank === "specialist") time = 4000;
+        if(rank === "operative") time = 3000;
+        if(rank === "agent") time = 2500;
+        if(rank === "recruit") time = 2000;
+
+        document.getElementById('diffLabel').innerText = `MODIFIER: ${rank.toUpperCase()} | TIME: ${time/1000}s`;
+        
+        let start = Date.now();
+        clock = setInterval(() => {
+            let left = 100 - ((Date.now() - start) / time * 100);
+            document.getElementById('timerBar').style.width = left + "%";
+            if(left <= 0) {
+                clearInterval(clock);
+                playing = false;
+                alert("ACCESS DENIED: VAULT LOCKED");
+                location.reload();
+            }
+        }, 30);
+    }
+
+    document.getElementById('userInput').oninput = async function() {
+        if(this.value.toUpperCase() === targetWord) {
+            clearInterval(clock);
+            playing = false;
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(25) });
+            alert("VAULT BREACHED! REWARD CREDITED.");
+            location.reload();
+        }
+    };
+</script>
+</body>
+</html>
