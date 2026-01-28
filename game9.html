@@ -3,52 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - 8K Row Shifter</title>
+    <title>HFC - 8K Row Shifter V2</title>
     <style>
         :root { 
             --neon: #64ffda; --bg: #020617; --gold: #fbbf24; 
             --pink: #f472b6; --blue: #38bdf8; 
         }
-        body { 
-            margin: 0; overflow: hidden; background: var(--bg);
-            font-family: 'Inter', system-ui, sans-serif;
-            color: white;
-        }
-        /* 8K UI Styling */
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Inter', sans-serif; color: white; }
+        
+        /* High-Quality UI */
         .header { 
             position: absolute; top: 15px; width: 90%; left: 5%;
             display: flex; justify-content: space-between; z-index: 10;
-            background: rgba(15, 23, 42, 0.8); padding: 15px;
-            border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.9); padding: 15px;
+            border-radius: 16px; border: 1px solid rgba(100, 255, 218, 0.2);
+            backdrop-filter: blur(15px);
         }
-        .stat-label { font-size: 10px; color: #94a3b8; display: block; margin-bottom: 2px;}
-        .stat-value { font-weight: 800; font-size: 14px; letter-spacing: 1px; }
+        .stat-group { display: flex; flex-direction: column; }
+        .stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-weight: 800; font-size: 15px; color: var(--neon); }
 
         #menu-overlay {
-            position: fixed; inset: 0; background: radial-gradient(circle, #0f172a 0%, #020617 100%);
+            position: fixed; inset: 0; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
         }
         .btn-start { 
-            padding: 20px 50px; background: linear-gradient(135deg, #64ffda, #38bdf8);
+            padding: 22px 60px; background: linear-gradient(135deg, var(--neon), var(--blue));
             color: #020617; border: none; border-radius: 50px; font-weight: 900;
-            cursor: pointer; font-size: 1.2rem; transition: 0.3s;
-            box-shadow: 0 0 30px rgba(100, 255, 218, 0.3);
+            cursor: pointer; font-size: 1.1rem; text-transform: uppercase;
+            box-shadow: 0 0 30px rgba(100, 255, 218, 0.3); transition: 0.3s;
         }
-        .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(100, 255, 218, 0.5); }
+        .btn-start:hover { transform: translateY(-3px); box-shadow: 0 10px 40px rgba(100, 255, 218, 0.5); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div><span class="stat-label">OPERATIVE</span><span id="userRank" class="stat-value" style="color:var(--neon)">---</span></div>
-        <div><span class="stat-label">VAULT BALANCE</span><span id="userCoins" class="stat-value" style="color:var(--gold)">0</span></div>
+        <div class="stat-group"><span class="stat-label">Agent ID</span><span id="userRank">SYNCING...</span></div>
+        <div class="stat-group"><span class="stat-label">Vault Balance</span><span id="userCoins" style="color:var(--gold)">0</span></div>
     </div>
 
     <div id="menu-overlay">
-        <h1 style="font-size: 3.5rem; margin: 0; background: linear-gradient(to right, #64ffda, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SHIFT SHOOTER</h1>
-        <p style="color: #64748b; margin-bottom: 30px;">8K ULTRA RESOLUTION INTERFACE</p>
-        <button class="btn-start" id="startBtn">PAY 50 & START</button>
+        <h1 style="font-size: 3rem; margin: 0; background: linear-gradient(to right, #64ffda, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(100,255,218,0.3));">SHIFT SHOOTER</h1>
+        <p id="msg" style="color: #64748b; margin: 20px 0 40px;">8K ULTRA-SHARP INTERFACE | ROW SHIFT LOGIC</p>
+        <button class="btn-start" id="startBtn">AUTHORIZE 50 CR</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -76,9 +74,10 @@
     
     let userData = null;
     let isPlaying = false;
-    let gridRows = []; // Array of arrays
+    let gridRows = [];
     let projectile = null;
     let currentAmmo = null;
+    let dpr = window.devicePixelRatio || 1;
 
     const hfcData = [
         { l: 'A', s: '+' }, { l: 'B', s: '[]' }, { l: 'C', s: '©' }, { l: 'D', s: '÷' },
@@ -100,29 +99,28 @@
         }
     });
 
-    function resize() {
-        canvas.width = window.innerWidth * window.devicePixelRatio;
-        canvas.height = window.innerHeight * window.devicePixelRatio;
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    function setupCanvas() {
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
         canvas.style.width = window.innerWidth + 'px';
         canvas.style.height = window.innerHeight + 'px';
+        ctx.scale(dpr, dpr);
     }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', setupCanvas);
+    setupCanvas();
 
     document.getElementById('startBtn').onclick = async () => {
         if(!userData || userData.coins < 50) return alert("VAULT ACCESS DENIED");
         try {
             await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-50) });
             initGame();
-        } catch (e) { location.reload(); }
+        } catch (e) { console.error(e); }
     };
 
     function initGame() {
         isPlaying = true;
         gridRows = [];
-        const numRows = 5;
-        for(let i = 0; i < numRows; i++) {
+        for(let i = 0; i < 5; i++) {
             gridRows.push(generateRow(i));
         }
         setNewAmmo();
@@ -137,16 +135,15 @@
         for(let i = 0; i < cols; i++) {
             row.push({
                 x: spacing * (i + 1),
-                y: 120 + (rowIndex * 80),
+                y: 150 + (rowIndex * 85),
                 data: hfcData[Math.floor(Math.random() * hfcData.length)],
-                color: rowIndex === 4 ? '#64ffda' : '#1e293b' // Bottom row highlighted
+                active: true
             });
         }
         return row;
     }
 
     function setNewAmmo() {
-        // Guaranteed Match Logic: Ammo will be one of the symbols in the bottom-most row
         const bottomRow = gridRows[gridRows.length - 1];
         const randomTarget = bottomRow[Math.floor(Math.random() * bottomRow.length)];
         currentAmmo = randomTarget.data;
@@ -154,31 +151,19 @@
 
     canvas.addEventListener('mousedown', (e) => {
         if (!isPlaying || projectile) return;
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const angle = Math.atan2(mouseY - (window.innerHeight - 100), mouseX - (window.innerWidth / 2));
-        
+        const angle = Math.atan2(e.clientY - (window.innerHeight - 100), e.clientX - (window.innerWidth / 2));
         projectile = {
-            x: window.innerWidth / 2,
-            y: window.innerHeight - 100,
-            vx: Math.cos(angle) * 25,
-            vy: Math.sin(angle) * 25,
+            x: window.innerWidth / 2, y: window.innerHeight - 100,
+            vx: Math.cos(angle) * 22, vy: Math.sin(angle) * 22,
             data: currentAmmo
         };
     });
 
-    async function shiftGrid() {
-        // Remove bottom row
-        gridRows.pop();
-        // Shift all remaining rows down
-        gridRows.forEach(row => {
-            row.forEach(t => t.y += 80);
-        });
-        // Add new row at top
-        gridRows.unshift(generateRow(0));
-        // Reset top row Y
-        gridRows[0].forEach(t => t.y = 120);
+    async function shiftRows() {
+        gridRows.pop(); // Remove bottom
+        gridRows.forEach(row => row.forEach(t => t.y += 85)); // Shift down
+        gridRows.unshift(generateRow(0)); // New top
+        gridRows[0].forEach(t => t.y = 150); 
         
         await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) });
         setNewAmmo();
@@ -189,52 +174,54 @@
         ctx.fillStyle = '#020617';
         ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-        // Draw Rows
-        gridRows.forEach((row, rowIndex) => {
-            const isBottom = rowIndex === gridRows.length - 1;
+        // Draw Stable Grid Rows
+        gridRows.forEach((row, rIdx) => {
+            const isTargetRow = rIdx === gridRows.length - 1;
             row.forEach(t => {
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, 25, 0, Math.PI * 2);
-                ctx.strokeStyle = isBottom ? '#64ffda' : 'rgba(100, 255, 218, 0.1)';
-                ctx.lineWidth = isBottom ? 3 : 1;
+                ctx.arc(t.x, t.y, 28, 0, Math.PI * 2);
+                ctx.strokeStyle = isTargetRow ? '#64ffda' : 'rgba(100, 255, 218, 0.1)';
+                ctx.lineWidth = isTargetRow ? 3 : 1;
                 ctx.stroke();
-                
-                ctx.fillStyle = isBottom ? '#fff' : '#334155';
-                ctx.font = '800 18px Inter';
+
+                ctx.fillStyle = isTargetRow ? '#fff' : '#1e293b';
+                ctx.font = 'bold 20px Inter';
                 ctx.textAlign = 'center';
-                ctx.fillText(t.data.s, t.x, t.y + 7);
+                ctx.fillText(t.data.s, t.x, t.y + 8);
             });
         });
 
-        // Current Ammo
+        // Current Ammo (Alphabet)
         ctx.fillStyle = '#64ffda';
-        ctx.font = '900 60px Inter';
+        ctx.font = '900 65px Inter';
+        ctx.textAlign = 'center';
         ctx.fillText(currentAmmo.l, window.innerWidth/2, window.innerHeight - 40);
 
-        // Projectile Logic
+        // Projectile Movement
         if(projectile) {
             projectile.x += projectile.vx;
             projectile.y += projectile.vy;
 
             ctx.beginPath();
-            ctx.arc(projectile.x, projectile.y, 15, 0, Math.PI * 2);
+            ctx.arc(projectile.x, projectile.y, 18, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
-            ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 25; ctx.shadowColor = '#fff';
             ctx.fill();
             ctx.shadowBlur = 0;
 
             if(projectile.x < 0 || projectile.x > window.innerWidth) projectile.vx *= -1;
 
-            // Check collision with BOTTOM row ONLY
-            const bottomRow = gridRows[gridRows.length - 1];
-            bottomRow.forEach((t, i) => {
+            // Check collision with BOTTOM row only
+            const targetRow = gridRows[gridRows.length - 1];
+            targetRow.forEach(t => {
                 const dist = Math.hypot(projectile.x - t.x, projectile.y - t.y);
-                if(dist < 40) {
+                if(dist < 45) {
                     if(projectile.data.l === t.data.l) {
                         projectile = null;
-                        shiftGrid();
+                        shiftRows();
                     } else {
                         isPlaying = false;
+                        document.getElementById('msg').innerText = "DECRYPTION ERROR: WRONG SYMBOL";
                         document.getElementById('menu-overlay').style.display = 'flex';
                     }
                 }
@@ -242,7 +229,6 @@
 
             if(projectile && (projectile.y < 0 || projectile.y > window.innerHeight)) projectile = null;
         }
-
         requestAnimationFrame(animate);
     }
 </script>
