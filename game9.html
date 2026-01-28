@@ -3,44 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - Bubble Shooter (Instant Access)</title>
+    <title>HFC - Colorful Bubble Shooter</title>
     <style>
-        :root { --neon: #64ffda; --bg: #030712; --gold: #ffd700; --danger: #ff4d4d; }
+        :root { 
+            --neon: #64ffda; 
+            --bg: #030712; 
+            --gold: #ffd700; 
+            --danger: #ff4d4d;
+            --purple: #bc13fe;
+            --blue: #3d5afe;
+        }
         body { 
             font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
             margin: 0; overflow: hidden; text-align: center;
-            background-image: radial-gradient(circle at top, #112240 0%, #030712 90%);
+            background: linear-gradient(180deg, #050a18 0%, #000 100%);
         }
-        /* Header UI */
         .header { 
             position: absolute; top: 10px; width: 94%; left: 3%;
             display: flex; justify-content: space-between; font-size: 11px; 
-            color: var(--neon); z-index: 10; border: 1px solid #112240; 
+            color: var(--neon); z-index: 10; border: 1px solid rgba(100, 255, 218, 0.3); 
             padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.8);
-            box-sizing: border-box;
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
         }
-        #gameCanvas { display: block; }
         #menu-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
         }
         .btn-start { 
-            padding: 20px 45px; background: var(--danger); color: #fff; border: none; 
-            border-radius: 15px; font-weight: 900; cursor: pointer; 
-            text-transform: uppercase; letter-spacing: 2px; margin-top: 20px;
+            padding: 18px 40px; background: linear-gradient(45deg, var(--danger), #ff8e53); 
+            color: #fff; border: none; border-radius: 50px; font-weight: 900; 
+            cursor: pointer; text-transform: uppercase; box-shadow: 0 5px 20px rgba(255, 77, 77, 0.4);
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <span>AGENT: <b id="userRank">LOADING...</b></span>
-        <span>VAULT: <b id="userCoins">0</b></span>
+        <span>AGENT: <b id="userRank" style="color: var(--purple);">LOADING...</b></span>
+        <span>VAULT: <b id="userCoins" style="color: var(--gold);">0</b></span>
     </div>
 
     <div id="menu-overlay">
-        <h1 style="color:var(--neon); letter-spacing: 5px;">BUBBLE CIPHER</h1>
-        <p id="msg" style="font-size: 12px; color: #888;">MATCH ALPHABET BALL TO SYMBOL GRID</p>
+        <h1 style="background: linear-gradient(to right, #64ffda, #bc13fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3rem; margin: 0;">NEON CIPHER</h1>
+        <p id="msg" style="color: #888;">MATCH THE FALLING LAST ROW!</p>
         <button class="btn-start" id="startBtn">PAY 50 & START</button>
     </div>
 
@@ -51,7 +56,6 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Firebase config
     const firebaseConfig = {
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
         authDomain: "hfc-academy.firebaseapp.com",
@@ -73,8 +77,8 @@
     let gridSymbols = [];
     let projectiles = [];
     let currentAmmo = null;
+    const colors = ['#64ffda', '#bc13fe', '#3d5afe', '#ff4d4d', '#ffd700', '#ff00ff'];
 
-    // Archive Cipher Data
     const hfcData = [
         { l: 'A', s: '+' }, { l: 'B', s: '[]' }, { l: 'C', s: '©' }, { l: 'D', s: '÷' },
         { l: 'E', s: '=' }, { l: 'F', s: '_' }, { l: 'G', s: '>' }, { l: 'H', s: '|' },
@@ -85,7 +89,6 @@
         { l: 'Y', s: '~' }, { l: 'Z', s: '℅' }
     ];
 
-    // Auth connection bina kisi overlay ke
     onAuthStateChanged(auth, u => {
         if(u) {
             onSnapshot(doc(db, "users", u.uid), s => {
@@ -104,9 +107,7 @@
     resize();
 
     document.getElementById('startBtn').onclick = async () => {
-        if(!userData) return alert("WAITING FOR SYNC...");
-        if(userData.coins < 50) return alert("NEED 50 COINS");
-        
+        if(!userData || userData.coins < 50) return alert("VAULT LOCKED: NEED 50 COINS");
         try {
             await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-50) });
             initGame();
@@ -118,7 +119,7 @@
         gridSymbols = [];
         projectiles = [];
         
-        const rows = 4;
+        const rows = 5; 
         const cols = Math.floor(canvas.width / 70);
         const padding = (canvas.width - (cols * 70)) / 2;
 
@@ -126,9 +127,11 @@
             for(let c = 0; c < cols; c++) {
                 gridSymbols.push({
                     x: padding + c * 70 + 35,
-                    y: r * 75 + 150,
+                    targetY: r * 75 + 150, // Final position
+                    y: (r === rows - 1) ? -100 : r * 75 + 150, // Last row starts from top
                     data: hfcData[Math.floor(Math.random() * hfcData.length)],
-                    radius: 30,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    isLastRow: r === rows - 1,
                     active: true
                 });
             }
@@ -141,7 +144,7 @@
 
     function setNewAmmo() {
         const activeTargets = gridSymbols.filter(t => t.active);
-        if(activeTargets.length === 0) return gameOver("MISSION SUCCESS: GRID CLEAR");
+        if(activeTargets.length === 0) return gameOver("MISSION COMPLETE!");
         currentAmmo = activeTargets[Math.floor(Math.random() * activeTargets.length)].data;
     }
 
@@ -156,44 +159,57 @@
         const angle = Math.atan2(e.clientY - (canvas.height - 80), e.clientX - (canvas.width / 2));
         projectiles.push({
             x: canvas.width / 2, y: canvas.height - 80,
-            vx: Math.cos(angle) * 18, vy: Math.sin(angle) * 18,
-            data: currentAmmo
+            vx: Math.cos(angle) * 20, vy: Math.sin(angle) * 20,
+            data: currentAmmo,
+            color: colors[Math.floor(Math.random() * colors.length)]
         });
     });
 
     function animate() {
         if (!isPlaying) return;
-        ctx.fillStyle = 'rgba(3, 7, 18, 0.4)';
+        ctx.fillStyle = 'rgba(3, 7, 18, 0.2)'; // Motion blur effect
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Grid Drawing
         gridSymbols.forEach(t => {
             if(!t.active) return;
+
+            // Last Row Animation: Baar baar upar se niche aana
+            if(t.isLastRow) {
+                t.y += 3; // Speed of falling
+                if(t.y > t.targetY) t.y = -50; // Reset to top when passes its line
+            }
+
+            // Glow effect
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = t.color;
+            
             ctx.beginPath();
-            ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = '#64ffda';
+            ctx.arc(t.x, t.y, 30, 0, Math.PI * 2);
+            ctx.strokeStyle = t.color;
+            ctx.lineWidth = 3;
             ctx.stroke();
+            
+            ctx.shadowBlur = 0; // Reset shadow for text
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 20px Arial';
-            ctx.textAlign = 'center';
             ctx.fillText(t.data.s, t.x, t.y + 8);
         });
 
-        // Current Ammo Text
-        ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 45px Arial';
+        // Shooter Ammo
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 50px Arial';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#fff';
         ctx.fillText(currentAmmo.l, canvas.width/2, canvas.height - 35);
+        ctx.shadowBlur = 0;
 
         projectiles.forEach((p, pi) => {
             p.x += p.vx; p.y += p.vy;
             
             ctx.beginPath();
             ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
-            ctx.fillStyle = '#64ffda';
+            ctx.fillStyle = '#fff';
             ctx.fill();
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText(p.data.l, p.x, p.y + 6);
 
             if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
 
@@ -207,7 +223,7 @@
                         await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) });
                         setNewAmmo();
                     } else {
-                        gameOver("WRONG DECRYPTION");
+                        gameOver("DECRYPTION ERROR");
                     }
                 }
             });
