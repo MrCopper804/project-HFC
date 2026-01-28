@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - Cipher Shooter (Official)</title>
+    <title>HFC - Alphabet Shooter (Official)</title>
     <style>
         :root { --neon: #64ffda; --bg: #030712; --gold: #ffd700; --danger: #ff4d4d; }
         body { 
@@ -12,7 +12,7 @@
             background-image: radial-gradient(circle at top, #112240 0%, #030712 90%);
         }
         .header { 
-            position: absolute; top: 10px; width: 90%; left: 5%;
+            position: absolute; top: 10px; width: 94%; left: 3%;
             display: flex; justify-content: space-between; font-size: 11px; 
             color: var(--neon); z-index: 10; border: 1px solid #112240; 
             padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.8);
@@ -20,7 +20,7 @@
         }
         #gameCanvas { display: block; cursor: crosshair; }
         #menu-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
         }
         .btn-start { 
@@ -29,6 +29,7 @@
             text-transform: uppercase; letter-spacing: 2px; margin-top: 20px;
         }
         #statusOverlay { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; justify-content: center; align-items: center; }
+        .hint-box { font-size: 10px; color: #555; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -41,8 +42,9 @@
     </div>
 
     <div id="menu-overlay">
-        <h1 style="color:var(--danger); letter-spacing: 5px;">CIPHER SHOOTER</h1>
-        <p id="msg" style="font-size: 12px; color: #888;">ENTRY: 50 COINS | REWARD: 2 COINS PER HIT</p>
+        <h1 style="color:var(--danger); letter-spacing: 5px;">ALPHABET SHOOTER</h1>
+        <p id="msg" style="font-size: 12px; color: #888;">SHOOT THE CORRECT SYMBOL USING THE ALPHABET BALL</p>
+        <div class="hint-box">ENTRY: 50 COINS | WRONG HIT = EXIT</div>
         <button class="btn-start" id="startBtn">PAY 50 & START</button>
     </div>
 
@@ -53,7 +55,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- FIREBASE CONFIG FROM YOUR FILE ---
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
         authDomain: "hfc-academy.firebaseapp.com",
@@ -77,6 +79,7 @@
     let currentAmmo = null;
     let spawnTimer;
 
+    // Data from Archive
     const hfcData = [
         { l: 'A', s: '+' }, { l: 'B', s: '[]' }, { l: 'C', s: '©' }, { l: 'D', s: '÷' },
         { l: 'E', s: '=' }, { l: 'F', s: '_' }, { l: 'G', s: '>' }, { l: 'H', s: '|' },
@@ -87,7 +90,6 @@
         { l: 'Y', s: '~' }, { l: 'Z', s: '℅' }
     ];
 
-    // --- AUTH & DATA CONNECTION ---
     onAuthStateChanged(auth, u => {
         if(u) {
             onSnapshot(doc(db, "users", u.uid), s => {
@@ -96,8 +98,6 @@
                 document.getElementById('userCoins').innerText = userData.coins;
                 document.getElementById('statusOverlay').style.display = 'none';
             });
-        } else {
-            window.location.href = "login.html"; // Agar login na ho to
         }
     });
 
@@ -108,12 +108,11 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // --- GAME START LOGIC ---
     document.getElementById('startBtn').onclick = async () => {
-        if(userData.coins < 50) return alert("ACCESS DENIED: NEED 50 COINS");
+        if(userData.coins < 50) return alert("VAULT ACCESS DENIED: LOW COINS");
         
         try {
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-50) });
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-50) }); //
             startLoop();
         } catch (e) { location.reload(); }
     };
@@ -128,10 +127,10 @@
         animate();
     }
 
-    async function gameOver(reason) {
+    function gameOver(reason) {
         isPlaying = false;
         clearTimeout(spawnTimer);
-        document.getElementById('msg').innerText = "SYSTEM CRASH: " + reason;
+        document.getElementById('msg').innerText = "CONNECTION TERMINATED: " + reason;
         document.getElementById('menu-overlay').style.display = 'flex';
     }
 
@@ -140,7 +139,7 @@
             this.radius = 35;
             this.x = Math.random() * (canvas.width - 70) + 35;
             this.y = -50;
-            this.speed = 2;
+            this.speed = 1.8;
             this.data = hfcData[Math.floor(Math.random() * hfcData.length)];
         }
         draw() {
@@ -149,8 +148,9 @@
             ctx.strokeStyle = '#64ffda';
             ctx.lineWidth = 2;
             ctx.stroke();
+            // Target draws the SYMBOL
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 20px Arial';
+            ctx.font = 'bold 22px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(this.data.s, this.x, this.y + 8);
         }
@@ -161,22 +161,27 @@
             this.x = canvas.width / 2;
             this.y = canvas.height - 80;
             const angle = Math.atan2(ty - this.y, tx - this.x);
-            this.vx = Math.cos(angle) * 15;
-            this.vy = Math.sin(angle) * 15;
+            this.vx = Math.cos(angle) * 16;
+            this.vy = Math.sin(angle) * 16;
             this.data = data;
         }
         draw() {
             ctx.beginPath();
-            ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, 18, 0, Math.PI * 2);
             ctx.fillStyle = '#64ffda';
             ctx.fill();
+            // Projectile draws the ALPHABET
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.data.l, this.x, this.y + 6);
         }
     }
 
     function spawnTarget() {
         if (!isPlaying) return;
         targets.push(new Target());
-        spawnTimer = setTimeout(spawnTarget, 1500);
+        spawnTimer = setTimeout(spawnTarget, 1400);
     }
 
     canvas.addEventListener('mousedown', (e) => {
@@ -190,11 +195,13 @@
         ctx.fillStyle = 'rgba(3, 7, 18, 0.4)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Shooter Ammo Display
+        // Shooter Ammo - Shows ALPHABET
         ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 40px Arial';
+        ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(currentAmmo.s, canvas.width/2, canvas.height - 40);
+        ctx.fillText("NEXT AMMO", canvas.width/2, canvas.height - 85);
+        ctx.font = 'bold 45px Arial';
+        ctx.fillText(currentAmmo.l, canvas.width/2, canvas.height - 35);
 
         projectiles.forEach((p, pi) => {
             p.x += p.vx; p.y += p.vy;
@@ -206,18 +213,18 @@
             t.y += t.speed;
             t.draw();
 
-            if (t.y > canvas.height) gameOver("BREACH DETECTED");
+            if (t.y > canvas.height) gameOver("BREACH AT SECTOR 7");
 
             projectiles.forEach(async (p, pi) => {
                 const dist = Math.hypot(p.x - t.x, p.y - t.y);
                 if (dist < 50) {
-                    if (p.data.s === t.data.s) {
-                        // REWARD: Update Firebase API directly
-                        updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) });
+                    // Matching Logic: Check if Alphabet on Ball matches Symbol on Target
+                    if (p.data.l === t.data.l) {
+                        updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) }); //
                         targets.splice(ti, 1);
                         projectiles.splice(pi, 1);
                     } else {
-                        gameOver("WRONG CIPHER");
+                        gameOver("CIPHER MISMATCH");
                     }
                 }
             });
