@@ -1,26 +1,34 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - The Impossible Vault (Official)</title>
+    <title>HFC - Cipher Shooter (Official)</title>
     <style>
         :root { --neon: #64ffda; --bg: #030712; --gold: #ffd700; --danger: #ff4d4d; }
         body { 
             font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
-            margin: 0; padding: 20px; text-align: center;
+            margin: 0; overflow: hidden; text-align: center;
             background-image: radial-gradient(circle at top, #112240 0%, #030712 90%);
         }
-        .header { display: flex; justify-content: space-between; font-size: 11px; color: var(--neon); margin-bottom: 30px; border: 1px solid #112240; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.5); }
-        .vault-ui { background: rgba(255,255,255,0.02); border: 1px solid #222; padding: 30px; border-radius: 20px; box-shadow: inset 0 0 20px #000; }
-        .symbol-box { font-size: 28px; letter-spacing: 5px; margin: 25px 0; color: var(--gold); min-height: 50px; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); word-break: break-all; line-height: 1.4; }
-        .timer-container { width: 100%; height: 8px; background: #000; border-radius: 10px; margin-bottom: 25px; border: 1px solid #222; overflow: hidden; }
-        #timerBar { width: 100%; height: 100%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-        input { width: 100%; padding: 18px; background: #050505; border: 1px solid #333; color: white; border-radius: 12px; text-align: center; font-size: 22px; outline: none; box-sizing: border-box; text-transform: uppercase; }
-        input:focus { border-color: var(--danger); }
-        .btn-start { padding: 20px 45px; background: var(--danger); color: #fff; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
-        #statusOverlay { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .header { 
+            position: absolute; top: 10px; width: 90%; left: 5%;
+            display: flex; justify-content: space-between; font-size: 11px; 
+            color: var(--neon); z-index: 10; border: 1px solid #112240; 
+            padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.8);
+            box-sizing: border-box;
+        }
+        #gameCanvas { display: block; cursor: crosshair; }
+        #menu-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+        }
+        .btn-start { 
+            padding: 20px 45px; background: var(--danger); color: #fff; border: none; 
+            border-radius: 15px; font-weight: 900; cursor: pointer; 
+            text-transform: uppercase; letter-spacing: 2px; margin-top: 20px;
+        }
+        #statusOverlay { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
@@ -32,26 +40,20 @@
         <span>VAULT: <b id="userCoins">0</b></span>
     </div>
 
-    <div id="startScreen">
-        <h1 style="color:var(--danger); letter-spacing: 8px; margin-bottom: 10px;">IMPOSSIBLE VAULT</h1>
-        <p style="font-size: 11px; color: #555; margin-bottom: 30px;">FEE: 10 COINS | REWARD: 25 COINS<br>OFFICIAL HFC CIPHER ACTIVE</p>
-        <button class="btn-start" id="payBtn">ENTER THE VOID</button>
+    <div id="menu-overlay">
+        <h1 style="color:var(--danger); letter-spacing: 5px;">CIPHER SHOOTER</h1>
+        <p id="msg" style="font-size: 12px; color: #888;">ENTRY: 50 COINS | REWARD: 2 COINS PER HIT</p>
+        <button class="btn-start" id="startBtn">PAY 50 & START</button>
     </div>
 
-    <div id="gameScreen" style="display: none;">
-        <div class="timer-container"><div id="timerBar"></div></div>
-        <div class="vault-ui">
-            <div id="diffLabel" style="font-size: 10px; color: var(--danger); margin-bottom: 10px; font-weight: bold;"></div>
-            <div class="symbol-box" id="symbolDisplay"></div>
-            <input type="text" id="userInput" placeholder="DECRYPT NOW" autocomplete="off">
-        </div>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // --- FIREBASE CONFIG FROM YOUR FILE ---
     const firebaseConfig = {
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
         authDomain: "hfc-academy.firebaseapp.com",
@@ -65,29 +67,27 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let userData = null;
-    let targetWord = "";
-    let clock;
-    let playing = false;
-
-    // --- OFFICIAL HFC CHART FROM ARCHIVE ---
-    const hfcChart = {
-        'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|',
-        'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶',
-        'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`',
-        'Y': '~', 'Z': '℅'
-    };
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
     
-    // --- REVERSED DIFFICULTY WORD BANK ---
-    const words = {
-        recruit: ["ACADEMY", "SECURITY", "PROTOCOL", "DATABASE", "OPERATIVE", "UPGRADE"],
-        agent: ["VORTEX", "MISSION", "SYSTEM", "DECODE"],
-        operative: ["STORM", "WOLF", "BRAIN", "DARK"],
-        specialist: ["GOLD", "BANK", "FIRE", "KEY"],
-        commander: ["SKY", "BOX", "CAT", "DOG"],
-        legend: ["ACE", "VIP", "TOP", "GO"]
-    };
+    let userData = null;
+    let isPlaying = false;
+    let targets = [];
+    let projectiles = [];
+    let currentAmmo = null;
+    let spawnTimer;
 
+    const hfcData = [
+        { l: 'A', s: '+' }, { l: 'B', s: '[]' }, { l: 'C', s: '©' }, { l: 'D', s: '÷' },
+        { l: 'E', s: '=' }, { l: 'F', s: '_' }, { l: 'G', s: '>' }, { l: 'H', s: '|' },
+        { l: 'I', s: '!' }, { l: 'J', s: '#' }, { l: 'K', s: ':' }, { l: 'L', s: '<' },
+        { l: 'M', s: '*' }, { l: 'N', s: '°' }, { l: 'O', s: '()' }, { l: 'P', s: '¶' },
+        { l: 'Q', s: '?' }, { l: 'R', s: '®' }, { l: 'S', s: '$' }, { l: 'T', s: '™' },
+        { l: 'U', s: "'" }, { l: 'V', s: '^' }, { l: 'W', s: '&' }, { l: 'X', s: '`' },
+        { l: 'Y', s: '~' }, { l: 'Z', s: '℅' }
+    ];
+
+    // --- AUTH & DATA CONNECTION ---
     onAuthStateChanged(auth, u => {
         if(u) {
             onSnapshot(doc(db, "users", u.uid), s => {
@@ -96,66 +96,134 @@
                 document.getElementById('userCoins').innerText = userData.coins;
                 document.getElementById('statusOverlay').style.display = 'none';
             });
+        } else {
+            window.location.href = "login.html"; // Agar login na ho to
         }
     });
 
-    document.getElementById('payBtn').onclick = async () => {
-        if(playing) return;
-        if(userData.coins < 10) return alert("VAULT ACCESS DENIED: LOW COINS");
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // --- GAME START LOGIC ---
+    document.getElementById('startBtn').onclick = async () => {
+        if(userData.coins < 50) return alert("ACCESS DENIED: NEED 50 COINS");
         
         try {
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-10) });
-            playing = true;
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('gameScreen').style.display = 'block';
-            document.getElementById('userInput').focus();
-            generateMission();
+            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-50) });
+            startLoop();
         } catch (e) { location.reload(); }
     };
 
-    function generateMission() {
-        const rank = userData.rank || "recruit";
-        const pool = words[rank] || words.recruit;
-        targetWord = pool[Math.floor(Math.random() * pool.length)];
-        
-        let symbols = "";
-        for(let char of targetWord) {
-            symbols += hfcChart[char] || char; 
-        }
-        document.getElementById('symbolDisplay').innerText = symbols;
-
-        // Reversed Difficulty: Recruit gets 2s, Legend gets 6s
-        let time = 6000;
-        if(rank === "commander") time = 5000;
-        if(rank === "specialist") time = 4000;
-        if(rank === "operative") time = 3000;
-        if(rank === "agent") time = 2500;
-        if(rank === "recruit") time = 2000;
-
-        document.getElementById('diffLabel').innerText = `MODIFIER: ${rank.toUpperCase()} | TIME: ${time/1000}s`;
-        
-        let start = Date.now();
-        clock = setInterval(() => {
-            let left = 100 - ((Date.now() - start) / time * 100);
-            document.getElementById('timerBar').style.width = left + "%";
-            if(left <= 0) {
-                clearInterval(clock);
-                playing = false;
-                alert("ACCESS DENIED: VAULT LOCKED");
-                location.reload();
-            }
-        }, 30);
+    function startLoop() {
+        isPlaying = true;
+        targets = [];
+        projectiles = [];
+        currentAmmo = hfcData[Math.floor(Math.random() * hfcData.length)];
+        document.getElementById('menu-overlay').style.display = 'none';
+        spawnTarget();
+        animate();
     }
 
-    document.getElementById('userInput').oninput = async function() {
-        if(this.value.toUpperCase() === targetWord) {
-            clearInterval(clock);
-            playing = false;
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(25) });
-            alert("VAULT BREACHED! REWARD CREDITED.");
-            location.reload();
+    async function gameOver(reason) {
+        isPlaying = false;
+        clearTimeout(spawnTimer);
+        document.getElementById('msg').innerText = "SYSTEM CRASH: " + reason;
+        document.getElementById('menu-overlay').style.display = 'flex';
+    }
+
+    class Target {
+        constructor() {
+            this.radius = 35;
+            this.x = Math.random() * (canvas.width - 70) + 35;
+            this.y = -50;
+            this.speed = 2;
+            this.data = hfcData[Math.floor(Math.random() * hfcData.length)];
         }
-    };
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#64ffda';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.data.s, this.x, this.y + 8);
+        }
+    }
+
+    class Projectile {
+        constructor(tx, ty, data) {
+            this.x = canvas.width / 2;
+            this.y = canvas.height - 80;
+            const angle = Math.atan2(ty - this.y, tx - this.x);
+            this.vx = Math.cos(angle) * 15;
+            this.vy = Math.sin(angle) * 15;
+            this.data = data;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+            ctx.fillStyle = '#64ffda';
+            ctx.fill();
+        }
+    }
+
+    function spawnTarget() {
+        if (!isPlaying) return;
+        targets.push(new Target());
+        spawnTimer = setTimeout(spawnTarget, 1500);
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        if (!isPlaying) return;
+        projectiles.push(new Projectile(e.clientX, e.clientY, currentAmmo));
+        currentAmmo = hfcData[Math.floor(Math.random() * hfcData.length)];
+    });
+
+    function animate() {
+        if (!isPlaying) return;
+        ctx.fillStyle = 'rgba(3, 7, 18, 0.4)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Shooter Ammo Display
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(currentAmmo.s, canvas.width/2, canvas.height - 40);
+
+        projectiles.forEach((p, pi) => {
+            p.x += p.vx; p.y += p.vy;
+            p.draw();
+            if (p.y < 0 || p.x < 0 || p.x > canvas.width) projectiles.splice(pi, 1);
+        });
+
+        targets.forEach((t, ti) => {
+            t.y += t.speed;
+            t.draw();
+
+            if (t.y > canvas.height) gameOver("BREACH DETECTED");
+
+            projectiles.forEach(async (p, pi) => {
+                const dist = Math.hypot(p.x - t.x, p.y - t.y);
+                if (dist < 50) {
+                    if (p.data.s === t.data.s) {
+                        // REWARD: Update Firebase API directly
+                        updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) });
+                        targets.splice(ti, 1);
+                        projectiles.splice(pi, 1);
+                    } else {
+                        gameOver("WRONG CIPHER");
+                    }
+                }
+            });
+        });
+        requestAnimationFrame(animate);
+    }
 </script>
 </body>
 </html>
