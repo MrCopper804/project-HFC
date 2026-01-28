@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - Bubble Shooter Edition</title>
+    <title>HFC - Bubble Shooter (Instant Access)</title>
     <style>
         :root { --neon: #64ffda; --bg: #030712; --gold: #ffd700; --danger: #ff4d4d; }
         body { 
@@ -11,6 +11,7 @@
             margin: 0; overflow: hidden; text-align: center;
             background-image: radial-gradient(circle at top, #112240 0%, #030712 90%);
         }
+        /* Header UI */
         .header { 
             position: absolute; top: 10px; width: 94%; left: 3%;
             display: flex; justify-content: space-between; font-size: 11px; 
@@ -20,7 +21,7 @@
         }
         #gameCanvas { display: block; }
         #menu-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
         }
         .btn-start { 
@@ -28,21 +29,18 @@
             border-radius: 15px; font-weight: 900; cursor: pointer; 
             text-transform: uppercase; letter-spacing: 2px; margin-top: 20px;
         }
-        #statusOverlay { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
 
-    <div id="statusOverlay">SECURE CONNECTION...</div>
-
     <div class="header">
-        <span>AGENT: <b id="userRank">---</b></span>
+        <span>AGENT: <b id="userRank">LOADING...</b></span>
         <span>VAULT: <b id="userCoins">0</b></span>
     </div>
 
     <div id="menu-overlay">
         <h1 style="color:var(--neon); letter-spacing: 5px;">BUBBLE CIPHER</h1>
-        <p id="msg" style="font-size: 12px; color: #888;">CLEAR THE GRID | WRONG HIT = EVICTION</p>
+        <p id="msg" style="font-size: 12px; color: #888;">MATCH ALPHABET BALL TO SYMBOL GRID</p>
         <button class="btn-start" id="startBtn">PAY 50 & START</button>
     </div>
 
@@ -53,6 +51,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // Firebase config
     const firebaseConfig = {
         apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
         authDomain: "hfc-academy.firebaseapp.com",
@@ -75,6 +74,7 @@
     let projectiles = [];
     let currentAmmo = null;
 
+    // Archive Cipher Data
     const hfcData = [
         { l: 'A', s: '+' }, { l: 'B', s: '[]' }, { l: 'C', s: '©' }, { l: 'D', s: '÷' },
         { l: 'E', s: '=' }, { l: 'F', s: '_' }, { l: 'G', s: '>' }, { l: 'H', s: '|' },
@@ -85,13 +85,13 @@
         { l: 'Y', s: '~' }, { l: 'Z', s: '℅' }
     ];
 
+    // Auth connection bina kisi overlay ke
     onAuthStateChanged(auth, u => {
         if(u) {
             onSnapshot(doc(db, "users", u.uid), s => {
                 userData = s.data();
                 document.getElementById('userRank').innerText = userData.rank.toUpperCase();
                 document.getElementById('userCoins').innerText = userData.coins;
-                document.getElementById('statusOverlay').style.display = 'none';
             });
         }
     });
@@ -104,7 +104,9 @@
     resize();
 
     document.getElementById('startBtn').onclick = async () => {
-        if(userData.coins < 50) return alert("INSUFFICIENT FUNDS");
+        if(!userData) return alert("WAITING FOR SYNC...");
+        if(userData.coins < 50) return alert("NEED 50 COINS");
+        
         try {
             await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-50) });
             initGame();
@@ -116,7 +118,6 @@
         gridSymbols = [];
         projectiles = [];
         
-        // Setup Stable Grid (4 Rows)
         const rows = 4;
         const cols = Math.floor(canvas.width / 70);
         const padding = (canvas.width - (cols * 70)) / 2;
@@ -139,11 +140,9 @@
     }
 
     function setNewAmmo() {
-        // Sirf wahi alphabet ammo mein aaye jo grid mein majood ho
         const activeTargets = gridSymbols.filter(t => t.active);
-        if(activeTargets.length === 0) return gameOver("GRID CLEARED!");
-        const randomTarget = activeTargets[Math.floor(Math.random() * activeTargets.length)];
-        currentAmmo = randomTarget.data;
+        if(activeTargets.length === 0) return gameOver("MISSION SUCCESS: GRID CLEAR");
+        currentAmmo = activeTargets[Math.floor(Math.random() * activeTargets.length)].data;
     }
 
     function gameOver(reason) {
@@ -153,13 +152,11 @@
     }
 
     canvas.addEventListener('mousedown', (e) => {
-        if (!isPlaying || projectiles.length > 0) return; // One shot at a time
+        if (!isPlaying || projectiles.length > 0) return;
         const angle = Math.atan2(e.clientY - (canvas.height - 80), e.clientX - (canvas.width / 2));
         projectiles.push({
-            x: canvas.width / 2,
-            y: canvas.height - 80,
-            vx: Math.cos(angle) * 18,
-            vy: Math.sin(angle) * 18,
+            x: canvas.width / 2, y: canvas.height - 80,
+            vx: Math.cos(angle) * 18, vy: Math.sin(angle) * 18,
             data: currentAmmo
         });
     });
@@ -169,41 +166,37 @@
         ctx.fillStyle = 'rgba(3, 7, 18, 0.4)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Stable Grid
+        // Grid Drawing
         gridSymbols.forEach(t => {
             if(!t.active) return;
             ctx.beginPath();
             ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = var(--neon);
+            ctx.strokeStyle = '#64ffda';
             ctx.stroke();
             ctx.fillStyle = '#fff';
-            ctx.font = '20px Arial';
+            ctx.font = 'bold 20px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(t.data.s, t.x, t.y + 8);
         });
 
-        // Draw Shooter
+        // Current Ammo Text
         ctx.fillStyle = '#ffd700';
         ctx.font = 'bold 45px Arial';
         ctx.fillText(currentAmmo.l, canvas.width/2, canvas.height - 35);
 
-        // Projectile Logic
         projectiles.forEach((p, pi) => {
             p.x += p.vx; p.y += p.vy;
             
-            // Draw Projectile (Alphabet Ball)
             ctx.beginPath();
             ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
-            ctx.fillStyle = var(--neon);
+            ctx.fillStyle = '#64ffda';
             ctx.fill();
             ctx.fillStyle = '#000';
             ctx.font = 'bold 16px Arial';
             ctx.fillText(p.data.l, p.x, p.y + 6);
 
-            // Wall bounce
             if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
 
-            // Collision with Grid
             gridSymbols.forEach(async (t) => {
                 if(!t.active) return;
                 const dist = Math.hypot(p.x - t.x, p.y - t.y);
@@ -214,7 +207,7 @@
                         await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) });
                         setNewAmmo();
                     } else {
-                        gameOver("WRONG CIPHER MATCHED");
+                        gameOver("WRONG DECRYPTION");
                     }
                 }
             });
