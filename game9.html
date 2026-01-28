@@ -3,49 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC - Colorful Bubble Shooter</title>
+    <title>HFC - 8K Row Shifter</title>
     <style>
         :root { 
-            --neon: #64ffda; 
-            --bg: #030712; 
-            --gold: #ffd700; 
-            --danger: #ff4d4d;
-            --purple: #bc13fe;
-            --blue: #3d5afe;
+            --neon: #64ffda; --bg: #020617; --gold: #fbbf24; 
+            --pink: #f472b6; --blue: #38bdf8; 
         }
         body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
-            margin: 0; overflow: hidden; text-align: center;
-            background: linear-gradient(180deg, #050a18 0%, #000 100%);
+            margin: 0; overflow: hidden; background: var(--bg);
+            font-family: 'Inter', system-ui, sans-serif;
+            color: white;
         }
+        /* 8K UI Styling */
         .header { 
-            position: absolute; top: 10px; width: 94%; left: 3%;
-            display: flex; justify-content: space-between; font-size: 11px; 
-            color: var(--neon); z-index: 10; border: 1px solid rgba(100, 255, 218, 0.3); 
-            padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.8);
-            box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
+            position: absolute; top: 15px; width: 90%; left: 5%;
+            display: flex; justify-content: space-between; z-index: 10;
+            background: rgba(15, 23, 42, 0.8); padding: 15px;
+            border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+        .stat-label { font-size: 10px; color: #94a3b8; display: block; margin-bottom: 2px;}
+        .stat-value { font-weight: 800; font-size: 14px; letter-spacing: 1px; }
+
         #menu-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            position: fixed; inset: 0; background: radial-gradient(circle, #0f172a 0%, #020617 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
         }
         .btn-start { 
-            padding: 18px 40px; background: linear-gradient(45deg, var(--danger), #ff8e53); 
-            color: #fff; border: none; border-radius: 50px; font-weight: 900; 
-            cursor: pointer; text-transform: uppercase; box-shadow: 0 5px 20px rgba(255, 77, 77, 0.4);
+            padding: 20px 50px; background: linear-gradient(135deg, #64ffda, #38bdf8);
+            color: #020617; border: none; border-radius: 50px; font-weight: 900;
+            cursor: pointer; font-size: 1.2rem; transition: 0.3s;
+            box-shadow: 0 0 30px rgba(100, 255, 218, 0.3);
         }
+        .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(100, 255, 218, 0.5); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <span>AGENT: <b id="userRank" style="color: var(--purple);">LOADING...</b></span>
-        <span>VAULT: <b id="userCoins" style="color: var(--gold);">0</b></span>
+        <div><span class="stat-label">OPERATIVE</span><span id="userRank" class="stat-value" style="color:var(--neon)">---</span></div>
+        <div><span class="stat-label">VAULT BALANCE</span><span id="userCoins" class="stat-value" style="color:var(--gold)">0</span></div>
     </div>
 
     <div id="menu-overlay">
-        <h1 style="background: linear-gradient(to right, #64ffda, #bc13fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3rem; margin: 0;">NEON CIPHER</h1>
-        <p id="msg" style="color: #888;">MATCH THE FALLING LAST ROW!</p>
+        <h1 style="font-size: 3.5rem; margin: 0; background: linear-gradient(to right, #64ffda, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">SHIFT SHOOTER</h1>
+        <p style="color: #64748b; margin-bottom: 30px;">8K ULTRA RESOLUTION INTERFACE</p>
         <button class="btn-start" id="startBtn">PAY 50 & START</button>
     </div>
 
@@ -74,10 +76,9 @@
     
     let userData = null;
     let isPlaying = false;
-    let gridSymbols = [];
-    let projectiles = [];
+    let gridRows = []; // Array of arrays
+    let projectile = null;
     let currentAmmo = null;
-    const colors = ['#64ffda', '#bc13fe', '#3d5afe', '#ff4d4d', '#ffd700', '#ff00ff'];
 
     const hfcData = [
         { l: 'A', s: '+' }, { l: 'B', s: '[]' }, { l: 'C', s: '©' }, { l: 'D', s: '÷' },
@@ -100,14 +101,17 @@
     });
 
     function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth * window.devicePixelRatio;
+        canvas.height = window.innerHeight * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
     }
     window.addEventListener('resize', resize);
     resize();
 
     document.getElementById('startBtn').onclick = async () => {
-        if(!userData || userData.coins < 50) return alert("VAULT LOCKED: NEED 50 COINS");
+        if(!userData || userData.coins < 50) return alert("VAULT ACCESS DENIED");
         try {
             await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(-50) });
             initGame();
@@ -116,120 +120,128 @@
 
     function initGame() {
         isPlaying = true;
-        gridSymbols = [];
-        projectiles = [];
-        
-        const rows = 5; 
-        const cols = Math.floor(canvas.width / 70);
-        const padding = (canvas.width - (cols * 70)) / 2;
-
-        for(let r = 0; r < rows; r++) {
-            for(let c = 0; c < cols; c++) {
-                gridSymbols.push({
-                    x: padding + c * 70 + 35,
-                    targetY: r * 75 + 150, // Final position
-                    y: (r === rows - 1) ? -100 : r * 75 + 150, // Last row starts from top
-                    data: hfcData[Math.floor(Math.random() * hfcData.length)],
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    isLastRow: r === rows - 1,
-                    active: true
-                });
-            }
+        gridRows = [];
+        const numRows = 5;
+        for(let i = 0; i < numRows; i++) {
+            gridRows.push(generateRow(i));
         }
-        
         setNewAmmo();
         document.getElementById('menu-overlay').style.display = 'none';
         animate();
     }
 
-    function setNewAmmo() {
-        const activeTargets = gridSymbols.filter(t => t.active);
-        if(activeTargets.length === 0) return gameOver("MISSION COMPLETE!");
-        currentAmmo = activeTargets[Math.floor(Math.random() * activeTargets.length)].data;
+    function generateRow(rowIndex) {
+        const cols = 5;
+        const row = [];
+        const spacing = window.innerWidth / (cols + 1);
+        for(let i = 0; i < cols; i++) {
+            row.push({
+                x: spacing * (i + 1),
+                y: 120 + (rowIndex * 80),
+                data: hfcData[Math.floor(Math.random() * hfcData.length)],
+                color: rowIndex === 4 ? '#64ffda' : '#1e293b' // Bottom row highlighted
+            });
+        }
+        return row;
     }
 
-    function gameOver(reason) {
-        isPlaying = false;
-        document.getElementById('msg').innerText = reason;
-        document.getElementById('menu-overlay').style.display = 'flex';
+    function setNewAmmo() {
+        // Guaranteed Match Logic: Ammo will be one of the symbols in the bottom-most row
+        const bottomRow = gridRows[gridRows.length - 1];
+        const randomTarget = bottomRow[Math.floor(Math.random() * bottomRow.length)];
+        currentAmmo = randomTarget.data;
     }
 
     canvas.addEventListener('mousedown', (e) => {
-        if (!isPlaying || projectiles.length > 0) return;
-        const angle = Math.atan2(e.clientY - (canvas.height - 80), e.clientX - (canvas.width / 2));
-        projectiles.push({
-            x: canvas.width / 2, y: canvas.height - 80,
-            vx: Math.cos(angle) * 20, vy: Math.sin(angle) * 20,
-            data: currentAmmo,
-            color: colors[Math.floor(Math.random() * colors.length)]
-        });
+        if (!isPlaying || projectile) return;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const angle = Math.atan2(mouseY - (window.innerHeight - 100), mouseX - (window.innerWidth / 2));
+        
+        projectile = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight - 100,
+            vx: Math.cos(angle) * 25,
+            vy: Math.sin(angle) * 25,
+            data: currentAmmo
+        };
     });
+
+    async function shiftGrid() {
+        // Remove bottom row
+        gridRows.pop();
+        // Shift all remaining rows down
+        gridRows.forEach(row => {
+            row.forEach(t => t.y += 80);
+        });
+        // Add new row at top
+        gridRows.unshift(generateRow(0));
+        // Reset top row Y
+        gridRows[0].forEach(t => t.y = 120);
+        
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) });
+        setNewAmmo();
+    }
 
     function animate() {
         if (!isPlaying) return;
-        ctx.fillStyle = 'rgba(3, 7, 18, 0.2)'; // Motion blur effect
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-        gridSymbols.forEach(t => {
-            if(!t.active) return;
-
-            // Last Row Animation: Baar baar upar se niche aana
-            if(t.isLastRow) {
-                t.y += 3; // Speed of falling
-                if(t.y > t.targetY) t.y = -50; // Reset to top when passes its line
-            }
-
-            // Glow effect
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = t.color;
-            
-            ctx.beginPath();
-            ctx.arc(t.x, t.y, 30, 0, Math.PI * 2);
-            ctx.strokeStyle = t.color;
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            ctx.shadowBlur = 0; // Reset shadow for text
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText(t.data.s, t.x, t.y + 8);
+        // Draw Rows
+        gridRows.forEach((row, rowIndex) => {
+            const isBottom = rowIndex === gridRows.length - 1;
+            row.forEach(t => {
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 25, 0, Math.PI * 2);
+                ctx.strokeStyle = isBottom ? '#64ffda' : 'rgba(100, 255, 218, 0.1)';
+                ctx.lineWidth = isBottom ? 3 : 1;
+                ctx.stroke();
+                
+                ctx.fillStyle = isBottom ? '#fff' : '#334155';
+                ctx.font = '800 18px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(t.data.s, t.x, t.y + 7);
+            });
         });
 
-        // Shooter Ammo
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 50px Arial';
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#fff';
-        ctx.fillText(currentAmmo.l, canvas.width/2, canvas.height - 35);
-        ctx.shadowBlur = 0;
+        // Current Ammo
+        ctx.fillStyle = '#64ffda';
+        ctx.font = '900 60px Inter';
+        ctx.fillText(currentAmmo.l, window.innerWidth/2, window.innerHeight - 40);
 
-        projectiles.forEach((p, pi) => {
-            p.x += p.vx; p.y += p.vy;
-            
+        // Projectile Logic
+        if(projectile) {
+            projectile.x += projectile.vx;
+            projectile.y += projectile.vy;
+
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+            ctx.arc(projectile.x, projectile.y, 15, 0, Math.PI * 2);
             ctx.fillStyle = '#fff';
+            ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
             ctx.fill();
+            ctx.shadowBlur = 0;
 
-            if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+            if(projectile.x < 0 || projectile.x > window.innerWidth) projectile.vx *= -1;
 
-            gridSymbols.forEach(async (t) => {
-                if(!t.active) return;
-                const dist = Math.hypot(p.x - t.x, p.y - t.y);
-                if(dist < 50) {
-                    if(p.data.l === t.data.l) {
-                        t.active = false;
-                        projectiles.splice(pi, 1);
-                        await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: increment(2) });
-                        setNewAmmo();
+            // Check collision with BOTTOM row ONLY
+            const bottomRow = gridRows[gridRows.length - 1];
+            bottomRow.forEach((t, i) => {
+                const dist = Math.hypot(projectile.x - t.x, projectile.y - t.y);
+                if(dist < 40) {
+                    if(projectile.data.l === t.data.l) {
+                        projectile = null;
+                        shiftGrid();
                     } else {
-                        gameOver("DECRYPTION ERROR");
+                        isPlaying = false;
+                        document.getElementById('menu-overlay').style.display = 'flex';
                     }
                 }
             });
 
-            if(p.y < 0) projectiles.splice(pi, 1);
-        });
+            if(projectile && (projectile.y < 0 || projectile.y > window.innerHeight)) projectile = null;
+        }
 
         requestAnimationFrame(animate);
     }
