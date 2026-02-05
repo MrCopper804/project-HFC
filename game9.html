@@ -1,1 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC Academy - Cipher Carrom</title>
+    <style>
+        :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; }
+        body { background: var(--bg); color: white; font-family: 'Courier New', monospace; margin: 0; text-align: center; overflow: hidden; touch-action: none; }
+        
+        #game-header { padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #222; background: #050505; }
+        .target-display { background: rgba(100, 255, 218, 0.1); padding: 5px 15px; border: 1px solid var(--neon); border-radius: 5px; }
+        
+        canvas { 
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            border: 8px solid #333;
+            box-shadow: 0 0 30px rgba(100,255,218,0.1);
+            margin: 10px auto;
+            display: block;
+            border-radius: 10px;
+        }
+        
+        .overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); display: flex; justify-content: center; 
+            align-items: center; z-index: 1000; 
+        }
+        .modal { 
+            border: 2px solid var(--neon); padding: 30px; border-radius: 20px; 
+            background: #000; box-shadow: 0 0 20px var(--neon);
+        }
+        .btn { 
+            background: var(--neon); color: black; padding: 15px 40px; 
+            border: none; font-weight: bold; cursor: pointer; border-radius: 5px;
+            font-size: 16px; transition: 0.3s;
+        }
+        .btn:active { transform: scale(0.9); }
+    </style>
+</head>
+<body>
 
+<div id="entryModal" class="overlay">
+    <div class="modal">
+        <h2 style="color: var(--neon); margin-top:0;">HFC CARROM MODE</h2>
+        <div style="margin: 20px 0; font-size: 18px;">
+            <p>ENTRY FEE: <span style="color:var(--danger);">10 COINS</span></p>
+            <p>REWARD: <span style="color:var(--neon);">30 COINS</span></p>
+        </div>
+        <button class="btn" id="payEntryBtn">UNLOCK SERVER & PLAY</button>
+        <p style="font-size:12px; color:#555; margin-top:15px;">Target the correct Cipher coin to win!</p>
+    </div>
+</div>
+
+<div id="game-header">
+    <div class="target-display">TARGET: <span id="targetChar" style="font-size: 22px; color: var(--gold); font-weight:bold;">?</span></div>
+    <div style="text-align:right;">
+        <div style="font-size:10px; color:var(--neon);">HFC VAULT</div>
+        <div id="userBal" style="color:var(--gold); font-weight:bold;">0.00</div>
+    </div>
+</div>
+
+<canvas id="carromBoard"></canvas>
+
+<div style="padding:10px; font-size:12px; color:#666;">
+    DRAG FROM STRIKER TO AIM • RELEASE TO FIRE
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // HFC Academy Config Integrated from your source code
+    const firebaseConfig = {
+        apiKey: "AIzaSyDEp7zO7pW4-y0Ym-Q3z7K4jLz7f0m-E8",
+        authDomain: "hfc-academy-5f7b2.firebaseapp.com",
+        projectId: "hfc-academy-5f7b2",
+        storageBucket: "hfc-academy-5f7b2.appspot.com",
+        messagingSenderId: "305273575306",
+        appId: "1:305273575306:web:6c06c54c3065a3c6902c11"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+    let userCoins = 0;
+    const canvas = document.getElementById('carromBoard');
+    const ctx = canvas.getContext('2d');
+
+    // HFC Cipher Deck
+    const cipherDeck = [
+        {char: 'A', sym: '×'}, {char: 'B', sym: '[]'}, {char: 'C', sym: '()'},
+        {char: 'Z', sym: '℅'}, {char: 'S', sym: '^'}, {char: 'X', sym: '◈'}
+    ];
+    let activeTarget = cipherDeck[Math.floor(Math.random() * cipherDeck.length)];
+
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            currentUser = user;
+            onSnapshot(doc(db, "users", user.uid), s => {
+                userCoins = s.data().coins || 0;
+                document.getElementById('userBal').innerText = userCoins.toFixed(2);
+            });
+        } else { window.location.href = "auth.html"; }
+    });
+
+    let striker = { x: 0, y: 0, r: 22, color: '#64ffda', vx: 0, vy: 0 };
+    let coins = [];
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+
+    document.getElementById('payEntryBtn').onclick = async () => {
+        if (userCoins < 10) return alert("Paisa nahi hai bhai! Minimum 10 Coins chahiye.");
+        await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(-10) });
+        document.getElementById('entryModal').style.display = 'none';
+        initGame();
+    };
+
+    function initGame() {
+        canvas.width = window.innerWidth > 400 ? 360 : window.innerWidth - 20;
+        canvas.height = 480;
+        document.getElementById('targetChar').innerText = activeTarget.char;
+        striker.x = canvas.width / 2;
+        striker.y = canvas.height - 60;
+
+        cipherDeck.forEach((item, i) => {
+            coins.push({
+                x: Math.random() * (canvas.width - 80) + 40,
+                y: Math.random() * 200 + 100,
+                r: 16,
+                sym: item.sym,
+                char: item.char,
+                color: '#fff',
+                vx: 0, vy: 0
+            });
+        });
+        requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener('touchstart', handleStart);
+    canvas.addEventListener('touchend', handleEnd);
+    canvas.addEventListener('mousedown', (e) => handleStart(e));
+    canvas.addEventListener('mouseup', (e) => handleEnd(e));
+
+    function handleStart(e) {
+        const rect = canvas.getBoundingClientRect();
+        const pos = e.touches ? e.touches[0] : e;
+        const mouseX = pos.clientX - rect.left;
+        const mouseY = pos.clientY - rect.top;
+        if (Math.hypot(mouseX - striker.x, mouseY - striker.y) < 40) {
+            isDragging = true;
+            dragStart = { x: mouseX, y: mouseY };
+        }
+    }
+
+    function handleEnd(e) {
+        if (!isDragging) return;
+        const rect = canvas.getBoundingClientRect();
+        const pos = e.changedTouches ? e.changedTouches[0] : e;
+        const mouseX = pos.clientX - rect.left;
+        const mouseY = pos.clientY - rect.top;
+        striker.vx = (dragStart.x - mouseX) * 0.15;
+        striker.vy = (dragStart.y - mouseY) * 0.15;
+        isDragging = false;
+    }
+
+    function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Pockets
+        ctx.fillStyle = '#222';
+        [[0,0], [canvas.width, 0], [0, canvas.height], [canvas.width, canvas.height]].forEach(p => {
+            ctx.beginPath(); ctx.arc(p[0], p[1], 35, 0, Math.PI*2); ctx.fill();
+        });
+
+        if (isDragging) {
+            ctx.strokeStyle = 'var(--neon)';
+            ctx.beginPath(); ctx.moveTo(striker.x, striker.y); ctx.lineTo(striker.x + (striker.x - dragStart.x), striker.y + (striker.y - dragStart.y)); ctx.stroke();
+        }
+
+        striker.x += striker.vx; striker.y += striker.vy;
+        striker.vx *= 0.98; striker.vy *= 0.98;
+
+        if (striker.x < striker.r || striker.x > canvas.width - striker.r) striker.vx *= -0.8;
+        if (striker.y < striker.r || striker.y > canvas.height - striker.r) striker.vy *= -0.8;
+
+        ctx.fillStyle = striker.color;
+        ctx.beginPath(); ctx.arc(striker.x, striker.y, striker.r, 0, Math.PI*2); ctx.fill();
+
+        coins.forEach((c, i) => {
+            c.x += c.vx; c.y += c.vy;
+            c.vx *= 0.98; c.vy *= 0.98;
+
+            if (Math.hypot(striker.x - c.x, striker.y - c.y) < striker.r + c.r) {
+                c.vx = (c.x - striker.x) * 0.2; c.vy = (c.y - striker.y) * 0.2;
+            }
+
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.font = 'bold 14px Arial'; ctx.fillText(c.sym, c.x-8, c.y+5);
+
+            if ((c.x < 35 || c.x > canvas.width - 35) && (c.y < 35 || c.y > canvas.height - 35)) {
+                handleResult(c);
+                coins.splice(i, 1);
+            }
+        });
+        requestAnimationFrame(update);
+    }
+
+    async function handleResult(coin) {
+        if (coin.char === activeTarget.char) {
+            alert("🎯 CORRECT DECODE! Reward: 30 Coins");
+            await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(30) });
+        } else {
+            alert("❌ WRONG SYMBOL! Better luck next time.");
+        }
+        location.reload();
+    }
+</script>
+</body>
+</html>
