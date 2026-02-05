@@ -21,6 +21,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
         canvas {
             border: 4px solid #64ffda;
@@ -71,26 +73,9 @@
             background: #64ffda;
             color: #000;
         }
-        #loader {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-        }
     </style>
 </head>
 <body>
-
-<div id="loader">
-    <h1 class="text-3xl neon-text mb-4">INITIALIZING CIPHER SYSTEM...</h1>
-    <div class="w-48 h-1 bg-gray-800">
-        <div class="h-full bg-[#64ffda] animate-pulse"></div>
-    </div>
-</div>
 
 <div id="game-container">
     <div id="ui-overlay">
@@ -115,14 +100,13 @@
     import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Firebase Config
+    // Firebase Initialization
     const firebaseConfig = JSON.parse(__firebase_config);
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'cipher-carrom';
 
-    // Game Constants & State
     const canvas = document.getElementById('carromBoard');
     const ctx = canvas.getContext('2d');
     const BOARD_SIZE = 600;
@@ -133,7 +117,7 @@
 
     let user = null;
     let balance = 0;
-    let gameState = 'IDLE'; // IDLE, AIMING, MOVING, GAMEOVER
+    let gameState = 'IDLE'; 
     let targetCipher = null;
     let coins = [];
     let striker = null;
@@ -153,16 +137,10 @@
 
     class Entity {
         constructor(x, y, radius, color, label = '', isStriker = false) {
-            this.x = x;
-            this.y = y;
-            this.radius = radius;
-            this.color = color;
-            this.label = label;
-            this.isStriker = isStriker;
-            this.vx = 0;
-            this.vy = 0;
-            this.mass = radius;
-            this.inPocket = false;
+            this.x = x; this.y = y; this.radius = radius;
+            this.color = color; this.label = label;
+            this.isStriker = isStriker; this.vx = 0; this.vy = 0;
+            this.mass = radius; this.inPocket = false;
         }
 
         draw() {
@@ -174,8 +152,6 @@
             ctx.strokeStyle = '#64ffda';
             ctx.lineWidth = 2;
             ctx.stroke();
-            ctx.closePath();
-
             if (this.label) {
                 ctx.fillStyle = this.isStriker ? '#000' : '#64ffda';
                 ctx.font = 'bold 14px Courier New';
@@ -187,16 +163,11 @@
 
         update() {
             if (this.inPocket) return;
-
-            this.x += this.vx;
-            this.y += this.vy;
-            this.vx *= FRICTION;
-            this.vy *= FRICTION;
-
+            this.x += this.vx; this.y += this.vy;
+            this.vx *= FRICTION; this.vy *= FRICTION;
             if (Math.abs(this.vx) < 0.1) this.vx = 0;
             if (Math.abs(this.vy) < 0.1) this.vy = 0;
 
-            // Wall Collisions
             if (this.x - this.radius < 0 || this.x + this.radius > BOARD_SIZE) {
                 this.vx *= -WALL_BOUNCE;
                 this.x = this.x - this.radius < 0 ? this.radius : BOARD_SIZE - this.radius;
@@ -206,17 +177,11 @@
                 this.y = this.y - this.radius < 0 ? this.radius : BOARD_SIZE - this.radius;
             }
 
-            // Pocket Check
-            const corners = [
-                {x: 0, y: 0}, {x: BOARD_SIZE, y: 0},
-                {x: 0, y: BOARD_SIZE}, {x: BOARD_SIZE, y: BOARD_SIZE}
-            ];
+            const corners = [{x:0,y:0},{x:600,y:0},{x:0,y:600},{x:600,y:600}];
             corners.forEach(p => {
-                const dist = Math.hypot(this.x - p.x, this.y - p.y);
-                if (dist < 40) {
+                if (Math.hypot(this.x - p.x, this.y - p.y) < 40) {
                     this.inPocket = true;
-                    this.vx = 0;
-                    this.vy = 0;
+                    this.vx = 0; this.vy = 0;
                     handlePocket(this);
                 }
             });
@@ -226,261 +191,131 @@
     function initGame() {
         canvas.width = BOARD_SIZE;
         canvas.height = BOARD_SIZE;
-        
-        // Setup Target
-        const selected = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-        targetCipher = selected;
+        targetCipher = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
         document.getElementById('target-display').innerText = `TARGET: ${targetCipher.char}`;
-
-        // Setup Striker
-        striker = new Entity(BOARD_SIZE / 2, BOARD_SIZE - 60, 25, '#64ffda', 'S', true);
-
-        // Setup Coins
-        coins = [];
-        const centerX = BOARD_SIZE / 2;
-        const centerY = BOARD_SIZE / 2;
-        
-        SYMBOLS.forEach((s, i) => {
+        striker = new Entity(300, 540, 25, '#64ffda', 'S', true);
+        coins = SYMBOLS.map((s, i) => {
             const angle = (i / SYMBOLS.length) * Math.PI * 2;
-            const dist = 80;
-            const x = centerX + Math.cos(angle) * dist;
-            const y = centerY + Math.sin(angle) * dist;
-            coins.push(new Entity(x, y, 20, 'rgba(0,0,0,0.8)', s.cipher));
+            return new Entity(300 + Math.cos(angle) * 80, 300 + Math.sin(angle) * 80, 20, 'rgba(0,0,0,0.8)', s.cipher);
         });
-
         gameState = 'IDLE';
     }
 
     async function handlePocket(entity) {
         if (entity.isStriker) {
             showModal("FOUL!", "Striker pocket ho gaya! Game Over.", false);
-            return;
-        }
-
-        if (entity.label === targetCipher.cipher) {
-            // WIN
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile'), {
-                    coins: increment(REWARD)
-                });
-                showModal("ACCESS GRANTED!", `Sahi Cipher decode kiya! +${REWARD} Coins earned.`, true);
-            } catch (e) {
-                console.error(e);
-            }
+        } else if (entity.label === targetCipher.cipher) {
+            if (!user) return;
+            await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile'), { coins: increment(REWARD) });
+            showModal("ACCESS GRANTED!", `Sahi Cipher decode kiya! +${REWARD} Coins.`, true);
         } else {
-            // WRONG HIT
-            showModal("SYSTEM BREACH!", "Galat symbol pocket kiya! System Lockdown.", false);
+            showModal("SYSTEM BREACH!", "Galat symbol pocket kiya!", false);
         }
     }
 
     function showModal(title, msg, isWin) {
         gameState = 'GAMEOVER';
-        const modal = document.getElementById('modal');
-        const mTitle = document.getElementById('modal-title');
-        const mMsg = document.getElementById('modal-msg');
-        
-        mTitle.innerText = title;
-        mTitle.className = isWin ? "text-2xl mb-4 neon-text" : "text-2xl mb-4 text-red-500";
-        mMsg.innerText = msg;
-        modal.style.display = 'block';
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-title').className = isWin ? "text-2xl mb-4 neon-text" : "text-2xl mb-4 text-red-500";
+        document.getElementById('modal-msg').innerText = msg;
+        document.getElementById('modal').style.display = 'block';
     }
 
     function resolveCollision(e1, e2) {
-        const dx = e2.x - e1.x;
-        const dy = e2.y - e1.y;
-        const distance = Math.hypot(dx, dy);
-
-        if (distance < e1.radius + e2.radius) {
-            // Normal Vector
-            const nx = dx / distance;
-            const ny = dy / distance;
-
-            // Relative Velocity
-            const rvx = e2.vx - e1.vx;
-            const rvy = e2.vy - e1.vy;
-
-            // Velocity along normal
-            const velAlongNormal = rvx * nx + rvy * ny;
-
-            if (velAlongNormal > 0) return;
-
-            // Impulse scalar
-            const restitution = 0.8;
-            let j = -(1 + restitution) * velAlongNormal;
-            j /= (1 / e1.mass + 1 / e2.mass);
-
-            // Apply impulse
-            const impulseX = j * nx;
-            const impulseY = j * ny;
-
-            e1.vx -= (1 / e1.mass) * impulseX;
-            e1.vy -= (1 / e1.mass) * impulseY;
-            e2.vx += (1 / e2.mass) * impulseX;
-            e2.vy += (1 / e2.mass) * impulseY;
-
-            // Anti-sticking
-            const overlap = (e1.radius + e2.radius) - distance;
-            e1.x -= nx * (overlap / 2);
-            e1.y -= ny * (overlap / 2);
-            e2.x += nx * (overlap / 2);
-            e2.y += ny * (overlap / 2);
+        const dx = e2.x - e1.x, dy = e2.y - e1.y, dist = Math.hypot(dx, dy);
+        if (dist < e1.radius + e2.radius) {
+            const nx = dx / dist, ny = dy / dist;
+            const rvx = e2.vx - e1.vx, rvy = e2.vy - e1.vy;
+            const velNormal = rvx * nx + rvy * ny;
+            if (velNormal > 0) return;
+            let j = -(1.8) * velNormal / (1/e1.mass + 1/e2.mass);
+            e1.vx -= (j * nx) / e1.mass; e1.vy -= (j * ny) / e1.mass;
+            e2.vx += (j * nx) / e2.mass; e2.vy += (j * ny) / e2.mass;
+            const overlap = (e1.radius + e2.radius) - dist;
+            e1.x -= nx * (overlap / 2); e1.y -= ny * (overlap / 2);
+            e2.x += nx * (overlap / 2); e2.y += ny * (overlap / 2);
         }
     }
 
     function gameLoop() {
-        ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-
-        // Draw Board Design
+        ctx.clearRect(0, 0, 600, 600);
         ctx.strokeStyle = 'rgba(100, 255, 218, 0.2)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(BOARD_SIZE/2, BOARD_SIZE/2, 120, 0, Math.PI*2);
-        ctx.stroke();
-        
-        // Draw Pockets
-        ctx.fillStyle = '#000';
-        [ [0,0], [BOARD_SIZE,0], [0,BOARD_SIZE], [BOARD_SIZE,BOARD_SIZE] ].forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p[0], p[1], 45, 0, Math.PI*2);
-            ctx.fill();
-            ctx.strokeStyle = '#64ffda';
-            ctx.stroke();
+        ctx.beginPath(); ctx.arc(300, 300, 120, 0, Math.PI*2); ctx.stroke();
+        [ [0,0], [600,0], [0,600], [600,600] ].forEach(p => {
+            ctx.beginPath(); ctx.arc(p[0], p[1], 45, 0, Math.PI*2); ctx.fillStyle = '#000'; ctx.fill();
+            ctx.strokeStyle = '#64ffda'; ctx.stroke();
         });
 
-        const allEntities = [striker, ...coins];
-        
-        // Update & Collision
-        allEntities.forEach((e, i) => {
-            e.update();
-            e.draw();
-            for (let j = i + 1; j < allEntities.length; j++) {
-                if (!e.inPocket && !allEntities[j].inPocket) {
-                    resolveCollision(e, allEntities[j]);
-                }
-            }
+        const all = [striker, ...coins];
+        all.forEach((e, i) => {
+            e.update(); e.draw();
+            for (let j = i + 1; j < all.length; j++) 
+                if (!e.inPocket && !all[j].inPocket) resolveCollision(e, all[j]);
         });
 
-        // Aiming Line
         if (aiming && gameState === 'IDLE') {
-            ctx.beginPath();
-            ctx.moveTo(striker.x, striker.y);
+            ctx.beginPath(); ctx.moveTo(striker.x, striker.y);
             const angle = Math.atan2(dragStart.y - dragEnd.y, dragStart.x - dragEnd.x);
-            const dist = Math.min(Math.hypot(dragStart.x - dragEnd.x, dragStart.y - dragEnd.y), 150);
-            
-            ctx.lineTo(striker.x + Math.cos(angle) * dist, striker.y + Math.sin(angle) * dist);
-            ctx.strokeStyle = '#ffd700';
-            ctx.setLineDash([5, 5]);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            const d = Math.min(Math.hypot(dragStart.x - dragEnd.x, dragStart.y - dragEnd.y), 150);
+            ctx.lineTo(striker.x + Math.cos(angle) * d, striker.y + Math.sin(angle) * d);
+            ctx.strokeStyle = '#ffd700'; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
         }
 
-        // State Check: if everything stopped
-        if (gameState === 'MOVING') {
-            const moving = allEntities.some(e => Math.abs(e.vx) > 0 || Math.abs(e.vy) > 0);
-            if (!moving) {
-                if (striker.inPocket) {
-                   // Handled in handlePocket
-                } else {
-                    gameState = 'IDLE';
-                    // Reset striker position if needed or just keep it there
-                }
-            }
-        }
-
+        if (gameState === 'MOVING' && !all.some(e => Math.abs(e.vx) > 0 || Math.abs(e.vy) > 0)) gameState = 'IDLE';
         requestAnimationFrame(gameLoop);
     }
 
-    // Controls
-    function handleInputStart(e) {
-        if (gameState !== 'IDLE') return;
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches ? e.touches[0] : e;
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mx = (touch.clientX - rect.left) * scaleX;
-        const my = (touch.clientY - rect.top) * scaleY;
-
-        if (Math.hypot(mx - striker.x, my - striker.y) < 50) {
-            aiming = true;
-            dragStart = { x: mx, y: my };
-        }
-    }
-
-    function handleInputMove(e) {
-        if (!aiming) return;
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches ? e.touches[0] : e;
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        dragEnd = { 
-            x: (touch.clientX - rect.left) * scaleX, 
-            y: (touch.clientY - rect.top) * scaleY 
-        };
-    }
-
-    async function handleInputEnd() {
-        if (!aiming) return;
-        aiming = false;
-
+    async function handleLaunch() {
+        if (!aiming) return; aiming = false;
         if (balance < ENTRY_FEE) {
-            showModal("INSUFFICIENT COINS", "Game start karne ke liye 10 coins chahiye.", false);
+            showModal("INSUFFICIENT COINS", `Kam az kam ${ENTRY_FEE} coins chahiye.`, false);
             return;
         }
-
-        // Deduct Entry Fee
-        try {
-            await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile'), {
-                coins: increment(-ENTRY_FEE)
-            });
-            
-            const dx = dragStart.x - dragEnd.x;
-            const dy = dragStart.y - dragEnd.y;
-            const power = 0.15;
-            striker.vx = dx * power;
-            striker.vy = dy * power;
-            gameState = 'MOVING';
-        } catch (e) {
-            console.error(e);
-        }
+        await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile'), { coins: increment(-ENTRY_FEE) });
+        const power = 0.15;
+        striker.vx = (dragStart.x - dragEnd.x) * power;
+        striker.vy = (dragStart.y - dragEnd.y) * power;
+        gameState = 'MOVING';
     }
 
-    canvas.addEventListener('mousedown', handleInputStart);
-    window.addEventListener('mousemove', handleInputMove);
-    window.addEventListener('mouseup', handleInputEnd);
-    canvas.addEventListener('touchstart', handleInputStart);
-    window.addEventListener('touchmove', handleInputMove);
-    window.addEventListener('touchend', handleInputEnd);
-
-    document.getElementById('modal-btn').onclick = () => {
-        location.reload();
+    const getM = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const t = e.touches ? e.touches[0] : e;
+        return { x: (t.clientX - rect.left) * (600/rect.width), y: (t.clientY - rect.top) * (600/rect.height) };
     };
 
-    // Firebase Auth & Data
+    canvas.addEventListener('mousedown', (e) => {
+        const m = getM(e);
+        if (gameState === 'IDLE' && Math.hypot(m.x - striker.x, m.y - striker.y) < 50) { aiming = true; dragStart = m; }
+    });
+    window.addEventListener('mousemove', (e) => { if (aiming) dragEnd = getM(e); });
+    window.addEventListener('mouseup', handleLaunch);
+    canvas.addEventListener('touchstart', (e) => {
+        const m = getM(e);
+        if (gameState === 'IDLE' && Math.hypot(m.x - striker.x, m.y - striker.y) < 50) { aiming = true; dragStart = m; }
+    });
+    window.addEventListener('touchmove', (e) => { if (aiming) dragEnd = getM(e); });
+    window.addEventListener('touchend', handleLaunch);
+
+    document.getElementById('modal-btn').onclick = () => location.reload();
+
     onAuthStateChanged(auth, async (u) => {
         if (u) {
             user = u;
-            const profileRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile');
-            onSnapshot(profileRef, (snap) => {
+            onSnapshot(doc(db, 'artifacts', appId, 'users', u.uid, 'profile'), (snap) => {
                 if (snap.exists()) {
                     balance = snap.data().coins || 0;
                     document.getElementById('balance-display').innerText = `Balance: ${balance}`;
                 }
-            }, (err) => console.error("Firestore error:", err));
-
-            document.getElementById('loader').style.display = 'none';
-            initGame();
-            gameLoop();
+            });
+            document.getElementById('game-container').style.opacity = '1';
+            initGame(); gameLoop();
         } else {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+            else await signInAnonymously(auth);
         }
     });
-
 </script>
-
 </body>
 </html>
 
