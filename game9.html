@@ -61,6 +61,7 @@
 
 <canvas id="carromBoard"></canvas>
 
+
 <div style="padding:10px; font-size:12px; color:#666;">
     DRAG FROM STRIKER TO AIM • RELEASE TO FIRE
 </div>
@@ -70,7 +71,7 @@
     import { getFirestore, doc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // HFC Academy Config Integrated from your source code
+    // HFC Academy Official Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyDEp7zO7pW4-y0Ym-Q3z7K4jLz7f0m-E8",
         authDomain: "hfc-academy-5f7b2.firebaseapp.com",
@@ -89,21 +90,26 @@
     const canvas = document.getElementById('carromBoard');
     const ctx = canvas.getContext('2d');
 
-    // HFC Cipher Deck
+    // HFC Cipher Mappings
     const cipherDeck = [
         {char: 'A', sym: '×'}, {char: 'B', sym: '[]'}, {char: 'C', sym: '()'},
         {char: 'Z', sym: '℅'}, {char: 'S', sym: '^'}, {char: 'X', sym: '◈'}
     ];
     let activeTarget = cipherDeck[Math.floor(Math.random() * cipherDeck.length)];
 
+    // Connect to Lobby Account
     onAuthStateChanged(auth, user => {
         if (user) {
             currentUser = user;
             onSnapshot(doc(db, "users", user.uid), s => {
-                userCoins = s.data().coins || 0;
-                document.getElementById('userBal').innerText = userCoins.toFixed(2);
+                if(s.exists()){
+                    userCoins = s.data().coins || 0;
+                    document.getElementById('userBal').innerText = userCoins.toFixed(2);
+                }
             });
-        } else { window.location.href = "auth.html"; }
+        } else {
+            window.location.href = "auth.html";
+        }
     });
 
     let striker = { x: 0, y: 0, r: 22, color: '#64ffda', vx: 0, vy: 0 };
@@ -112,10 +118,12 @@
     let dragStart = { x: 0, y: 0 };
 
     document.getElementById('payEntryBtn').onclick = async () => {
-        if (userCoins < 10) return alert("Paisa nahi hai bhai! Minimum 10 Coins chahiye.");
-        await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(-10) });
-        document.getElementById('entryModal').style.display = 'none';
-        initGame();
+        if (userCoins < 10) return alert("Insufficient Coins! Game requires 10 coins.");
+        try {
+            await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(-10) });
+            document.getElementById('entryModal').style.display = 'none';
+            initGame();
+        } catch(e) { alert("Error: " + e.message); }
     };
 
     function initGame() {
@@ -125,7 +133,7 @@
         striker.x = canvas.width / 2;
         striker.y = canvas.height - 60;
 
-        cipherDeck.forEach((item, i) => {
+        cipherDeck.forEach((item) => {
             coins.push({
                 x: Math.random() * (canvas.width - 80) + 40,
                 y: Math.random() * 200 + 100,
@@ -139,30 +147,29 @@
         requestAnimationFrame(update);
     }
 
-    canvas.addEventListener('touchstart', handleStart);
-    canvas.addEventListener('touchend', handleEnd);
-    canvas.addEventListener('mousedown', (e) => handleStart(e));
-    canvas.addEventListener('mouseup', (e) => handleEnd(e));
-
-    function handleStart(e) {
+    // Controls
+    const getMousePos = (e) => {
         const rect = canvas.getBoundingClientRect();
         const pos = e.touches ? e.touches[0] : e;
-        const mouseX = pos.clientX - rect.left;
-        const mouseY = pos.clientY - rect.top;
-        if (Math.hypot(mouseX - striker.x, mouseY - striker.y) < 40) {
+        return { x: pos.clientX - rect.left, y: pos.clientY - rect.top };
+    };
+
+    canvas.addEventListener('mousedown', (e) => startDrag(getMousePos(e)));
+    canvas.addEventListener('touchstart', (e) => startDrag(getMousePos(e)));
+    canvas.addEventListener('mouseup', (e) => endDrag(getMousePos(e)));
+    canvas.addEventListener('touchend', (e) => endDrag(getMousePos(e)));
+
+    function startDrag(pos) {
+        if (Math.hypot(pos.x - striker.x, pos.y - striker.y) < 40) {
             isDragging = true;
-            dragStart = { x: mouseX, y: mouseY };
+            dragStart = pos;
         }
     }
 
-    function handleEnd(e) {
+    function endDrag(pos) {
         if (!isDragging) return;
-        const rect = canvas.getBoundingClientRect();
-        const pos = e.changedTouches ? e.changedTouches[0] : e;
-        const mouseX = pos.clientX - rect.left;
-        const mouseY = pos.clientY - rect.top;
-        striker.vx = (dragStart.x - mouseX) * 0.15;
-        striker.vy = (dragStart.y - mouseY) * 0.15;
+        striker.vx = (dragStart.x - pos.x) * 0.15;
+        striker.vy = (dragStart.y - pos.y) * 0.15;
         isDragging = false;
     }
 
@@ -175,46 +182,49 @@
             ctx.beginPath(); ctx.arc(p[0], p[1], 35, 0, Math.PI*2); ctx.fill();
         });
 
+        // Aim Line
         if (isDragging) {
             ctx.strokeStyle = 'var(--neon)';
             ctx.beginPath(); ctx.moveTo(striker.x, striker.y); ctx.lineTo(striker.x + (striker.x - dragStart.x), striker.y + (striker.y - dragStart.y)); ctx.stroke();
         }
 
+        // Striker Physics
         striker.x += striker.vx; striker.y += striker.vy;
-        striker.vx *= 0.98; striker.vy *= 0.98;
-
+        striker.vx *= 0.985; striker.vy *= 0.985;
         if (striker.x < striker.r || striker.x > canvas.width - striker.r) striker.vx *= -0.8;
         if (striker.y < striker.r || striker.y > canvas.height - striker.r) striker.vy *= -0.8;
 
         ctx.fillStyle = striker.color;
         ctx.beginPath(); ctx.arc(striker.x, striker.y, striker.r, 0, Math.PI*2); ctx.fill();
 
+        // Coins
         coins.forEach((c, i) => {
             c.x += c.vx; c.y += c.vy;
             c.vx *= 0.98; c.vy *= 0.98;
 
             if (Math.hypot(striker.x - c.x, striker.y - c.y) < striker.r + c.r) {
-                c.vx = (c.x - striker.x) * 0.2; c.vy = (c.y - striker.y) * 0.2;
+                c.vx = (c.x - striker.x) * 0.22; c.vy = (c.y - striker.y) * 0.22;
             }
 
             ctx.fillStyle = '#fff';
             ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#000'; ctx.font = 'bold 14px Arial'; ctx.fillText(c.sym, c.x-8, c.y+5);
+            ctx.fillStyle = '#000'; ctx.font = 'bold 14px Courier'; ctx.fillText(c.sym, c.x-8, c.y+5);
 
+            // Pocket Logic
             if ((c.x < 35 || c.x > canvas.width - 35) && (c.y < 35 || c.y > canvas.height - 35)) {
-                handleResult(c);
+                handlePocket(c);
                 coins.splice(i, 1);
             }
         });
         requestAnimationFrame(update);
     }
 
-    async function handleResult(coin) {
+    async function handlePocket(coin) {
         if (coin.char === activeTarget.char) {
-            alert("🎯 CORRECT DECODE! Reward: 30 Coins");
+            alert("🎯 ACCESS GRANTED! You earned 30 Coins.");
             await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(30) });
         } else {
-            alert("❌ WRONG SYMBOL! Better luck next time.");
+            alert("❌ SYSTEM BREACH: Wrong Cipher Symbol.");
         }
         location.reload();
     }
