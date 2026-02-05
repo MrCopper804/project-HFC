@@ -7,33 +7,66 @@
     <style>
         :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; }
         body { background: var(--bg); color: white; font-family: 'Courier New', monospace; margin: 0; text-align: center; overflow: hidden; touch-action: none; }
-        #game-header { padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #222; background: #050505; }
+        
+        #game-header { padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #222; background: #050505; height: 60px; align-items: center; box-sizing: border-box; }
         .target-display { background: rgba(100, 255, 218, 0.1); padding: 5px 15px; border: 1px solid var(--neon); border-radius: 5px; }
-        canvas { background: radial-gradient(circle, #1a1a1a 0%, #000 100%); border: 8px solid #333; margin: 10px auto; display: block; border-radius: 10px; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { border: 2px solid var(--neon); padding: 30px; border-radius: 20px; background: #000; box-shadow: 0 0 20px var(--neon); }
-        .btn { background: var(--neon); color: black; padding: 15px 40px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 16px; }
+        
+        canvas { 
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            border: 8px solid #333;
+            box-shadow: 0 0 30px rgba(100,255,218,0.2);
+            margin: 10px auto;
+            display: block;
+            border-radius: 15px;
+            cursor: crosshair;
+        }
+        
+        .overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.98); display: flex; justify-content: center; 
+            align-items: center; z-index: 1000; 
+        }
+        .modal { 
+            border: 2px solid var(--neon); padding: 30px; border-radius: 20px; 
+            background: #000; box-shadow: 0 0 30px var(--neon); max-width: 300px;
+        }
+        .btn { 
+            background: var(--neon); color: black; padding: 15px 40px; 
+            border: none; font-weight: bold; cursor: pointer; border-radius: 10px;
+            font-size: 16px; width: 100%;
+        }
+        #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2000; }
     </style>
 </head>
 <body>
 
-<div id="entryModal" class="overlay">
+<div id="loading-screen">
+    <div style="color:var(--neon); font-size:24px; margin-bottom:10px;">HFC SYSTEM LOADING...</div>
+    <div style="width:200px; height:2px; background:#111;"><div id="load-bar" style="width:0%; height:100%; background:var(--neon); transition:0.5s;"></div></div>
+</div>
+
+<div id="entryModal" class="overlay" style="display:none;">
     <div class="modal">
-        <h2 style="color: var(--neon); margin-top:0;">HFC CARROM MODE</h2>
-        <p>ENTRY FEE: <span style="color:var(--danger);">10 COINS</span></p>
-        <p>REWARD: <span style="color:var(--neon);">30 COINS</span></p>
-        <button class="btn" id="payEntryBtn">UNLOCK SERVER & PLAY</button>
+        <h2 style="color: var(--neon); margin: 0 0 10px 0;">HFC CARROM</h2>
+        <p style="color:#888; font-size:14px;">Decode the server by hitting the correct symbol.</p>
+        <div style="margin: 20px 0; border: 1px solid #222; padding: 15px; border-radius: 10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>ENTRY:</span><span style="color:var(--danger);">-10 COINS</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>REWARD:</span><span style="color:var(--neon);">+30 COINS</span></div>
+        </div>
+        <button class="btn" id="payEntryBtn">PAY & START</button>
     </div>
 </div>
 
 <div id="game-header">
-    <div class="target-display">TARGET: <span id="targetChar">?</span></div>
+    <div class="target-display">TARGET: <span id="targetChar" style="font-size: 22px; color: var(--gold); font-weight:bold;">?</span></div>
     <div style="text-align:right;">
-        <div id="userBal" style="color:var(--gold); font-weight:bold;">Loading...</div>
+        <div id="userBal" style="color:var(--gold); font-weight:bold; font-size:18px;">0.00</div>
+        <div style="font-size:10px; color:var(--neon);">HFC VAULT</div>
     </div>
 </div>
 
 <canvas id="carromBoard"></canvas>
+
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -53,133 +86,165 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUser = null;
-    let userCoins = 0;
+    let currentUser = null, userCoins = 0;
     const canvas = document.getElementById('carromBoard');
     const ctx = canvas.getContext('2d');
 
-    // Authentication Check - Lobby Se Connection
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            // Jab user mil jaye tabhi modal dikhao
-            document.getElementById('entryModal').style.display = 'flex';
-            
-            onSnapshot(doc(db, "users", user.uid), (s) => {
-                if(s.exists()){
-                    userCoins = s.data().coins || 0;
-                    document.getElementById('userBal').innerText = userCoins.toFixed(2);
-                }
-            });
-        } else {
-            // Agar login nahi hai toh wapis auth page
-            window.location.href = "auth.html";
-        }
-    });
-
+    // HFC Cipher Keymap
     const cipherDeck = [
-        {char: 'A', sym: '×'}, {char: 'B', sym: '[]'}, {char: 'Z', sym: '℅'}, {char: 'S', sym: '^'}
+        {char: 'A', sym: '×'}, {char: 'B', sym: '[]'}, {char: 'C', sym: '()'},
+        {char: 'Z', sym: '℅'}, {char: 'S', sym: '^'}, {char: 'X', sym: '◈'}
     ];
     let activeTarget = cipherDeck[Math.floor(Math.random() * cipherDeck.length)];
-    let striker = { x: 0, y: 0, r: 22, color: '#64ffda', vx: 0, vy: 0 };
+
+    // Physics Constants
+    const FRICTION = 0.985;
+    const WALL_BOUNCE = 0.7;
+
+    onAuthStateChanged(auth, user => {
+        document.getElementById('load-bar').style.width = "100%";
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            if (user) {
+                currentUser = user;
+                document.getElementById('entryModal').style.display = 'flex';
+                onSnapshot(doc(db, "users", user.uid), s => {
+                    if(s.exists()){
+                        userCoins = s.data().coins || 0;
+                        document.getElementById('userBal').innerText = userCoins.toFixed(2);
+                    }
+                });
+            } else { window.location.href = "auth.html"; }
+        }, 800);
+    });
+
+    let striker = { x: 0, y: 0, r: 22, vx: 0, vy: 0 };
     let coins = [];
-    let isDragging = false;
-    let dragStart = { x: 0, y: 0 };
+    let isDragging = false, dragStart = { x: 0, y: 0 };
 
     document.getElementById('payEntryBtn').onclick = async () => {
-        if (userCoins < 10) return alert("10 Coins Chahiye!");
+        if (userCoins < 10) return alert("Insufficient Balance!");
         await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(-10) });
         document.getElementById('entryModal').style.display = 'none';
-        initGame();
+        initBoard();
     };
 
-    function initGame() {
-        canvas.width = window.innerWidth > 400 ? 360 : window.innerWidth - 20;
-        canvas.height = 480;
+    function initBoard() {
+        canvas.width = Math.min(window.innerWidth - 20, 380);
+        canvas.height = 500;
         document.getElementById('targetChar').innerText = activeTarget.char;
+        
         striker.x = canvas.width / 2;
-        striker.y = canvas.height - 60;
+        striker.y = canvas.height - 70;
 
-        cipherDeck.forEach((item) => {
+        cipherDeck.forEach((item, i) => {
             coins.push({
-                x: Math.random() * (canvas.width - 80) + 40,
-                y: Math.random() * 200 + 100,
-                r: 16, sym: item.sym, char: item.char, vx: 0, vy: 0
+                x: 60 + (i * 45) % (canvas.width - 100),
+                y: 100 + (i * 40),
+                r: 16, sym: item.sym, char: item.char,
+                vx: 0, vy: 0, color: '#fff'
             });
         });
-        requestAnimationFrame(update);
+        render();
     }
 
-    // Controls aur Physics baqi same rahega...
-    canvas.addEventListener('mousedown', (e) => startDrag(e));
-    canvas.addEventListener('touchstart', (e) => startDrag(e.touches[0]));
-    canvas.addEventListener('mouseup', (e) => endDrag(e));
-    canvas.addEventListener('touchend', (e) => endDrag(e.changedTouches[0]));
-
-    function startDrag(pos) {
+    // Input Handling
+    const getPos = (e) => {
         const rect = canvas.getBoundingClientRect();
-        const mx = pos.clientX - rect.left;
-        const my = pos.clientY - rect.top;
-        if (Math.hypot(mx - striker.x, my - striker.y) < 40) {
+        const p = e.touches ? e.touches[0] : e;
+        return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+    };
+
+    canvas.addEventListener('mousedown', e => handleStart(getPos(e)));
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); handleStart(getPos(e)); });
+    window.addEventListener('mouseup', e => handleEnd(getPos(e)));
+    window.addEventListener('touchend', e => handleEnd(getPos(e)));
+
+    function handleStart(p) {
+        if (Math.hypot(p.x - striker.x, p.y - striker.y) < 40 && striker.vx === 0) {
             isDragging = true;
-            dragStart = {x: mx, y: my};
+            dragStart = p;
         }
     }
 
-    function endDrag(pos) {
+    function handleEnd(p) {
         if (!isDragging) return;
-        const rect = canvas.getBoundingClientRect();
-        const mx = pos.clientX - rect.left;
-        const my = pos.clientY - rect.top;
-        striker.vx = (dragStart.x - mx) * 0.15;
-        striker.vy = (dragStart.y - my) * 0.15;
+        striker.vx = (dragStart.x - p.x) * 0.18;
+        striker.vy = (dragStart.y - p.y) * 0.18;
         isDragging = false;
     }
 
-    function update() {
+    function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Pocket, Striker, Coins Drawing & Physics Logic...
-        // (Wahi physics jo pehle thi)
-        drawGame();
-        requestAnimationFrame(update);
-    }
-
-    function drawGame() {
+        
         // Draw Pockets
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = '#1a1a1a';
         [[0,0], [canvas.width, 0], [0, canvas.height], [canvas.width, canvas.height]].forEach(p => {
-            ctx.beginPath(); ctx.arc(p[0], p[1], 35, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p[0], p[1], 40, 0, Math.PI*2); ctx.fill();
         });
 
-        // Striker movement
+        // Aiming Line
+        if (isDragging) {
+            ctx.strokeStyle = var(--neon);
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath(); ctx.moveTo(striker.x, striker.y);
+            ctx.lineTo(striker.x + (striker.x - dragStart.x), striker.y + (striker.y - dragStart.y));
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Striker Logic
         striker.x += striker.vx; striker.y += striker.vy;
-        striker.vx *= 0.98; striker.vy *= 0.98;
-        ctx.fillStyle = striker.color;
+        striker.vx *= FRICTION; striker.vy *= FRICTION;
+        if (Math.abs(striker.vx) < 0.1) striker.vx = 0;
+        if (Math.abs(striker.vy) < 0.1) striker.vy = 0;
+
+        if (striker.x < striker.r || striker.x > canvas.width - striker.r) striker.vx *= -WALL_BOUNCE;
+        if (striker.y < striker.r || striker.y > canvas.height - striker.r) striker.vy *= -WALL_BOUNCE;
+
+        ctx.fillStyle = var(--neon);
         ctx.beginPath(); ctx.arc(striker.x, striker.y, striker.r, 0, Math.PI*2); ctx.fill();
 
-        // Coins movement & collision
+        // Coins Logic
         coins.forEach((c, i) => {
             c.x += c.vx; c.y += c.vy;
-            if (Math.hypot(striker.x - c.x, striker.y - c.y) < striker.r + c.r) {
-                c.vx = (c.x - striker.x) * 0.2; c.vy = (c.y - striker.y) * 0.2;
+            c.vx *= FRICTION; c.vy *= FRICTION;
+
+            // Collision
+            let d = Math.hypot(striker.x - c.x, striker.y - c.y);
+            if (d < striker.r + c.r) {
+                let angle = Math.atan2(c.y - striker.y, c.x - striker.x);
+                let speed = Math.hypot(striker.vx, striker.vy);
+                c.vx = Math.cos(angle) * speed;
+                c.vy = Math.sin(angle) * speed;
+                striker.vx *= 0.5; striker.vy *= 0.5;
             }
+
+            // Wall Bounce
+            if (c.x < c.r || c.x > canvas.width - c.r) c.vx *= -WALL_BOUNCE;
+            if (c.y < c.r || c.y > canvas.height - c.r) c.vy *= -WALL_BOUNCE;
+
+            // Draw
             ctx.fillStyle = '#fff';
             ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#000'; ctx.fillText(c.sym, c.x-5, c.y+5);
+            ctx.fillStyle = '#000'; ctx.font = 'bold 16px Courier'; ctx.fillText(c.sym, c.x-8, c.y+6);
 
-            if ((c.x < 35 || c.x > canvas.width - 35) && (c.y < 35 || c.y > canvas.height - 35)) {
-                handleResult(c);
+            // Pocketing
+            if ((c.x < 40 || c.x > canvas.width-40) && (c.y < 40 || c.y > canvas.height-40)) {
+                checkResult(c);
                 coins.splice(i, 1);
             }
         });
+
+        requestAnimationFrame(render);
     }
 
-    async function handleResult(coin) {
+    async function checkResult(coin) {
         if (coin.char === activeTarget.char) {
-            alert("WIN! 30 Coins Added.");
+            alert("🎯 ENCRYPTION SUCCESS! +30 Coins");
             await updateDoc(doc(db, "users", currentUser.uid), { coins: increment(30) });
         } else {
-            alert("WRONG! Try Again.");
+            alert("❌ SYSTEM CRASH: Wrong Cipher!");
         }
         location.reload();
     }
