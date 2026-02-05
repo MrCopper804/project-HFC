@@ -2,215 +2,137 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HFC Game 9 - Elite Miner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HFC Game 9 - Learn & Mine</title>
     <style>
-        :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.1); }
+        :root { --neon: #64ffda; --bg: #000; --gold: #ffd700; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.05); }
         body { 
-            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
-            margin: 0; padding: 20px; text-align: center; overflow-x: hidden;
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
+            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
+            color: white; margin: 0; padding: 15px; text-align: center; min-height: 100vh;
         }
-        .container { max-width: 450px; margin: auto; }
+        .mission-container {
+            max-width: 550px; margin: 10px auto; background: var(--glass);
+            border: 2px solid var(--neon); border-radius: 25px; padding: 25px;
+            backdrop-filter: blur(15px); box-sizing: border-box;
+        }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid #333; }
+        .val { color: var(--gold); font-weight: bold; display: block; }
         
-        /* Stats Styling */
-        .header { margin-bottom: 25px; }
-        .header h1 { color: var(--neon); font-size: 28px; letter-spacing: 2px; text-transform: uppercase; }
-        
-        .hud { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
-        }
-        .hud-item { 
-            background: var(--glass); padding: 15px; border-radius: 15px; border: 1px solid #333;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .label { font-size: 10px; color: #888; display: block; margin-bottom: 5px; }
-        .val { font-size: 18px; font-weight: bold; color: var(--gold); }
+        .question-box { background: #000; padding: 20px; border-radius: 15px; border: 1px solid var(--neon); margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .opt-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .opt-btn { background: var(--glass); border: 1px solid #444; color: white; padding: 15px; border-radius: 12px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .opt-btn:hover { border-color: var(--neon); background: rgba(100, 255, 218, 0.1); }
 
-        /* Game Box */
-        .game-card { 
-            background: #0a0a0a; border: 2px solid var(--neon); padding: 25px;
-            border-radius: 25px; position: relative; min-height: 350px;
-            display: flex; flex-direction: column; justify-content: center;
-            box-shadow: 0 0 20px rgba(100, 255, 218, 0.2);
-        }
+        .progress-wrapper { height: 10px; background: #111; border-radius: 5px; margin-top: 20px; overflow: hidden; border: 1px solid #333; }
+        .progress-bar { height: 100%; background: var(--neon); width: 0%; transition: 0.4s; box-shadow: 0 0 10px var(--neon); }
 
-        .question-text { font-size: 20px; margin-bottom: 25px; line-height: 1.4; color: #fff; }
-
-        .options-list { display: flex; flex-direction: column; gap: 12px; }
-        .opt { 
-            background: #151515; border: 1px solid #333; color: white; padding: 15px;
-            border-radius: 12px; cursor: pointer; transition: 0.3s; font-size: 16px;
-        }
-        .opt:hover { border-color: var(--neon); background: rgba(100, 255, 218, 0.1); }
-        .opt:active { transform: scale(0.98); }
-
-        /* Progress Circle */
-        .progress-container { margin-top: 20px; position: relative; }
-        .bar-bg { width: 100%; height: 8px; background: #222; border-radius: 10px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--neon); width: 0%; transition: 0.5s; box-shadow: 0 0 10px var(--neon); }
-
-        /* Overlays */
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; border-radius: 23px; display: flex;
-            flex-direction: column; justify-content: center; align-items: center; z-index: 100;
-        }
-        .btn-action {
-            background: var(--neon); color: #000; border: none; padding: 15px 40px;
-            border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.4);
-        }
-        
-        .error { color: var(--danger); font-size: 14px; margin-top: 10px; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .btn-main { background: var(--neon); color: #000; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; font-size: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>HFC MINING</h1>
-        <p style="color: var(--text); font-size: 12px;">Learn Academy Rules & Earn Rewards</p>
+<div class="mission-container">
+    <h2 style="color: var(--neon); margin-top: 0;">MINING MODULE 09</h2>
+    
+    <div class="stat-grid">
+        <div class="stat-card"><span style="font-size: 10px;">VAULT</span><span id="u-coins" class="val">--</span></div>
+        <div class="stat-card"><span style="font-size: 10px;">PROGRESS</span><span id="u-prog" class="val">0 / 15</span></div>
     </div>
 
-    <div class="hud">
-        <div class="hud-item"><span class="label">VAULT BALANCE</span><span id="u-coins" class="val">0</span></div>
-        <div class="hud-item"><span class="label">MINING PROGRESS</span><span id="u-prog" class="val">0 / 15</span></div>
+    <div id="game-core">
+        <div id="q-text" class="question-box">System Initializing...</div>
+        <div class="opt-grid" id="options"></div>
+        <div class="progress-wrapper"><div id="p-bar" class="progress-bar"></div></div>
     </div>
+</div>
 
-    <div class="game-card">
-        <div id="screen-start" class="overlay">
-            <h2 style="color: var(--gold);">ENERGY REQUIRED</h2>
-            <p style="padding: 0 20px; font-size: 14px; color: #888;">Mining session requires 5 Coins. Reach 15 correct answers to get 20 Coins back.</p>
-            <button class="btn-action" onclick="payAndPlay()">PAY 5 COINS</button>
-            <div id="start-error" class="error"></div>
-        </div>
-
-        <div id="screen-win" class="overlay" style="display: none;">
-            <h2 style="color: var(--neon);">MISSION SUCCESS!</h2>
-            <p>20 HFC Coins transferred to vault.</p>
-            <button class="btn-action" onclick="location.reload()">PLAY AGAIN</button>
-        </div>
-
-        <div id="game-ui">
-            <div id="q-text" class="question-text">Initializing HFC Module...</div>
-            <div class="options-list" id="options"></div>
-            <div class="progress-container">
-                <div class="bar-bg"><div id="p-bar" class="bar-fill"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div style="margin-top: 25px;">
-        <a href="lobby.html" style="color: #444; text-decoration: none; font-size: 14px;">← ABORT MISSION (Lobby)</a>
+<div id="start-overlay" class="overlay">
+    <div style="border: 1px solid var(--gold); padding: 30px; border-radius: 20px; background: rgba(255,215,0,0.05);">
+        <h3 style="color: var(--gold);">MINING AUTHORIZATION</h3>
+        <p>Fee: 5 Coins | Reward: 20 Coins</p>
+        <p style="font-size: 12px; color: #888;">Requirement: 15 Correct Answers</p>
+        <button class="btn-main" onclick="startMission()">INITIALIZE (5 COINS)</button>
     </div>
 </div>
 
 <script type="module">
-    // Firebase Syncing logic
     import { db, auth } from "./firebase-config.js";
-    import { doc, getDoc, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    let userRef = null;
+    let userDoc = null;
     let score = 0;
-    let currentBalance = 0;
+    const target = 15;
 
-    const hfcQuestions = [
-        { q: "HFC system mein withdrawal kitnay coins per hai?", a: ["50 Coins", "100 Coins", "10 Coins"], c: 0 },
-        { q: "1 PKR kitnay Coins ke barabar hai?", a: ["100 Coins", "50 Coins", "200 Coins"], c: 1 },
-        { q: "HFC ka official color theme kya hai?", a: ["Neon & Black", "Red & White", "Blue & Gold"], c: 0 },
-        { q: "Coin mining ke liye kya lazmi hai?", a: ["Sahi Jawab", "Sirf Wait", "Account Delete"], c: 0 },
-        { q: "HFC Academy ka maqsad kya hai?", a: ["Skill & Earn", "Sirf Chat", "Time Pass"], c: 0 },
-        { q: "Agar account block ho jaye to kahan contact karein?", a: ["Admin Support", "Facebook", "No one"], c: 0 },
-        { q: "Coins ko XP mein convert karne ka rate?", a: ["1:10", "1:15", "1:5"], c: 1 }
+    const database = [
+        { q: "HFC 1 Coin ki value kya hai?", a: ["0.02 PKR", "0.05 PKR", "1 PKR"], c: 0 },
+        { q: "Withdrawal process kitnay hours leta hai?", a: ["12-24h", "1h", "Instant"], c: 0 },
+        { q: "Admin contact kahan milay ga?", a: ["Inbox", "Profile", "Settings"], c: 0 },
+        { q: "Learn & Earn ka kia matlab hai?", a: ["Seekhna aur Kamana", "Sirf Kamana", "Time Pass"], c: 0 },
+        { q: "HFC rank 'Elite' kab milti hai?", a: ["1000 XP", "5000 XP", "500 XP"], c: 1 }
     ];
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            userRef = doc(db, "users", user.uid);
-            syncData();
-        } else {
-            window.location.href = "auth.html";
-        }
+            userDoc = doc(db, "users", user.uid);
+            const snap = await getDoc(userDoc);
+            if (snap.exists()) {
+                document.getElementById('u-coins').innerText = snap.data().coins;
+            }
+        } else { window.location.href = "auth.html"; }
     });
 
-    async function syncData() {
-        const snap = await getDoc(userRef);
-        if (snap.exists()) {
-            currentBalance = snap.data().coins || 0;
-            document.getElementById('u-coins').innerText = currentBalance;
-        }
-    }
+    window.startMission = async () => {
+        const snap = await getDoc(userDoc);
+        const currentCoins = snap.data().coins || 0;
 
-    window.payAndPlay = async () => {
-        const err = document.getElementById('start-error');
-        if (currentBalance < 5) {
-            err.innerText = "❌ Insufficient balance in vault!";
+        if (currentCoins < 5) {
+            alert("INSUFFICIENT COINS: You need at least 5 coins.");
             return;
         }
 
         try {
-            await updateDoc(userRef, { 
-                coins: increment(-5),
-                lastMined: serverTimestamp() 
-            });
-            document.getElementById('screen-start').style.display = 'none';
-            score = 0;
-            updateHUD();
-            renderQuestion();
-        } catch (e) {
-            err.innerText = "Sync Error: Check Internet";
-        }
+            // Sync with DB (Deduct Fee)
+            await updateDoc(userDoc, { coins: increment(-5) });
+            document.getElementById('u-coins').innerText = currentCoins - 5;
+            document.getElementById('start-overlay').style.display = 'none';
+            renderNext();
+        } catch (e) { alert("SYNC ERROR"); }
     };
 
-    function renderQuestion() {
-        const qObj = hfcQuestions[Math.floor(Math.random() * hfcQuestions.length)];
-        document.getElementById('q-text').innerText = qObj.q;
-        const container = document.getElementById('options');
-        container.innerHTML = '';
+    function renderNext() {
+        const q = database[Math.floor(Math.random() * database.length)];
+        document.getElementById('q-text').innerText = q.q;
+        const btnContainer = document.getElementById('options');
+        btnContainer.innerHTML = '';
 
-        qObj.a.forEach((opt, i) => {
-            const b = document.createElement('div');
-            b.className = 'opt';
+        q.a.forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = 'opt-btn';
             b.innerText = opt;
-            b.onclick = () => handleAnswer(i, qObj.c);
-            container.appendChild(b);
+            b.onclick = () => check(i, q.c);
+            btnContainer.appendChild(b);
         });
     }
 
-    async function handleAnswer(selected, correct) {
-        if (selected === correct) {
+    async function check(sel, cor) {
+        if (sel === cor) {
             score++;
-            updateHUD();
-            if (score >= 15) {
-                await completeMining();
-            } else {
-                renderQuestion();
-            }
+            document.getElementById('u-prog').innerText = `${score} / ${target}`;
+            document.getElementById('p-bar').style.width = `${(score / target) * 100}%`;
+
+            if (score >= target) {
+                // Final Sync with DB (Add Reward)
+                await updateDoc(userDoc, { coins: increment(20), score: increment(30) });
+                alert("MISSION SUCCESS: 20 COINS ADDED TO VAULT");
+                location.reload();
+            } else { renderNext(); }
         } else {
-            // Shake effect on wrong answer
-            document.querySelector('.game-card').style.borderColor = 'var(--danger)';
-            setTimeout(() => document.querySelector('.game-card').style.borderColor = 'var(--neon)', 500);
-            renderQuestion(); // Move to next anyway but no point added
-        }
-    }
-
-    function updateHUD() {
-        document.getElementById('u-prog').innerText = `${score} / 15`;
-        document.getElementById('p-bar').style.width = `${(score / 15) * 100}%`;
-    }
-
-    async function completeMining() {
-        document.getElementById('game-ui').style.opacity = '0.3';
-        try {
-            await updateDoc(userRef, { 
-                coins: increment(20),
-                score: increment(50) // High XP for finishing
-            });
-            document.getElementById('screen-win').style.display = 'flex';
-            syncData();
-        } catch (e) {
-            alert("Reward Sync Failed! Contact Admin.");
+            alert("WRONG DATA: Recalibrating...");
+            renderNext();
         }
     }
 </script>
