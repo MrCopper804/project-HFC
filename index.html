@@ -1,228 +1,365 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HFC Academy | Neural Link</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #05070a;
-            --neon: #64ffda;
-            --accent: #00e5ff;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --border: rgba(100, 255, 218, 0.15);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HFC Academy | Neural Link</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #05070a;
+      --neon: #64ffda;
+      --blue: #00e5ff;
+      --pink: #ff4d94;
+      --glass: rgba(255, 255, 255, 0.05);
+      --panel: rgba(10, 15, 26, 0.7);
+      --border-glow: rgba(100, 255, 218, 0.3);
+    }
 
-        body { 
-            font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #fff;
-            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
-            overflow: hidden;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        /* HFC TOP BRANDING */
-        header {
-            padding: 20px; text-align: center;
-            border-bottom: 1px solid var(--border);
-            background: rgba(0,0,0,0.3);
-        }
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg);
+      color: #fff;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .hfc-logo {
-            font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900;
-            letter-spacing: 6px; color: var(--neon); margin: 0;
-            text-shadow: 0 0 15px rgba(100, 255, 218, 0.4);
-        }
+    /* Animated Background */
+    #particles-js {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
 
-        .xp-chip {
-            display: inline-block; margin-top: 8px; padding: 3px 15px;
-            background: rgba(100, 255, 218, 0.1); border: 1px solid var(--neon);
-            border-radius: 4px; font-size: 12px; font-weight: 700; color: var(--neon);
-        }
+    .content-wrapper {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
 
-        main {
-            flex: 1; padding: 20px; overflow-y: auto;
-            display: flex; flex-direction: column; align-items: center; gap: 15px;
-        }
+    /* Header */
+    header {
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
 
-        .glass-card {
-            width: 100%; max-width: 400px; background: var(--card-bg);
-            border: 1px solid var(--border); border-radius: 15px; padding: 20px;
-            box-sizing: border-box;
-        }
+    .logo h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--neon);
+      text-shadow: 0 0 15px rgba(100, 255, 218, 0.6);
+    }
 
-        .label { font-size: 11px; color: var(--neon); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; opacity: 0.7; }
+    .auth-buttons {
+      display: flex;
+      gap: 12px;
+    }
 
-        textarea {
-            width: 100%; height: 110px; background: #000; border: 1px solid #222;
-            border-radius: 10px; color: #fff; padding: 12px; font-size: 17px; outline: none;
-            resize: none; box-sizing: border-box; font-family: 'Rajdhani', sans-serif;
-        }
+    .auth-btn {
+      padding: 8px 18px;
+      background: var(--glass);
+      border: 1px solid var(--border-glow);
+      border-radius: 8px;
+      color: var(--neon);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
 
-        .btn-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .auth-btn:hover {
+      background: rgba(100, 255, 218, 0.15);
+      box-shadow: 0 0 12px var(--neon);
+    }
 
-        .btn {
-            padding: 14px; border-radius: 8px; border: none; font-weight: 700;
-            font-family: 'Orbitron', sans-serif; font-size: 10px; cursor: pointer;
-            transition: 0.2s; text-transform: uppercase;
-        }
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 60px 20px 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
 
-        .btn-encrypt { background: var(--neon); color: #000; }
-        .btn-decrypt { background: transparent; color: #fff; border: 1px solid #fff; }
+    .hero h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--neon);
+      margin-bottom: 16px;
+      text-shadow: 0 0 20px rgba(100, 255, 218, 0.5);
+      animation: pulseGlow 3s infinite alternate;
+    }
 
-        .result-box {
-            width: 100%; max-width: 400px; text-align: center;
-            background: rgba(0, 229, 255, 0.02); border-radius: 15px;
-            padding: 25px 15px; border: 1px dashed var(--border); box-sizing: border-box;
-            position: relative;
-        }
+    .hero p {
+      font-size: 16px;
+      color: #ccd6f6;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
 
-        #outputArea {
-            font-size: 26px; font-weight: 700; color: var(--accent);
-            word-break: break-all; display: block;
-        }
+    /* Buttons Grid */
+    .buttons-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: 0 20px 40px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
 
-        .copy-link {
-            font-size: 10px; color: #555; margin-top: 10px; cursor: pointer; text-decoration: underline;
-        }
+    .action-card {
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-glow);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.35s ease;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
 
-        /* UMAIR KHAN PREMIUM BRANDING (BOTTOM) */
-        footer {
-            padding: 25px 15px; text-align: center;
-            background: #000; border-top: 2px solid var(--neon);
-        }
+    .action-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(100, 255, 218, 0.4);
+      border-color: var(--neon);
+    }
 
-        .lobby-link {
-            color: var(--neon); text-decoration: none; font-weight: 700;
-            font-size: 12px; letter-spacing: 2px; display: block; margin-bottom: 15px;
-        }
+    .action-card.lobby:hover { border-color: var(--neon); box-shadow: 0 12px 40px rgba(100, 255, 218, 0.4); }
+    .action-card.translator:hover { border-color: var(--blue); box-shadow: 0 12px 40px rgba(0, 229, 255, 0.4); }
+    .action-card.auth:hover { border-color: var(--pink); box-shadow: 0 12px 40px rgba(255, 77, 148, 0.4); }
 
-        .dev-badge {
-            display: inline-block; padding: 8px 25px; border-radius: 4px;
-            background: linear-gradient(145deg, rgba(100,255,218,0.1), transparent);
-            border-left: 3px solid var(--neon); border-right: 3px solid var(--neon);
-        }
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+      display: block;
+    }
 
-        .dev-title {
-            font-size: 10px; color: #666; letter-spacing: 4px; margin: 0;
-            text-transform: uppercase; font-weight: 500;
-        }
+    .lobby .card-icon { color: var(--neon); }
+    .translator .card-icon { color: var(--blue); }
+    .auth .card-icon { color: var(--pink); }
 
-        .dev-name {
-            font-family: 'Orbitron', sans-serif; font-size: 16px; color: #fff;
-            letter-spacing: 2px; margin-top: 4px;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        }
-    </style>
+    .action-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .action-card p {
+      font-size: 14px;
+      color: #a0aec0;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer {
+      padding: 30px 20px;
+      text-align: center;
+      margin-top: auto;
+    }
+
+    .dev-badge {
+      display: inline-block;
+      padding: 16px 32px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid var(--border-glow);
+    }
+
+    .dev-title {
+      font-size: 10px;
+      color: #666;
+      letter-spacing: 4px;
+      margin: 0;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .dev-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      color: #fff;
+      letter-spacing: 2px;
+      margin-top: 6px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Animations */
+    @keyframes pulseGlow {
+      0% { text-shadow: 0 0 15px rgba(100, 255, 218, 0.5); }
+      100% { text-shadow: 0 0 30px rgba(100, 255, 218, 0.8), 0 0 40px rgba(100, 255, 218, 0.6); }
+    }
+
+    /* Responsive Design */
+    @media (min-width: 768px) {
+      .buttons-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 900px;
+      }
+      
+      .hero h2 {
+        font-size: 42px;
+      }
+      
+      .hero p {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .hero h2 {
+        font-size: 28px;
+        letter-spacing: 2px;
+      }
+      
+      .hero p {
+        font-size: 14px;
+        padding: 0 10px;
+      }
+      
+      .action-card {
+        padding: 20px;
+      }
+      
+      .action-card h3 {
+        font-size: 16px;
+      }
+      
+      .card-icon {
+        font-size: 24px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <!-- Animated Background -->
+  <div id="particles-js"></div>
 
+  <div class="content-wrapper">
+    <!-- Header -->
     <header>
-        <h1 class="hfc-logo">HFC ACADEMY</h1>
-        <div class="xp-chip">CORE XP: <span id="displayXP">0</span></div>
+      <div class="logo">
+        <h1>HFC ACADEMY</h1>
+      </div>
+      <div class="auth-buttons">
+        <a href="auth.html" class="auth-btn">Login</a>
+        <a href="auth.html" class="auth-btn">Signup</a>
+      </div>
     </header>
 
-    <main>
-        <div class="glass-card">
-            <div class="label">Signal Input</div>
-            <textarea id="inputArea" placeholder="Waiting for data..."></textarea>
-            
-            <div class="btn-box">
-                <button class="btn btn-encrypt" onclick="startTranslation('toHFC')">To HFC</button>
-                <button class="btn btn-decrypt" onclick="startTranslation('toENG')">To Eng</button>
-            </div>
-        </div>
+    <!-- Hero Section -->
+    <section class="hero">
+      <h2>WELCOME TO HFC NEURAL CORE</h2>
+      <p>Secure Signal Translation and Neural Communication System</p>
+    </section>
 
-        <div class="result-box">
-            <div class="label" style="opacity: 0.4;">Processed Data</div>
-            <span id="outputArea">Ready_</span>
-            <div class="copy-link" onclick="copyText()">Copy To Clipboard</div>
-        </div>
-    </main>
+    <!-- Action Cards -->
+    <div class="buttons-grid">
+      <a href="lobby.html" class="action-card lobby">
+        <span class="card-icon">🌐</span>
+        <h3>ENTER LOBBY</h3>
+        <p>Access the neural network hub</p>
+      </a>
+      
+      <a href="translator.html" class="action-card translator">
+        <span class="card-icon">💬</span>
+        <h3>OPEN TRANSLATOR</h3>
+        <p>Real-time signal translation</p>
+      </a>
+      
+      <a href="auth.html" class="action-card auth">
+        <span class="card-icon">🔐</span>
+        <h3>LOGIN / SIGNUP</h3>
+        <p>Secure authentication portal</p>
+      </a>
+    </div>
 
+    <!-- Footer -->
     <footer>
-        <a href="lobby.html" class="lobby-link">_MISSION LOBBY_</a>
-        <div class="dev-badge">
-            <p class="dev-title">System Developer</p>
-            <div class="dev-name">UMAIR KHAN</div>
-        </div>
+      <div class="dev-badge">
+        <p class="dev-title">System Developer</p>
+        <div class="dev-name">UMAIR KHAN</div>
+      </div>
     </footer>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
-            authDomain: "hfc-academy.firebaseapp.com",
-            projectId: "hfc-academy",
-            storageBucket: "hfc-academy.firebasestorage.app",
-            messagingSenderId: "84006497196",
-            appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        const hfcMap = {'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|', 'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶', 'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`', 'Y': '~', 'Z': '℅'};
-        
-        let currentUID = null;
-        let currentXP = 0;
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUID = user.uid;
-                const snap = await getDoc(doc(db, "users", currentUID));
-                if (snap.exists()) {
-                    currentXP = snap.data().score || 0;
-                    document.getElementById('displayXP').innerText = currentXP;
-                }
-            } else { window.location.href = "auth.html"; }
-        });
-
-        window.startTranslation = async (mode) => {
-            const input = document.getElementById('inputArea').value.toUpperCase();
-            if (!input.trim()) return;
-
-            const cost = (mode === 'toHFC') ? 10 : 20;
-            if (currentXP < cost) { alert("Insufficient XP!"); return; }
-
-            try {
-                await updateDoc(doc(db, "users", currentUID), { score: increment(-cost) });
-                currentXP -= cost;
-                document.getElementById('displayXP').innerText = currentXP;
-
-                let finalResult = "";
-                if (mode === 'toHFC') {
-                    finalResult = input.split('').map(char => hfcMap[char] || char).join('');
-                } else {
-                    let tempText = input;
-                    let items = Object.entries(hfcMap).sort((a,b) => b[1].length - a[1].length);
-                    let decoded = "";
-                    while (tempText.length > 0) {
-                        let found = false;
-                        for (let [letter, symbol] of items) {
-                            if (tempText.startsWith(symbol)) {
-                                decoded += letter;
-                                tempText = tempText.slice(symbol.length);
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) { decoded += tempText[0]; tempText = tempText.slice(1); }
-                    }
-                    finalResult = decoded;
-                }
-                document.getElementById('outputArea').innerText = finalResult;
-            } catch (e) { alert("Sync Error!"); }
-        };
-
-        window.copyText = () => {
-            const text = document.getElementById('outputArea').innerText;
-            navigator.clipboard.writeText(text);
-            alert("Signal Copied!");
-        };
-    </script>
+  <!-- Particles.js CDN -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      particlesJS("particles-js", {
+        particles: {
+          number: { value: 60, density: { enable: true, value_area: 800 } },
+          color: { value: "#64ffda" },
+          shape: { type: "circle" },
+          opacity: { value: 0.15, random: true },
+          size: { value: 1.5, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#64ffda",
+            opacity: 0.1,
+            width: 1
+          },
+          move: {
+            enable: true,
+            speed: 0.8,
+            direction: "none",
+            random: true,
+            straight: false,
+            out_mode: "out",
+            bounce: false
+          }
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: { enable: true, mode: "repulse" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
+          },
+          modes: {
+            repulse: { distance: 80, duration: 0.4 },
+            push: { particles_nb: 3 }
+          }
+        },
+        retina_detect: true
+      });
+    });
+  </script>
 </body>
 </html>
+```
