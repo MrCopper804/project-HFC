@@ -1,363 +1,956 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HFC Academy | Neural Link</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #05070a;
-      --neon: #64ffda;
-      --blue: #00e5ff;
-      --pink: #ff4d94;
-      --glass: rgba(255, 255, 255, 0.05);
-      --panel: rgba(10, 15, 26, 0.7);
-      --border-glow: rgba(100, 255, 218, 0.3);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HFC Academy | Neural Link</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #05070a;
+  --dark-bg: #030508;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg: rgba(10, 15, 26, 0.7);
+  --neon: #64ffda;
+  --accent: #00e5ff;
+  --purple: #8a2be2;
+  --gold: #ffd700;
+  --border: rgba(100, 255, 218, 0.15);
+  --text: #ccd6f6;
+}
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-    body {
-      font-family: 'Rajdhani', sans-serif;
-      background: var(--bg);
-      color: #fff;
-      overflow-x: hidden;
-      min-height: 100vh;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
+body {
+  font-family: 'Rajdhani', sans-serif; 
+  background: var(--bg);
+  color: var(--text);
+  margin: 0; 
+  padding: 0; 
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(100, 255, 218, 0.05) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(138, 43, 226, 0.05) 0%, transparent 20%);
+}
 
-    /* Animated Background */
-    #particles-js {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
+/* Sticky Navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 15px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
 
-    .content-wrapper {
-      position: relative;
-      z-index: 10;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+.navbar.scrolled {
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
 
-    /* Header */
-    header {
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1200px;
-      margin: 0 auto;
-      width: 100%;
-    }
+.logo {
+  font-family: 'Orbitron', sans-serif; 
+  font-size: 22px; 
+  font-weight: 900;
+  letter-spacing: 3px; 
+  color: var(--neon); 
+  text-decoration: none;
+  text-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
+  display: flex;
+  align-items: center;
+}
 
-    .logo h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 24px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      color: var(--neon);
-      text-shadow: 0 0 15px rgba(100, 255, 218, 0.6);
-    }
+.logo-icon {
+  margin-right: 10px;
+  font-size: 28px;
+}
 
-    .auth-buttons {
-      display: flex;
-      gap: 12px;
-    }
+.nav-links {
+  display: flex;
+  gap: 25px;
+}
 
-    .auth-btn {
-      padding: 8px 18px;
-      background: var(--glass);
-      border: 1px solid var(--border-glow);
-      border-radius: 8px;
-      color: var(--neon);
-      font-family: 'Rajdhani', sans-serif;
-      font-weight: 700;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-    }
+.nav-link {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  position: relative;
+  padding: 5px 0;
+  transition: all 0.3s ease;
+}
 
-    .auth-btn:hover {
-      background: rgba(100, 255, 218, 0.15);
-      box-shadow: 0 0 12px var(--neon);
-    }
+.nav-link:hover {
+  color: var(--neon);
+}
 
-    /* Hero Section */
-    .hero {
-      text-align: center;
-      padding: 60px 20px 40px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--neon);
+  transition: width 0.3s ease;
+}
 
-    .hero h2 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 32px;
-      font-weight: 900;
-      letter-spacing: 3px;
-      color: var(--neon);
-      margin-bottom: 16px;
-      text-shadow: 0 0 20px rgba(100, 255, 218, 0.5);
-      animation: pulseGlow 3s infinite alternate;
-    }
+.nav-link:hover::after {
+  width: 100%;
+}
 
-    .hero p {
-      font-size: 16px;
-      color: #ccd6f6;
-      line-height: 1.6;
-      max-width: 600px;
-      margin: 0 auto;
-    }
+/* Hero Section */
+.hero {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 5%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
 
-    /* Buttons Grid */
-    .buttons-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-      padding: 0 20px 40px;
-      max-width: 500px;
-      margin: 0 auto;
-    }
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, transparent 20%, var(--dark-bg) 80%);
+  z-index: -1;
+}
 
-    .action-card {
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border-glow);
-      border-radius: 16px;
-      padding: 24px;
-      text-align: center;
-      transition: all 0.35s ease;
-      cursor: pointer;
-      text-decoration: none;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
+.hero-content {
+  max-width: 800px;
+  animation: fadeInUp 1s ease-out;
+}
 
-    .action-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 40px rgba(100, 255, 218, 0.4);
-      border-color: var(--neon);
-    }
+.hero h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+  color: var(--neon);
+  text-shadow: 0 0 20px rgba(100, 255, 218, 0.5);
+  line-height: 1.1;
+}
 
-    .action-card.lobby:hover { border-color: var(--neon); box-shadow: 0 12px 40px rgba(100, 255, 218, 0.4); }
-    .action-card.translator:hover { border-color: var(--blue); box-shadow: 0 12px 40px rgba(0, 229, 255, 0.4); }
-    .action-card.auth:hover { border-color: var(--pink); box-shadow: 0 12px 40px rgba(255, 77, 148, 0.4); }
+.hero p {
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  margin-bottom: 40px;
+  line-height: 1.6;
+  color: #a0aec0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-    .card-icon {
-      font-size: 28px;
-      margin-bottom: 16px;
-      display: block;
-    }
+.btn {
+  display: inline-block;
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
 
-    .lobby .card-icon { color: var(--neon); }
-    .translator .card-icon { color: var(--blue); }
-    .auth .card-icon { color: var(--pink); }
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon), var(--purple));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 
-    .action-card h3 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      margin-bottom: 8px;
-    }
+.btn:hover::before {
+  opacity: 1;
+}
 
-    .action-card p {
-      font-size: 14px;
-      color: #a0aec0;
-      line-height: 1.5;
-    }
+.btn-primary {
+  background: transparent;
+  border: 2px solid var(--neon);
+  color: var(--neon);
+  margin: 0 10px;
+}
 
-    /* Footer */
-    footer {
-      padding: 30px 20px;
-      text-align: center;
-      margin-top: auto;
-    }
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--purple);
+  color: var(--purple);
+  margin: 0 10px;
+}
 
-    .dev-badge {
-      display: inline-block;
-      padding: 16px 32px;
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      border: 1px solid var(--border-glow);
-    }
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(100, 255, 218, 0.3);
+}
 
-    .dev-title {
-      font-size: 10px;
-      color: #666;
-      letter-spacing: 4px;
-      margin: 0;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
+/* Features Section */
+.features {
+  padding: 80px 5%;
+  background: var(--dark-bg);
+}
 
-    .dev-name {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 18px;
-      color: #fff;
-      letter-spacing: 2px;
-      margin-top: 6px;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
+.section-title {
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  color: var(--neon);
+  margin-bottom: 60px;
+  position: relative;
+}
 
-    /* Animations */
-    @keyframes pulseGlow {
-      0% { text-shadow: 0 0 15px rgba(100, 255, 218, 0.5); }
-      100% { text-shadow: 0 0 30px rgba(100, 255, 218, 0.8), 0 0 40px rgba(100, 255, 218, 0.6); }
-    }
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: var(--neon);
+  border-radius: 3px;
+}
 
-    /* Responsive Design */
-    @media (min-width: 768px) {
-      .buttons-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-        max-width: 900px;
-      }
-      
-      .hero h2 {
-        font-size: 42px;
-      }
-      
-      .hero p {
-        font-size: 18px;
-      }
-    }
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
 
-    @media (max-width: 767px) {
-      .hero h2 {
-        font-size: 28px;
-        letter-spacing: 2px;
-      }
-      
-      .hero p {
-        font-size: 14px;
-        padding: 0 10px;
-      }
-      
-      .action-card {
-        padding: 20px;
-      }
-      
-      .action-card h3 {
-        font-size: 16px;
-      }
-      
-      .card-icon {
-        font-size: 24px;
-      }
-    }
-  </style>
+.feature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.4s ease;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, var(--neon), var(--purple));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--neon);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.feature-card:hover::before {
+  transform: scaleX(1);
+}
+
+.feature-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  color: var(--neon);
+  text-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+}
+
+.feature-card h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: white;
+}
+
+.feature-card p {
+  color: #a0aec0;
+  line-height: 1.6;
+}
+
+/* Stats Section */
+.stats {
+  padding: 80px 5%;
+  background: linear-gradient(to bottom, var(--dark-bg), var(--bg));
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.stat-number {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--neon);
+  margin-bottom: 10px;
+  text-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+}
+
+.stat-label {
+  font-size: 16px;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* CTA Section */
+.cta {
+  padding: 100px 5%;
+  text-align: center;
+  background: var(--dark-bg);
+  position: relative;
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(100, 255, 218, 0.05) 0%, transparent 70%);
+  z-index: -1;
+}
+
+.cta h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 36px;
+  color: var(--neon);
+  margin-bottom: 20px;
+}
+
+.cta p {
+  max-width: 600px;
+  margin: 0 auto 40px;
+  color: #a0aec0;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.cta-btn {
+  background: linear-gradient(90deg, var(--neon), var(--purple));
+  color: #000;
+  border: none;
+  padding: 18px 50px;
+  font-size: 18px;
+  font-weight: 800;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 0 30px rgba(100, 255, 218, 0.3);
+}
+
+.cta-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 40px rgba(100, 255, 218, 0.5);
+}
+
+/* Footer */
+footer {
+  background: var(--dark-bg);
+  padding: 50px 5% 30px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto 40px;
+}
+
+.footer-col h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  color: var(--neon);
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.footer-col h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: var(--neon);
+}
+
+.footer-links {
+  list-style: none;
+}
+
+.footer-links li {
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  color: #a0aec0;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.footer-links a:hover {
+  color: var(--neon);
+  transform: translateX(5px);
+}
+
+.copyright {
+  text-align: center;
+  padding-top: 30px;
+  border-top: 1px solid var(--border);
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Original Content Styling */
+.original-content {
+  padding: 60px 5%;
+  background: var(--dark-bg);
+}
+
+.hfc-section {
+  max-width: 500px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.hfc-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.hfc-logo {
+  font-family: 'Orbitron', sans-serif; 
+  font-size: 28px; 
+  font-weight: 900;
+  letter-spacing: 6px; 
+  color: var(--neon); 
+  margin: 0;
+  text-shadow: 0 0 15px rgba(100, 255, 218, 0.4);
+}
+
+.xp-chip {
+  display: inline-block; 
+  margin-top: 15px; 
+  padding: 8px 25px;
+  background: rgba(100, 255, 218, 0.1); 
+  border: 1px solid var(--neon);
+  border-radius: 30px; 
+  font-size: 16px; 
+  font-weight: 700; 
+  color: var(--neon);
+}
+
+.glass-card {
+  width: 100%; 
+  background: var(--card-bg);
+  border: 1px solid var(--border); 
+  border-radius: 15px; 
+  padding: 25px;
+  box-sizing: border-box;
+  margin-bottom: 25px;
+}
+
+.label { 
+  font-size: 12px; 
+  color: var(--neon); 
+  letter-spacing: 2px; 
+  text-transform: uppercase; 
+  margin-bottom: 15px; 
+  opacity: 0.7; 
+}
+
+textarea {
+  width: 100%; 
+  height: 120px; 
+  background: rgba(0,0,0,0.3); 
+  border: 1px solid #222;
+  border-radius: 12px; 
+  color: #fff; 
+  padding: 15px; 
+  font-size: 18px; 
+  outline: none;
+  resize: none; 
+  box-sizing: border-box; 
+  font-family: 'Rajdhani', sans-serif;
+  transition: all 0.3s ease;
+}
+
+textarea:focus {
+  border-color: var(--neon);
+  box-shadow: 0 0 15px rgba(100, 255, 218, 0.2);
+}
+
+.btn-box { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 15px; 
+  margin-top: 20px; 
+}
+
+.btn-original {
+  padding: 16px; 
+  border-radius: 10px; 
+  border: none; 
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif; 
+  font-size: 12px; 
+  cursor: pointer;
+  transition: 0.2s; 
+  text-transform: uppercase;
+}
+
+.btn-encrypt { 
+  background: var(--neon); 
+  color: #000; 
+}
+
+.btn-decrypt { 
+  background: transparent; 
+  color: #fff; 
+  border: 1px solid #fff; 
+}
+
+.result-box {
+  width: 100%; 
+  text-align: center;
+  background: rgba(0, 229, 255, 0.02); 
+  border-radius: 15px;
+  padding: 30px 20px; 
+  border: 1px dashed var(--border); 
+  box-sizing: border-box;
+  position: relative;
+}
+
+#outputArea {
+  font-size: 28px; 
+  font-weight: 700; 
+  color: var(--accent);
+  word-break: break-all; 
+  display: block;
+  min-height: 60px;
+  line-height: 1.4;
+}
+
+.copy-link {
+  font-size: 12px; 
+  color: #555; 
+  margin-top: 15px; 
+  cursor: pointer; 
+  text-decoration: underline;
+  transition: all 0.3s ease;
+}
+
+.copy-link:hover {
+  color: var(--neon);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 15px;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .hero h1 {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+  }
+  
+  .btn {
+    display: block;
+    margin: 10px auto;
+    width: 80%;
+  }
+  
+  .features-grid, .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .btn-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neon);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--purple);
+}
+</style>
 </head>
 <body>
-  <!-- Animated Background -->
-  <div id="particles-js"></div>
-
-  <div class="content-wrapper">
-    <!-- Header -->
-    <header>
-      <div class="logo">
-        <h1>HFC ACADEMY</h1>
-      </div>
-      <div class="auth-buttons">
-        <a href="auth.html" class="auth-btn">Login</a>
-        <a href="auth.html" class="auth-btn">Signup</a>
-      </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero">
-      <h2>WELCOME TO HFC NEURAL CORE</h2>
-      <p>Secure Signal Translation and Neural Communication System</p>
-    </section>
-
-    <!-- Action Cards -->
-    <div class="buttons-grid">
-      <a href="lobby.html" class="action-card lobby">
-        <span class="card-icon">🌐</span>
-        <h3>ENTER LOBBY</h3>
-        <p>Access the neural network hub</p>
-      </a>
-      
-      <a href="translator.html" class="action-card translator">
-        <span class="card-icon">💬</span>
-        <h3>OPEN TRANSLATOR</h3>
-        <p>Real-time signal translation</p>
-      </a>
-      
-      <a href="auth.html" class="action-card auth">
-        <span class="card-icon">🔐</span>
-        <h3>LOGIN / SIGNUP</h3>
-        <p>Secure authentication portal</p>
-      </a>
+  <!-- Sticky Navbar -->
+  <nav class="navbar">
+    <a href="#" class="logo">
+      <span class="logo-icon">⚡</span>
+      HFC Academy
+    </a>
+    <div class="nav-links">
+      <a href="#" class="nav-link">Home</a>
+      <a href="#" class="nav-link">About</a>
+      <a href="#" class="nav-link">Privacy</a>
+      <a href="#" class="nav-link">Contact</a>
+      <a href="auth.html" class="nav-link">Login</a>
     </div>
+  </nav>
 
-    <!-- Footer -->
-    <footer>
-      <div class="dev-badge">
-        <p class="dev-title">System Developer</p>
-        <div class="dev-name">UMAIR KHAN</div>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Welcome to HFC Academy</h1>
+      <p>An immersive educational platform where skill-based gaming meets real-world learning. Master cryptography, earn XP, and climb the leaderboards in our secure Firebase-powered environment.</p>
+      <div class="hero-buttons">
+        <a href="auth.html" class="btn btn-primary">Get Started</a>
+        <a href="lobby.html" class="btn btn-secondary">Play Now</a>
       </div>
-    </footer>
-  </div>
+    </div>
+  </section>
 
-  <!-- Particles.js CDN -->
-  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      particlesJS("particles-js", {
-        particles: {
-          number: { value: 60, density: { enable: true, value_area: 800 } },
-          color: { value: "#64ffda" },
-          shape: { type: "circle" },
-          opacity: { value: 0.15, random: true },
-          size: { value: 1.5, random: true },
-          line_linked: {
-            enable: true,
-            distance: 150,
-            color: "#64ffda",
-            opacity: 0.1,
-            width: 1
-          },
-          move: {
-            enable: true,
-            speed: 0.8,
-            direction: "none",
-            random: true,
-            straight: false,
-            out_mode: "out",
-            bounce: false
+  <!-- Features Section -->
+  <section class="features">
+    <h2 class="section-title">Platform Features</h2>
+    <div class="features-grid">
+      <div class="feature-card floating">
+        <div class="feature-icon">🎮</div>
+        <h3>Skill-Based Games</h3>
+        <p>Engage in challenging games that test your decryption skills, memory, and problem-solving abilities.</p>
+      </div>
+      <div class="feature-card floating" style="animation-delay: 0.2s;">
+        <div class="feature-icon">🏆</div>
+        <h3>XP & Leaderboards</h3>
+        <p>Earn experience points, unlock ranks, and compete with players worldwide on our global leaderboards.</p>
+      </div>
+      <div class="feature-card floating" style="animation-delay: 0.4s;">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure Firebase System</h3>
+        <p>Enterprise-grade security with Firebase Authentication and Firestore for seamless data management.</p>
+      </div>
+      <div class="feature-card floating" style="animation-delay: 0.6s;">
+        <div class="feature-icon">📈</div>
+        <h3>Educational Growth</h3>
+        <p>Develop valuable skills in cryptography, pattern recognition, and critical thinking through gameplay.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalUsers">0</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="gamesPlayed">0</div>
+        <div class="stat-label">Games Played</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="activePlayers">0</div>
+        <div class="stat-label">Active Players</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="cta">
+    <h2>Ready to Begin Your Mission?</h2>
+    <p>Join thousands of agents worldwide who are mastering the art of cryptography and climbing the ranks in HFC Academy.</p>
+    <a href="auth.html" class="cta-btn">Start Your Journey</a>
+  </section>
+
+  <!-- Original Content Section -->
+  <section class="original-content">
+    <div class="hfc-section">
+      <div class="hfc-header">
+        <h1 class="hfc-logo">HFC ACADEMY</h1>
+        <div class="xp-chip">CORE XP: <span id="displayXP">0</span></div>
+      </div>
+      
+      <div class="glass-card">
+        <div class="label">Signal Input</div>
+        <textarea id="inputArea" placeholder="Waiting for data..."></textarea>
+        <div class="btn-box">
+          <button class="btn-original btn-encrypt" onclick="startTranslation('toHFC')">To HFC</button>
+          <button class="btn-original btn-decrypt" onclick="startTranslation('toENG')">To Eng</button>
+        </div>
+      </div>
+      
+      <div class="result-box">
+        <div class="label" style="opacity: 0.4;">Processed Data</div>
+        <span id="outputArea">Ready_</span>
+        <div class="copy-link" onclick="copyText()">Copy To Clipboard</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h3>About Us</h3>
+        <p style="color: #a0aec0; line-height: 1.6;">HFC Academy is an innovative educational platform that combines gaming with skill development in cryptography and problem-solving.</p>
+      </div>
+      <div class="footer-col">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Games</a></li>
+          <li><a href="leaderboard.html">Leaderboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>Legal</h3>
+        <ul class="footer-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>Contact</h3>
+        <ul class="footer-links">
+          <li><a href="mailto:support@hfca.edu">support@hfca.edu</a></li>
+          <li><a href="#">Discord Community</a></li>
+          <li><a href="#">Twitter</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="copyright">
+      &copy; 2026 HFC Academy. All rights reserved. Developed by Umair Khan.
+    </div>
+  </footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+  authDomain: "hfc-academy.firebaseapp.com",
+  projectId: "hfc-academy",
+  storageBucket: "hfc-academy.firebasestorage.app",
+  messagingSenderId: "84006497196",
+  appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const hfcMap = {
+  'A': '+', 'B': '[]', 'C': '©', 'D': '÷', 'E': '=', 'F': '_', 'G': '>', 'H': '|',
+  'I': '!', 'J': '#', 'K': ':', 'L': '<', 'M': '*', 'N': '°', 'O': '()', 'P': '¶',
+  'Q': '?', 'R': '®', 'S': '$', 'T': '™', 'U': "'", 'V': '^', 'W': '&', 'X': '`',
+  'Y': '~', 'Z': '℅'
+};
+
+let currentUID = null;
+let currentXP = 0;
+
+// Initialize stats counters
+function animateCounter(elementId, targetValue, duration = 2000) {
+  const element = document.getElementById(elementId);
+  let start = 0;
+  const increment = targetValue / (duration / 16);
+  
+  const timer = setInterval(() => {
+    start += increment;
+    if (start >= targetValue) {
+      element.textContent = targetValue.toLocaleString();
+      clearInterval(timer);
+    } else {
+      element.textContent = Math.ceil(start).toLocaleString();
+    }
+  }, 16);
+}
+
+// Simulate stats (in a real app, these would come from Firebase)
+document.addEventListener('DOMContentLoaded', () => {
+  // These values would be fetched from your database in a real implementation
+  animateCounter('totalUsers', 12500);
+  animateCounter('gamesPlayed', 87500);
+  animateCounter('activePlayers', 3200);
+});
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUID = user.uid;
+    const snap = await getDoc(doc(db, "users", currentUID));
+    if (snap.exists()) {
+      currentXP = snap.data().score || 0;
+      document.getElementById('displayXP').innerText = currentXP;
+    }
+  } else { 
+    window.location.href = "auth.html"; 
+  }
+});
+
+window.startTranslation = async (mode) => {
+  const input = document.getElementById('inputArea').value.toUpperCase();
+  if (!input.trim()) return;
+  
+  const cost = (mode === 'toHFC') ? 10 : 20;
+  if (currentXP < cost) { 
+    alert("Insufficient XP!"); 
+    return; 
+  }
+  
+  try {
+    await updateDoc(doc(db, "users", currentUID), { score: increment(-cost) });
+    currentXP -= cost;
+    document.getElementById('displayXP').innerText = currentXP;
+    
+    let finalResult = "";
+    if (mode === 'toHFC') {
+      finalResult = input.split('').map(char => hfcMap[char] || char).join('');
+    } else {
+      let tempText = input;
+      let items = Object.entries(hfcMap).sort((a,b) => b[1].length - a[1].length);
+      let decoded = "";
+      while (tempText.length > 0) {
+        let found = false;
+        for (let [letter, symbol] of items) {
+          if (tempText.startsWith(symbol)) {
+            decoded += letter;
+            tempText = tempText.slice(symbol.length);
+            found = true;
+            break;
           }
-        },
-        interactivity: {
-          detect_on: "canvas",
-          events: {
-            onhover: { enable: true, mode: "repulse" },
-            onclick: { enable: true, mode: "push" },
-            resize: true
-          },
-          modes: {
-            repulse: { distance: 80, duration: 0.4 },
-            push: { particles_nb: 3 }
-          }
-        },
-        retina_detect: true
-      });
-    });
-  </script>
+        }
+        if (!found) { 
+          decoded += tempText[0]; 
+          tempText = tempText.slice(1); 
+        }
+      }
+      finalResult = decoded;
+    }
+    
+    document.getElementById('outputArea').innerText = finalResult;
+  } catch (e) { 
+    alert("Sync Error!"); 
+  }
+};
+
+window.copyText = () => {
+  const text = document.getElementById('outputArea').innerText;
+  navigator.clipboard.writeText(text);
+  alert("Signal Copied!");
+};
+
+// Navbar scroll effect
+window.addEventListener('scroll', () => {
+  const navbar = document.querySelector('.navbar');
+  if (window.scrollY > 50) {
+    navbar.classList.add('scrolled');
+  } else {
+    navbar.classList.remove('scrolled');
+  }
+});
+</script>
 </body>
 </html>
+
