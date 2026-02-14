@@ -1,0 +1,384 @@
+here<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - HFC Academy</title>
+    <style>
+        :root {
+            --bg-primary: #0f0f1b;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --text-primary: #e6e6ff;
+            --text-secondary: #a9a9c3;
+            --accent-primary: #4da6ff;
+            --accent-secondary: #6a5af9;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-tertiary));
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+            background: rgba(26, 26, 46, 0.85);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(77, 166, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(77, 166, 255, 0.15) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            z-index: 1;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .last-updated {
+            background: rgba(77, 166, 255, 0.15);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .policy-container {
+            background: rgba(26, 26, 46, 0.92);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(106, 90, 249, 0.25);
+            margin-bottom: 40px;
+        }
+
+        .section {
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::before {
+            content: "•";
+            font-size: 2.5rem;
+            color: var(--accent-secondary);
+            position: relative;
+            top: -5px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        ul {
+            padding-left: 25px;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+
+        a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+            display: inline-block;
+        }
+
+        a::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent-primary);
+            transition: var(--transition);
+        }
+
+        a:hover::after {
+            width: 100%;
+        }
+
+        a:hover {
+            color: var(--accent-secondary);
+        }
+
+        .highlight {
+            background: rgba(77, 166, 255, 0.15);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 500;
+            color: var(--accent-primary);
+        }
+
+        .contact-info {
+            background: rgba(106, 90, 249, 0.1);
+            border-left: 4px solid var(--accent-secondary);
+            padding: 20px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            margin: 25px 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .policy-container {
+                padding: 30px 25px;
+            }
+            
+            h1 {
+                font-size: 2.3rem;
+            }
+            
+            h2 {
+                font-size: 1.6rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .policy-container {
+                padding: 25px 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            header {
+                padding: 30px 15px;
+            }
+            
+            .section {
+                margin-bottom: 25px;
+                padding-bottom: 20px;
+            }
+        }
+
+        .logo-accent {
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-accent::after {
+            content: "HFC";
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: var(--accent-primary);
+            opacity: 0.3;
+            z-index: -1;
+            font-weight: 800;
+            font-size: 3.5rem;
+            letter-spacing: -3px;
+            transform: translateY(-15px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="logo-accent">Privacy Policy</span> - HFC Academy</h1>
+            <p class="subtitle">Your privacy is important to us. This policy explains how we collect, use, and protect your information.</p>
+            <div class="last-updated">Last Updated: February 10, 2026</div>
+        </header>
+
+        <main class="policy-container">
+            <div class="section">
+                <h2>Introduction</h2>
+                <p>Welcome to <span class="highlight">HFC Academy</span>, an online educational gaming and academy platform. We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, disclose, and safeguard your information when you use our website and services hosted on Firebase Hosting.</p>
+                <p>By accessing or using HFC Academy, you agree to the terms of this Privacy Policy. If you do not agree with these terms, please do not use our services.</p>
+            </div>
+
+            <div class="section">
+                <h2>Information We Collect</h2>
+                <p>We collect information that you provide directly to us and information that is automatically collected when you use our services:</p>
+                <ul>
+                    <li><span class="highlight">Personal Information:</span> When you create an account, we collect your name, email address, and profile information.</li>
+                    <li><span class="highlight">Usage Data:</span> We collect information about your interactions with our platform, including game progress, coins earned, leaderboard rankings, time spent on educational content, and feature usage.</li>
+                    <li><span class="highlight">Device Information:</span> We collect information about your device, including IP address, browser type, operating system, and unique device identifiers.</li>
+                    <li><span class="highlight">Log Data:</span> Our servers automatically record information when you access our services, including access times, pages viewed, and error reports.</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>How We Use Information</h2>
+                <p>We use the collected information for various purposes:</p>
+                <ul>
+                    <li>To provide, maintain, and improve our educational gaming platform</li>
+                    <li>To personalize your experience and display relevant educational content</li>
+                    <li>To manage your account, game progress, coins, and leaderboard rankings</li>
+                    <li>To communicate with you about your account, updates, and support inquiries</li>
+                    <li>To analyze usage patterns and optimize platform performance</li>
+                    <li>To comply with legal obligations and protect against fraudulent activities</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>Cookies Policy</h2>
+                <p>We use cookies and similar tracking technologies to enhance your experience on HFC Academy. Cookies are small data files stored on your device that help us remember your preferences and settings.</p>
+                <p>Our cookie usage includes:</p>
+                <ul>
+                    <li><span class="highlight">Essential Cookies:</span> Required for core platform functionality, including user authentication and game state management</li>
+                    <li><span class="highlight">Analytics Cookies:</span> Help us understand how users interact with our platform to improve performance</li>
+                    <li><span class="highlight">Preference Cookies:</span> Remember your settings and customization choices</li>
+                </ul>
+                <p>You can control cookie settings through your browser, but disabling essential cookies may limit your ability to use certain features of HFC Academy.</p>
+            </div>
+
+            <div class="section">
+                <h2>Google AdSense and Third-Party Advertising</h2>
+                <p>HFC Academy uses <span class="highlight">Google AdSense</span> to display advertisements to support our free educational services. Google AdSense uses cookies (including the DoubleClick cookie) to serve ads based on your prior visits to our website and other sites on the internet.</p>
+                <p>Google's use of advertising cookies enables it to serve ads to you based on your visit to our site and other sites on the internet. You may opt out of personalized advertising by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer">Google's Ad Settings</a>. Alternatively, you can opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="https://www.networkadvertising.org/choices" target="_blank" rel="noopener noreferrer">www.networkadvertising.org</a>.</p>
+                <p>We do not have access to or control over cookies used by third-party advertisers. We encourage you to review the privacy policies of these third parties for more information about their data practices.</p>
+            </div>
+
+            <div class="section">
+                <h2>Firebase Services Disclosure</h2>
+                <p>HFC Academy utilizes <span class="highlight">Firebase Authentication</span> for secure user login/signup and <span class="highlight">Firestore Database</span> to store user data including game progress, coins, leaderboard information, and educational content preferences.</p>
+                <p>Firebase services may collect certain information to provide, maintain, and protect their services. This includes device information, usage data, and diagnostic information. Firebase adheres to Google's Privacy Policy, which you can review at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">https://policies.google.com/privacy</a>.</p>
+                <p>All data stored in Firestore Database is encrypted at rest and in transit. We implement strict security rules to ensure users can only access their own data and public educational content.</p>
+            </div>
+
+            <div class="section">
+                <h2>Data Protection</h2>
+                <p>We implement industry-standard security measures to protect your personal information:</p>
+                <ul>
+                    <li>All data transmissions are encrypted using SSL/TLS technology</li>
+                    <li>User passwords are hashed using strong cryptographic algorithms</li>
+                    <li>Firestore security rules restrict data access to authorized users only</li>
+                    <li>Regular security audits and updates to our infrastructure</li>
+                    <li>Strict access controls for personnel who handle user data</li>
+                </ul>
+                <p>While we strive to protect your personal information, no method of transmission over the internet or electronic storage is 100% secure. We cannot guarantee absolute security but commit to addressing any vulnerabilities promptly.</p>
+            </div>
+
+            <div class="section">
+                <h2>User Rights</h2>
+                <p>Depending on your location, you may have certain rights regarding your personal information:</p>
+                <ul>
+                    <li><span class="highlight">Access:</span> Request a copy of the personal information we hold about you</li>
+                    <li><span class="highlight">Correction:</span> Request correction of inaccurate or incomplete data</li>
+                    <li><span class="highlight">Deletion:</span> Request deletion of your personal information (subject to legal retention requirements)</li>
+                    <li><span class="highlight">Restriction:</span> Request restriction of processing in certain circumstances</li>
+                    <li><span class="highlight">Data Portability:</span> Request transfer of your data to another service provider</li>
+                </ul>
+                <p>To exercise these rights, contact us at the email address provided in the Contact Information section. We will respond to legitimate requests within 30 days.</p>
+            </div>
+
+            <div class="section">
+                <h2>Children's Information</h2>
+                <p>HFC Academy is designed for users of all ages but is not intended for children under 13 years old (or 16 in some regions). We do not knowingly collect personal information from children under these ages.</p>
+                <p>If we become aware that we have collected personal information from a child without parental consent, we will take steps to delete such information. If you believe a child has provided us with personal information, please contact us immediately.</p>
+                <p>Parents can review, delete, or refuse further collection of their child's information by contacting us through the information provided below.</p>
+            </div>
+
+            <div class="section">
+                <h2>Changes to This Policy</h2>
+                <p>We may update this Privacy Policy from time to time to reflect changes in our practices or for legal reasons. We will notify users of significant changes by posting the new Privacy Policy on this page with an updated "Last Updated" date.</p>
+                <p>Your continued use of HFC Academy after any changes indicates your acceptance of the updated policy. We encourage you to review this policy periodically for any changes.</p>
+            </div>
+
+            <div class="section">
+                <h2>Contact Information</h2>
+                <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+                <div class="contact-info">
+                    <p><span class="highlight">Email:</span> privacy@hfca.edu.pk</p>
+                    <p><span class="highlight">Address:</span> HFC Academy Privacy Team, Lahore, Pakistan</p>
+                    <p><span class="highlight">Website:</span> <a href="https://www.hfca.edu.pk" target="_blank" rel="noopener noreferrer">https://www.hfca.edu.pk</a></p>
+                </div>
+                <p>We will make every effort to address your concerns and resolve any privacy issues in a timely manner.</p>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2026 HFC Academy. All rights reserved. | Hosted on Firebase Hosting | Serving Global Users from Pakistan</p>
+            <p>This Privacy Policy is AdSense compliant and meets international privacy standards.</p>
+        </footer>
+    </div>
+</body>
+</html>
+
