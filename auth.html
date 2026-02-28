@@ -4,30 +4,371 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFC Academy - Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root { --neon: #64ffda; --admin: #ff0055; --bg: #000; }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .auth-container { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border: 1px solid #222; width: 90%; max-width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: var(--neon); color: #000; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .toggle-link { font-size: 12px; color: #888; margin-top: 15px; cursor: pointer; display: block; }
-        #statusMsg { font-size: 11px; margin-top: 10px; color: var(--admin); }
+        :root {
+            --neon: #64ffda;
+            --admin: #ff0055;
+            --bg: #05070a;
+        }
+        
+        body {
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(100, 255, 218, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(138, 43, 226, 0.08) 0%, transparent 50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .auth-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        /* Decorative Elements */
+        .auth-wrapper::before,
+        .auth-wrapper::after {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+
+        .auth-wrapper::before {
+            background: var(--neon);
+            top: -100px;
+            left: -100px;
+        }
+
+        .auth-wrapper::after {
+            background: var(--admin);
+            bottom: -100px;
+            right: -100px;
+        }
+
+        .auth-container {
+            background: rgba(10, 15, 26, 0.7);
+            padding: 40px 35px;
+            border-radius: 24px;
+            border: 1px solid rgba(100, 255, 218, 0.15);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-logo-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #authTitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--neon);
+            text-shadow: 0 0 20px rgba(100, 255, 218, 0.4);
+            margin: 0;
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+            box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon input {
+            padding-left: 45px;
+        }
+
+        .input-icon::before {
+            content: attr(data-icon);
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .input-icon:focus-within::before {
+            color: var(--neon);
+        }
+
+        #regFields {
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #authBtn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--neon), #4dd9b5);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 14px;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(100, 255, 218, 0.3);
+        }
+
+        #authBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(100, 255, 218, 0.5);
+        }
+
+        #authBtn:active {
+            transform: translateY(-1px);
+        }
+
+        #statusMsg {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 600;
+            min-height: 18px;
+            color: var(--admin);
+        }
+
+        .toggle-link {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 25px;
+            text-align: center;
+            display: block;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-link:hover {
+            color: var(--neon);
+        }
+
+        .toggle-link span {
+            color: var(--neon);
+            font-weight: 600;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-divider span {
+            padding: 0 15px;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .auth-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .auth-feature {
+            text-align: center;
+            padding: 15px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .auth-feature:hover {
+            background: rgba(100, 255, 218, 0.05);
+            border-color: rgba(100, 255, 218, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .auth-feature-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .auth-feature-text {
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 30px 25px;
+            }
+
+            #authTitle {
+                font-size: 24px;
+            }
+
+            .auth-features {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="auth-container">
-        <h2 id="authTitle" style="color: var(--neon);">LOGIN</h2>
-        <div id="regFields" style="display: none;">
-            <input type="text" id="username" placeholder="Username">
-            <input type="tel" id="regWhatsapp" placeholder="WhatsApp Number (e.g. 03001234567)" required>
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <span class="auth-logo-icon">⚡</span>
+                <h1 id="authTitle">LOGIN</h1>
+                <p class="auth-subtitle">Access your agent dashboard</p>
+            </div>
+
+            <div id="regFields" style="display: none;">
+                <div class="input-group input-icon" data-icon="👤">
+                    <label class="input-label">Username</label>
+                    <input type="text" id="username" placeholder="Choose a codename">
+                </div>
+                <div class="input-group input-icon" data-icon="📱">
+                    <label class="input-label">WhatsApp Number</label>
+                    <input type="tel" id="regWhatsapp" placeholder="03001234567">
+                </div>
+            </div>
+
+            <div class="input-group input-icon" data-icon="📧">
+                <label class="input-label">Email Address</label>
+                <input type="email" id="email" placeholder="agent@hfcacademy.com">
+            </div>
+
+            <div class="input-group input-icon" data-icon="🔒">
+                <label class="input-label">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+
+            <button id="authBtn">PROCEED</button>
+            <p id="statusMsg"></p>
+
+            <span class="toggle-link" id="toggleAuth">
+                New agent? <span>Create Account</span>
+            </span>
+
+            <div class="auth-divider">
+                <span>AGENT BENEFITS</span>
+            </div>
+
+            <div class="auth-features">
+                <div class="auth-feature">
+                    <span class="auth-feature-icon">🎮</span>
+                    <span class="auth-feature-text">Play Games</span>
+                </div>
+                <div class="auth-feature">
+                    <span class="auth-feature-icon">🏆</span>
+                    <span class="auth-feature-text">Earn XP</span>
+                </div>
+                <div class="auth-feature">
+                    <span class="auth-feature-icon">💰</span>
+                    <span class="auth-feature-text">Win Coins</span>
+                </div>
+            </div>
+
+            <div class="auth-footer">
+                <p>🔒 Secured by Firebase Authentication</p>
+            </div>
         </div>
-        <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="password" placeholder="Password">
-        
-        <button id="authBtn">PROCEED</button>
-        <p id="statusMsg"></p>
-        <span class="toggle-link" id="toggleAuth">New here? Create an Account</span>
     </div>
 
     <script type="module">
@@ -55,7 +396,9 @@
             isLogin = !isLogin;
             document.getElementById('authTitle').innerText = isLogin ? "LOGIN" : "REGISTER";
             document.getElementById('regFields').style.display = isLogin ? "none" : "block";
-            document.getElementById('toggleAuth').innerText = isLogin ? "New here? Create an Account" : "Already have an account? Login";
+            document.getElementById('toggleAuth').innerHTML = isLogin 
+                ? 'New agent? <span>Create Account</span>' 
+                : 'Already an agent? <span>Login</span>';
         };
 
         // Main Auth Function
@@ -65,40 +408,50 @@
             const username = document.getElementById('username').value.trim();
             const status = document.getElementById('statusMsg');
 
-            if(!email || !password) return alert("Fill all fields!");
-            status.innerText = "Processing... Please wait.";
+            if(!email || !password) {
+                status.innerText = "⚠️ Please fill all required fields!";
+                return;
+            }
+
+            status.innerText = "⏳ Processing... Please wait.";
 
             try {
                 if (isLogin) {
                     // --- LOGIN LOGIC ---
                     await signInWithEmailAndPassword(auth, email, password);
-                    location.href = "lobby.html";
+                    status.innerText = "✅ Login successful! Redirecting...";
+                    status.style.color = "#64ffda";
+                    setTimeout(() => { location.href = "lobby.html"; }, 1000);
                 } else {
                     // --- REGISTER LOGIC ---
-                    if(!username) return alert("Enter Username!");
-                    
+                    if(!username) {
+                        status.innerText = "⚠️ Please enter a username!";
+                        return;
+                    }
+
                     const res = await createUserWithEmailAndPassword(auth, email, password);
                     const user = res.user;
 
-                    status.innerText = "Saving Data to Database...";
+                    status.innerText = "💾 Saving data to cloud...";
 
                     // Data save with WhatsApp field
                     await setDoc(doc(db, "users", user.uid), {
                         username: username,
                         email: email,
-                        whatsapp: document.getElementById('regWhatsapp').value, // Naya field
+                        whatsapp: document.getElementById('regWhatsapp').value,
                         score: 0,
                         coins: 0,
                         rank: "recruit",
                         role: "user"
                     });
 
-                    status.innerText = "Account Created Successfully!";
+                    status.innerText = "✅ Account Created Successfully!";
+                    status.style.color = "#64ffda";
                     // Data save hone ke baad hi lobby par bhejega
                     setTimeout(() => { location.href = "lobby.html"; }, 1000);
                 }
             } catch (error) {
-                status.innerText = "Error: " + error.message;
+                status.innerText = "❌ Error: " + error.message;
                 console.error(error);
             }
         };

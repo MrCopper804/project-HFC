@@ -4,82 +4,363 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HFC - Global Leaderboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #000; --neon: #64ffda; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --panel: #0a192f; }
-        body { 
-            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
-            margin: 0; padding: 15px; text-align: center;
-            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
+        :root {
+            --bg: #05070a;
+            --bg-secondary: #0a0f1a;
+            --neon: #64ffda;
+            --neon-glow: rgba(100, 255, 218, 0.3);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.3);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-dark: rgba(10, 15, 26, 0.9);
+            --panel: #0a192f;
+            --text: #e6f1ff;
+            --text-muted: #556080;
+            --border: rgba(100, 255, 218, 0.15);
+            --silver: #c0c0c0;
+            --bronze: #cd7f32;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            background-image: radial-gradient(circle at top, #112240 0%, #05070a 90%);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            padding: 20px;
             min-height: 100vh;
         }
 
-        .title { color: var(--neon); letter-spacing: 5px; font-weight: 900; margin: 20px 0; text-transform: uppercase; font-size: 22px; }
-        
-        /* Tabs Styling */
-        .leader-tabs { display: flex; gap: 8px; margin: 20px auto; max-width: 450px; }
-        .tab { 
-            flex: 1; padding: 12px; background: var(--glass); border: 1px solid #333; 
-            border-radius: 12px; cursor: pointer; font-size: 11px; font-weight: 900; 
-            color: #888; transition: 0.3s; text-transform: uppercase;
+        /* Back Button */
+        .back-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
         }
-        .tab.active { border-color: var(--neon); color: var(--neon); background: rgba(100, 255, 218, 0.1); }
 
+        .back-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass);
+        }
+
+        .back-btn:hover {
+            color: var(--neon);
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            padding: 60px 20px 30px;
+            position: relative;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(100, 255, 218, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            letter-spacing: 4px;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            text-shadow: 0 0 20px var(--neon-glow);
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Tabs */
+        .leader-tabs {
+            display: flex;
+            gap: 12px;
+            margin: 30px auto;
+            max-width: 450px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .tab:hover {
+            border-color: rgba(100, 255, 218, 0.3);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        .tab.active {
+            border-color: var(--neon);
+            color: var(--neon);
+            background: rgba(100, 255, 218, 0.1);
+            box-shadow: 0 5px 20px var(--neon-glow);
+        }
+
+        .tab[data-type="coins"].active {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 5px 20px var(--gold-glow);
+        }
+
+        /* Leaderboard Container */
         .leader-container {
-            max-width: 450px; margin: 0 auto; background: rgba(10, 25, 47, 0.6);
-            border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 20px;
-            padding: 10px; backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--glass-dark);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 10px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
-        
-        .entry {
-            display: flex; align-items: center; padding: 12px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            animation: fadeIn 0.4s ease forwards; opacity: 0;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
-        .rank-num { width: 35px; font-weight: 900; font-size: 16px; color: #555; }
-        .agent-info { flex: 1; text-align: left; margin-left: 10px; }
-        .agent-name { font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; display: block; }
-        .agent-rank { font-size: 9px; color: var(--neon); letter-spacing: 1px; text-transform: uppercase; opacity: 0.8; }
-        
-        .agent-value { 
-            font-weight: 900; font-size: 14px; color: #fff; 
-            background: rgba(255,255,255,0.03); padding: 6px 12px; 
-            border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); 
+        /* Entries */
+        .entry {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            animation: fadeIn 0.4s ease forwards;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin-bottom: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .entry:hover {
+            background: rgba(100, 255, 218, 0.05);
+            transform: translateX(5px);
+        }
+
+        .entry:last-child {
+            border-bottom: none;
+        }
+
+        .rank-num {
+            width: 45px;
+            font-weight: 900;
+            font-size: 18px;
+            color: var(--text-muted);
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+        }
+
+        .agent-info {
+            flex: 1;
+            text-align: left;
+            margin-left: 15px;
+            min-width: 0;
+        }
+
+        .agent-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .agent-rank {
+            font-size: 10px;
+            color: var(--neon);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        .agent-value {
+            font-weight: 900;
+            font-size: 15px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Orbitron', sans-serif;
+            min-width: 100px;
+            text-align: center;
         }
 
         /* Top 3 Medals */
-        .entry:nth-child(1) .rank-num { color: var(--gold); font-size: 22px; text-shadow: 0 0 10px var(--gold); }
-        .entry:nth-child(2) .rank-num { color: #e5e4e2; font-size: 20px; }
-        .entry:nth-child(3) .rank-num { color: #cd7f32; font-size: 18px; }
-        
-        .entry:nth-child(1) { background: rgba(255, 215, 0, 0.03); border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.1); margin-bottom: 5px; }
-
-        .back-btn {
-            display: inline-block; margin-top: 30px; color: var(--neon);
-            text-decoration: none; font-size: 11px; font-weight: bold;
-            border: 1px solid var(--neon); padding: 12px 30px; border-radius: 12px;
-            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+        .entry:nth-child(1) .rank-num {
+            color: var(--gold);
+            font-size: 26px;
+            text-shadow: 0 0 15px var(--gold-glow);
         }
-        .back-btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+
+        .entry:nth-child(2) .rank-num {
+            color: var(--silver);
+            font-size: 22px;
+            text-shadow: 0 0 10px rgba(192, 192, 192, 0.5);
+        }
+
+        .entry:nth-child(3) .rank-num {
+            color: var(--bronze);
+            font-size: 20px;
+            text-shadow: 0 0 10px rgba(205, 127, 50, 0.5);
+        }
+
+        .entry:nth-child(1) {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), transparent);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .entry:nth-child(1) .agent-value {
+            color: var(--gold);
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Return Button */
+        .return-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .return-btn {
+            display: inline-block;
+            color: var(--neon);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            border: 1px solid var(--neon);
+            padding: 14px 35px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .return-btn:hover {
+            background: var(--neon);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-glow);
+            transform: translateY(-3px);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .leader-tabs {
+                gap: 8px;
+            }
+
+            .tab {
+                padding: 12px 8px;
+                font-size: 10px;
+            }
+
+            .entry {
+                padding: 14px 12px;
+            }
+
+            .rank-num {
+                width: 35px;
+                font-size: 16px;
+            }
+
+            .agent-name {
+                font-size: 13px;
+            }
+
+            .agent-value {
+                font-size: 13px;
+                padding: 8px 12px;
+                min-width: 80px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h2 class="title">Elite Rankings</h2>
+    <div class="back-nav">
+        <a href="lobby.html" class="back-btn">← Back to Lobby</a>
+    </div>
+
+    <div class="page-header">
+        <h1 class="page-title">🏆 Elite Rankings</h1>
+        <p class="page-subtitle">Top Agents Worldwide</p>
+    </div>
 
     <div class="leader-tabs">
-        <div class="tab active" id="tabXP" onclick="switchLeaderboard('score')">XP Leaders</div>
-        <div class="tab" id="tabCoins" onclick="switchLeaderboard('coins')">Coin Lords</div>
+        <div class="tab active" id="tabXP" onclick="switchLeaderboard('score')" data-type="xp">XP Leaders</div>
+        <div class="tab" id="tabCoins" onclick="switchLeaderboard('coins')" data-type="coins">Coin Lords</div>
     </div>
 
     <div class="leader-container" id="leaderboardList">
-        <p style="color: #444; padding: 40px; font-size: 12px;">FETCHING AGENT DATA...</p>
+        <div class="empty-state">
+            <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
+            <div>FETCHING AGENT DATA...</div>
+        </div>
     </div>
 
-    <a href="lobby.html" class="back-btn">Return to Base</a>
-
-    
+    <div class="return-section">
+        <a href="lobby.html" class="return-btn">Return to Base</a>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -97,21 +378,20 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let currentSort = 'score'; // Default sorting by XP (score)
+        let currentSort = 'score';
         let unsubscribe = null;
 
         window.switchLeaderboard = (type) => {
             currentSort = type;
-            
-            // UI Toggle
+
             document.getElementById('tabXP').classList.toggle('active', type === 'score');
             document.getElementById('tabCoins').classList.toggle('active', type === 'coins');
-            
+
             loadData();
         };
 
         function loadData() {
-            if (unsubscribe) unsubscribe(); // Purana listener band karo
+            if (unsubscribe) unsubscribe();
 
             const leaderRef = collection(db, "users");
             const q = query(leaderRef, orderBy(currentSort, "desc"), limit(15));
@@ -126,24 +406,26 @@
                     const name = data.username || (data.email ? data.email.split('@')[0] : "RECRUIT");
                     const rankName = (data.rank || "recruit").toUpperCase();
                     const value = currentSort === 'score' ? (data.score || 0) + " XP" : (data.coins || 0) + " COINS";
-                    
+
                     let medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
 
-                    listDiv.innerHTML += `
-                        <div class="entry" style="animation-delay: ${rank * 0.05}s">
-                            <div class="rank-num">${medal}</div>
-                            <div class="agent-info">
-                                <span class="agent-name">${name}</span>
-                                <span class="agent-rank">${rankName}</span>
-                            </div>
-                            <div class="agent-value" style="color: ${currentSort === 'coins' ? 'var(--gold)' : 'var(--neon)'}">${value}</div>
+                    const entry = document.createElement('div');
+                    entry.className = 'entry';
+                    entry.style.animationDelay = `${rank * 0.05}s`;
+                    entry.innerHTML = `
+                        <div class="rank-num">${medal}</div>
+                        <div class="agent-info">
+                            <span class="agent-name">${name}</span>
+                            <span class="agent-rank">${rankName}</span>
                         </div>
+                        <div class="agent-value" style="color: ${currentSort === 'coins' ? 'var(--gold)' : 'var(--neon)'}">${value}</div>
                     `;
+                    listDiv.appendChild(entry);
                     rank++;
                 });
 
                 if (snapshot.empty) {
-                    listDiv.innerHTML = "<p style='padding:40px; color:#444;'>No active agents found.</p>";
+                    listDiv.innerHTML = "<div class='empty-state'><div style='font-size: 48px; margin-bottom: 15px;'>📭</div><div>NO ACTIVE AGENTS FOUND</div></div>";
                 }
             });
         }

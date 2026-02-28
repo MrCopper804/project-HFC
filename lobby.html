@@ -4,199 +4,648 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HFC Academy - Mission Lobby</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #000000;
-            --glass: rgba(255, 255, 255, 0.05);
+            --bg: #05070a;
+            --bg-secondary: #0a0f1a;
+            --bg-tertiary: #112240;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-dark: rgba(10, 15, 26, 0.8);
             --neon: #64ffda;
+            --neon-glow: rgba(100, 255, 218, 0.3);
             --danger: #ff4d4d;
             --admin: #ff0055;
             --gold: #ffd700;
-            --panel: rgba(10, 15, 26, 0.98);
+            --gold-glow: rgba(255, 215, 0, 0.3);
+            --panel: rgba(10, 15, 26, 0.95);
+            --border: rgba(100, 255, 218, 0.15);
+            --text: #ccd6f6;
+            --text-muted: #556080;
         }
 
-        body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
-            background-image: radial-gradient(circle at top right, #112240 0%, #000 75%);
-            color: #ccd6f6; margin: 0; padding: 0; display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* --- HEADER --- */
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg);
+            background-image: radial-gradient(circle at top right, #112240 0%, #05070a 75%);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- ENHANCED HEADER --- */
         .header {
-            width: 100%; background: var(--panel); padding: 10px 15px;
-            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(100, 255, 218, 0.1);
-            display: flex; align-items: center; box-sizing: border-box; z-index: 100;
-            height: 65px; flex-shrink: 0;
+            width: 100%;
+            background: var(--panel);
+            padding: 15px 20px;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+            gap: 15px;
         }
 
         .icon-btn {
-            width: 38px; height: 38px; display: flex; justify-content: center; 
-            align-items: center; border-radius: 10px; background: var(--glass);
-            color: var(--neon); text-decoration: none; font-size: 18px;
-            border: 1px solid rgba(100, 255, 218, 0.2); cursor: pointer;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            background: var(--glass);
+            color: var(--neon);
+            text-decoration: none;
+            font-size: 20px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
         }
 
-        .user-stats { flex-grow: 1; margin: 0 12px; display: flex; align-items: center; overflow: hidden; }
+        .icon-btn:hover {
+            background: rgba(100, 255, 218, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--neon-glow);
+        }
+
+        .icon-btn:active {
+            transform: scale(0.95);
+        }
+
+        .user-stats {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-width: 0;
+        }
+
         .rank-badge {
-            min-width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon);
-            display: flex; justify-content: center; align-items: center; font-size: 12px;
-            margin-right: 8px; background: rgba(0,0,0,0.5); box-shadow: 0 0 8px var(--neon);
+            min-width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--neon);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px var(--neon-glow);
+            animation: pulse-glow 2s ease-in-out infinite;
         }
 
-        .rank-text { font-weight: 900; font-size: 10px; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
-        .currency-row { font-size: 8.5px; margin-top: 2px; display: flex; gap: 8px; font-weight: bold; }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px var(--neon-glow); }
+            50% { box-shadow: 0 0 25px var(--neon-glow); }
+        }
 
-        /* --- TRANSACTION BUTTONS --- */
-        .wallet-actions { display: flex; gap: 5px; margin-left: auto; margin-right: 10px; }
+        .stats-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .rank-text {
+            font-weight: 800;
+            font-size: 12px;
+            color: #fff;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .currency-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .currency-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* --- WALLET ACTIONS --- */
+        .wallet-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
         .action-btn {
-            padding: 5px 10px; font-size: 9px; border-radius: 6px; border: 1px solid var(--neon);
-            background: rgba(100, 255, 218, 0.1); color: var(--neon); text-decoration: none;
-            font-weight: bold; text-transform: uppercase;
+            padding: 10px 18px;
+            font-size: 11px;
+            border-radius: 10px;
+            border: 1px solid var(--neon);
+            background: rgba(100, 255, 218, 0.1);
+            color: var(--neon);
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
-        .withdraw-btn { border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.1); }
+
+        .action-btn:hover {
+            background: rgba(100, 255, 218, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--neon-glow);
+        }
+
+        .withdraw-btn {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .withdraw-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 5px 15px var(--gold-glow);
+        }
 
         /* --- SCROLLABLE AREA --- */
         .scroll-container {
-            flex-grow: 1; overflow-y: auto; padding: 20px 15px; scrollbar-width: none; 
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 30px 20px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon) var(--bg-secondary);
         }
-        .scroll-container::-webkit-scrollbar { display: none; }
 
-        .grid { 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; 
-            max-width: 420px; margin: 0 auto; width: 100%; box-sizing: border-box; 
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: var(--neon);
+            border-radius: 4px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--neon);
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px var(--neon-glow);
+            margin-bottom: 8px;
+        }
+
+        .section-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         .card {
-            aspect-ratio: 1 / 0.85; background: var(--glass); border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px; display: flex; flex-direction: column; justify-content: center;
-            align-items: center; text-decoration: none; color: white; transition: 0.2s;
-            backdrop-filter: blur(5px); font-size: 24px;
+            aspect-ratio: 1 / 1.1;
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 42px;
+            position: relative;
+            overflow: hidden;
         }
-        .card:active { transform: scale(0.95); border-color: var(--neon); background: rgba(100,255,218,0.05); }
-        .card span { font-size: 9px; font-weight: 800; margin-top: 6px; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
-        .new-card { border-color: var(--neon); box-shadow: 0 0 15px rgba(100, 255, 218, 0.1); }
-        .soon-card { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; border-style: dashed; }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--neon), var(--gold));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.08);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--neon-glow);
+        }
+
+        .card:active {
+            transform: translateY(-4px);
+        }
+
+        .card span {
+            font-size: 11px;
+            font-weight: 800;
+            margin-top: 12px;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .new-card {
+            border-color: var(--neon);
+        }
+
+        .new-card::after {
+            content: 'NEW';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--neon);
+            color: #000;
+            font-size: 9px;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .soon-card {
+            opacity: 0.4;
+            filter: grayscale(1);
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        .soon-card:hover {
+            transform: none;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: none;
+        }
 
         /* --- MENU --- */
         .menu {
-            position: absolute; top: 60px; right: 15px; background: #0d1117;
-            border: 1px solid #30363d; border-radius: 12px; width: 200px;
-            display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 200; overflow: hidden;
+            position: absolute;
+            top: 75px;
+            right: 20px;
+            background: var(--glass-dark);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            min-width: 220px;
+            display: none;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
         }
-        .menu.active { display: block; }
-        .menu-item { color: #fff; font-size: 12px; font-weight: bold; padding: 12px 18px; cursor: pointer; display: block; text-decoration: none; border-bottom: 1px solid #21262d; }
-        .menu-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--neon); }
+
+        .menu.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .menu-item {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 14px 20px;
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(100, 255, 218, 0.1);
+            color: var(--neon);
+            padding-left: 25px;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
 
         /* --- MODAL --- */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal.active { display: flex; }
-        .modal-box { background: #0d1117; border: 2px solid var(--neon); padding: 20px; border-radius: 18px; width: 85%; max-width: 300px; text-align: center; }
-        .mode-selector { display: flex; gap: 6px; margin-bottom: 12px; }
-        .m-btn { flex: 1; padding: 8px; font-size: 9px; border-radius: 6px; border: 1px solid #333; background: none; color: #fff; cursor: pointer; }
-        .m-btn.active { background: var(--neon); color: #000; font-weight: bold; }
-        .c-input { width: 100%; padding: 10px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; text-align: center; }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-box {
+            background: var(--glass-dark);
+            border: 2px solid var(--neon);
+            padding: 35px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px var(--neon-glow);
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            letter-spacing: 2px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .m-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 11px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .m-btn.active {
+            background: var(--neon);
+            color: #000;
+            border-color: var(--neon);
+        }
+
+        .m-btn:hover {
+            border-color: var(--neon);
+        }
+
+        .rate-info {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .c-input {
+            width: 100%;
+            padding: 14px;
+            margin: 15px 0;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            font-size: 16px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .c-input:focus {
+            outline: none;
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        .ex-preview {
+            font-size: 13px;
+            color: var(--neon);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .confirm-btn {
+            background: var(--neon);
+            color: #000;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 800;
+            width: 100%;
+            cursor: pointer;
+            font-size: 13px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--neon-glow);
+        }
+
+        .cancel-link {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 18px;
+            cursor: pointer;
+            display: block;
+            transition: color 0.3s ease;
+        }
+
+        .cancel-link:hover {
+            color: var(--neon);
+        }
 
         /* --- WHATSAPP FLOAT --- */
         .wa-float {
             position: fixed;
-            width: 50px;
-            height: 50px;
-            bottom: 25px;
-            right: 20px;
-            background-color: #25d366;
+            width: 60px;
+            height: 60px;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #25d366, #128c7e);
             color: white;
             border-radius: 50%;
             text-align: center;
-            font-size: 22px;
-            box-shadow: 0 0 15px rgba(37, 211, 102, 0.5);
+            font-size: 28px;
+            box-shadow: 0 5px 25px rgba(37, 211, 102, 0.5);
             z-index: 1000;
             display: flex;
             justify-content: center;
             align-items: center;
             text-decoration: none;
-            transition: 0.3s;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            animation: pulse-wa 2s infinite;
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255, 255, 255, 0.2);
         }
-        .wa-float:active { transform: scale(0.85); }
-        @keyframes pulse-wa {
-            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+
+        .wa-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 35px rgba(37, 211, 102, 0.7);
+        }
+
+        .wa-float:active {
+            transform: scale(0.95);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .header {
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .user-stats {
+                padding: 8px 12px;
+            }
+
+            .action-btn {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .card {
+                aspect-ratio: 1 / 1;
+                font-size: 36px;
+            }
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="index.html" class="icon-btn">🏠</a>
+        <a href="index.html" class="icon-btn" title="Home">🏠</a>
+        
         <div class="user-stats">
-            <div class="rank-badge">⭐</div>
-            <div>
+            <div class="rank-badge" id="rankBadge">⭐</div>
+            <div class="stats-content">
                 <div class="rank-text" id="displayRank">RECRUIT</div>
                 <div class="currency-row">
-                    <span style="color:var(--neon)">XP: <span id="displayXP">0</span></span>
-                    <span style="color:var(--gold)">COINS: <span id="displayCoins">0</span></span>
+                    <span class="currency-item" style="color:var(--neon)">XP: <span id="displayXP">0</span></span>
+                    <span class="currency-item" style="color:var(--gold)">COINS: <span id="displayCoins">0</span></span>
                 </div>
             </div>
         </div>
-        
+
         <div class="wallet-actions">
             <a href="deposit.html" class="action-btn">Deposit</a>
             <a href="withdraw.html" class="action-btn withdraw-btn">Withdraw</a>
         </div>
 
-        <div class="icon-btn" id="menuToggle">⚙️</div>
+        <div class="icon-btn" id="menuToggle" title="Menu">⚙️</div>
     </div>
 
     <div class="scroll-container">
+        <div class="section-header">
+            <h1 class="section-title">MISSION HUB</h1>
+            <p class="section-subtitle">Select your challenge</p>
+        </div>
+        
         <div class="grid">
-            <a href="chart.html" class="card">📖<span>CHART</span></a>
-            <a href="game1.html" class="card">⌨️<span>DECODE</span></a>
-            <a href="game2.html" class="card">🧩<span>QUIZ</span></a>
-            <a href="game3.html" class="card">🔎<span>MATCH</span></a>
-            <a href="game4.html" class="card">☄️<span>FALLING</span></a>
-            <a href="game5.html" class="card">🧠<span>RECALL</span></a>
-            <a href="game6.html" class="card new-card">⛈️<span>XP STORM</span></a>
-            <a href="game7.html" class="card new-card">🌀<span>VORTEX</span></a>
-            <a href="game8.html" class="card new-card">🪙<span>COIN FLIP</span></a>
-            <a href="game9.html" class="card new-card">⛏️<span>COINS MINING</span></a>
-            <div class="card soon-card">🔒<span>GAME 10 SOON</span></div>
+            <a href="chart.html" class="card">📖<span>Chart</span></a>
+            <a href="game1.html" class="card">⌨️<span>Decode</span></a>
+            <a href="game2.html" class="card">🧩<span>Quiz</span></a>
+            <a href="game3.html" class="card">🔎<span>Match</span></a>
+            <a href="game4.html" class="card">☄️<span>Falling</span></a>
+            <a href="game5.html" class="card">🧠<span>Recall</span></a>
+            <a href="game6.html" class="card new-card">⛈️<span>XP Storm</span></a>
+            <a href="game7.html" class="card new-card">🌀<span>Vortex</span></a>
+            <a href="game8.html" class="card new-card">🪙<span>Coin Flip</span></a>
+            <a href="game9.html" class="card new-card">⛏️<span>Coins Mining</span></a>
+            <div class="card soon-card">🔒<span>Soon</span></div>
         </div>
     </div>
 
     <div class="menu" id="mainMenu">
-        <div id="adminLinks"></div> 
-        <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 EXCHANGE CENTER</div>
-        
-        <a href="tools.html" class="menu-item" style="color: var(--neon); border-left: 3px solid var(--neon);">🛠️ TOOLS SYSTEM</a>
-        
-        <a href="inbox.html" class="menu-item">📩 MY INBOX</a> 
-        <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ RANK UP STORE</a>
-        <a href="profile.html" class="menu-item">👤 PROFILE</a>
-        <a href="leaderboard.html" class="menu-item">🏆 LEADERBOARD</a>
-        <div class="menu-item" id="logoutBtn" style="color:var(--danger); border:none;">🚪 LOGOUT</div>
+        <div id="adminLinks"></div>
+        <div class="menu-item" style="color:var(--gold)" onclick="openExchange()">💎 Exchange Center</div>
+        <a href="tools.html" class="menu-item" style="color: var(--neon); border-left: 3px solid var(--neon);">🛠️ Tools System</a>
+        <a href="inbox.html" class="menu-item">📩 My Inbox</a>
+        <a href="ranks.html" class="menu-item" style="color:var(--neon)">⭐ Rank Up Store</a>
+        <a href="profile.html" class="menu-item">👤 Profile</a>
+        <a href="leaderboard.html" class="menu-item">🏆 Leaderboard</a>
+        <div class="menu-item" id="logoutBtn" style="color:var(--danger); border:none;">🚪 Logout</div>
     </div>
 
     <div class="modal" id="exModal">
         <div class="modal-box">
-            <h4 style="color:var(--neon); margin:0 0 10px 0;">EXCHANGE</h4>
+            <h4 class="modal-title">EXCHANGE CENTER</h4>
             <div class="mode-selector">
-                <button id="btnCtoX" class="m-btn active" onclick="setExMode('CtoX')">COIN ➔ XP</button>
-                <button id="btnXtoC" class="m-btn" onclick="setExMode('XtoC')">XP ➔ COIN</button>
+                <button id="btnCtoX" class="m-btn active" onclick="setExMode('CtoX')">Coin → XP</button>
+                <button id="btnXtoC" class="m-btn" onclick="setExMode('XtoC')">XP → Coin</button>
             </div>
-            <p id="rate" style="font-size: 10px; color: #888;">1 COIN = 15 XP</p>
+            <p id="rate" class="rate-info">1 COIN = 15 XP</p>
             <input type="number" id="exInput" class="c-input" placeholder="Amount">
-            <div id="exPreview" style="font-size: 11px; color: var(--neon); margin-bottom: 12px;">You get: 0 XP</div>
-            <button onclick="doExchange()" style="background:var(--neon); color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; width:100%; cursor:pointer;">CONFIRM</button>
-            <p onclick="closeExchange()" style="color:#555; font-size:11px; margin-top:12px; cursor:pointer;">Cancel</p>
+            <div id="exPreview" class="ex-preview">You get: 0 XP</div>
+            <button onclick="doExchange()" class="confirm-btn">CONFIRM EXCHANGE</button>
+            <p class="cancel-link" onclick="closeExchange()">Cancel</p>
         </div>
     </div>
 
-    <a href="https://wa.me/923018858303?text=Hi%20Admin,%20I%20need%20help%20with%20HFC%20Academy" class="wa-float" target="_blank">
-        <span>💬</span>
-    </a>
+    <a href="https://wa.me/923018858303?text=Hi%20Admin,%20I%20need%20help%20with%20HFC%20Academy" class="wa-float" target="_blank" title="Contact Support">💬</a>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -221,12 +670,21 @@
         const menu = document.getElementById('mainMenu');
 
         // Menu Toggle
-        toggle.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('active'); };
+        toggle.onclick = (e) => { 
+            e.stopPropagation(); 
+            menu.classList.toggle('active'); 
+        };
+        
         document.onclick = () => menu.classList.remove('active');
+        
         document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => location.href = "auth.html");
 
         // Exchange Functions
-        window.openExchange = () => document.getElementById('exModal').classList.add('active');
+        window.openExchange = () => {
+            document.getElementById('exModal').classList.add('active');
+            menu.classList.remove('active');
+        };
+        
         window.closeExchange = () => document.getElementById('exModal').classList.remove('active');
 
         window.setExMode = (mode) => {
@@ -241,6 +699,7 @@
             const val = parseInt(document.getElementById('exInput').value) || 0;
             document.getElementById('exPreview').innerText = "You get: " + (exMode==='CtoX' ? val*15+" XP" : Math.floor(val/100)+" Coins");
         };
+        
         document.getElementById('exInput').oninput = updateExPreview;
 
         window.doExchange = async () => {
@@ -251,11 +710,11 @@
             const data = snap.data();
 
             if (exMode === 'CtoX') {
-                if ((data.coins||0) < amt) return alert("Low Coins!");
+                if ((data.coins||0) < amt) return alert("Insufficient coins!");
                 await updateDoc(userRef, { coins: increment(-amt), score: increment(amt*15) });
             } else {
-                if (amt < 100) return alert("Min 100 XP!");
-                if ((data.score||0) < amt) return alert("Low XP!");
+                if (amt < 100) return alert("Minimum 100 XP required!");
+                if ((data.score||0) < amt) return alert("Insufficient XP!");
                 await updateDoc(userRef, { score: increment(-amt), coins: increment(Math.floor(amt/100)) });
             }
             closeExchange();
@@ -274,12 +733,14 @@
                     if (data.role === "admin" && !document.getElementById('admMail')) {
                         const adminArea = document.getElementById('adminLinks');
                         adminArea.innerHTML = `
-                            <a href="admin_email.html" id="admMail" class="menu-item" style="color:var(--admin)">📧 ADMIN EMAIL SYSTEM</a>
-                            <a href="admin.html" id="admCmd" class="menu-item" style="color:var(--admin)">🛡️ COMMAND CENTER</a>
+                            <a href="admin_email.html" id="admMail" class="menu-item" style="color:var(--admin)">📧 Admin Email</a>
+                            <a href="admin.html" id="admCmd" class="menu-item" style="color:var(--admin)">🛡️ Command Center</a>
                         `;
                     }
                 });
-            } else { location.href = "auth.html"; }
+            } else { 
+                location.href = "auth.html"; 
+            }
         });
     </script>
 </body>

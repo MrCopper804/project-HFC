@@ -4,115 +4,534 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFC Admin - Master Controller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --admin: #ff0055; --bg: #000; --neon: #64ffda; --gold: #ffd700; --danger: #ff4d4d; }
-        body { 
-            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
-            padding: 10px; margin: 0; min-height: 100vh;
+        :root {
+            --admin: #ff0055;
+            --admin-glow: rgba(255, 0, 85, 0.3);
+            --bg: #05070a;
+            --bg-secondary: #0a0f1a;
+            --neon: #64ffda;
+            --neon-glow: rgba(100, 255, 218, 0.3);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.3);
+            --danger: #ff4d4d;
+            --success: #00b894;
+            --text: #e6f1ff;
+            --text-muted: #556080;
+            --border: rgba(255, 255, 255, 0.05);
+            --border-light: rgba(100, 255, 218, 0.15);
         }
-        .box { 
-            background: rgba(255,0,85,0.05); padding: 20px; border-radius: 20px; 
-            border: 1px solid var(--admin); max-width: 500px; margin: 10px auto; 
+
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
-        input, select { 
-            width: 100%; padding: 12px; margin: 8px 0; background: #111; 
-            border: 1px solid #333; color: white; border-radius: 10px; 
-            box-sizing: border-box; outline: none;
+
+        body {
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at top right, rgba(255, 0, 85, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at bottom left, rgba(100, 255, 218, 0.05) 0%, transparent 40%);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            padding: 20px;
+            min-height: 100vh;
         }
-        button { 
-            width: 100%; padding: 14px; background: var(--admin); color: white; 
-            border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
-            margin-top: 10px; transition: 0.3s;
+
+        /* Header */
+        .admin-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
         }
-        .reset-btn { background: #333; font-size: 11px; padding: 10px; margin-top: 5px; border: 1px solid #444; }
-        .reset-btn:hover { background: var(--danger); border-color: var(--danger); }
-        
-        .table-container { 
-            margin: 20px auto; max-width: 900px; overflow-x: auto; 
-            background: #0a0a0a; border-radius: 15px; border: 1px solid #222; 
+
+        .admin-header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 0, 85, 0.15) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(60px);
         }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
-        th { background: #111; color: var(--neon); padding: 12px; border-bottom: 1px solid #222; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #111; color: #ccc; }
-        .section-title { color: var(--gold); font-size: 14px; letter-spacing: 2px; text-align: center; margin-bottom: 15px; display: block; font-weight: 900; }
-        
-        .req-card { background: #050505; border: 1px solid #222; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .req-info { font-size: 11px; line-height: 1.6; }
-        .btn-group { display: flex; gap: 10px; }
-        .btn-approve { background: var(--neon); color: #000; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
-        .btn-cancel { background: var(--danger); color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 900; cursor: pointer; }
-        .withdraw-card { border-color: var(--gold); background: rgba(255, 215, 0, 0.02); }
-        
-        /* Custom Link Style */
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--admin);
+            letter-spacing: 4px;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 900;
+            text-shadow: 0 0 30px var(--admin-glow);
+            text-transform: uppercase;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 20px;
+            background: rgba(255, 0, 85, 0.15);
+            border: 1px solid var(--admin);
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--admin);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Layout */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Boxes */
+        .box {
+            background: rgba(26, 26, 46, 0.6);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .box-admin {
+            border-color: var(--admin);
+        }
+
+        .box-deposit {
+            border-color: var(--neon);
+        }
+
+        .box-withdraw {
+            border-color: var(--gold);
+        }
+
+        .section-title {
+            color: var(--neon);
+            font-size: 13px;
+            letter-spacing: 3px;
+            text-align: left;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-family: 'Orbitron', sans-serif;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title::before {
+            content: '▸';
+            color: var(--admin);
+            font-size: 18px;
+        }
+
+        .box-withdraw .section-title {
+            color: var(--gold);
+        }
+
+        /* Forms */
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 8px 0;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--admin);
+            background: rgba(255, 0, 85, 0.05);
+            box-shadow: 0 0 0 3px rgba(255, 0, 85, 0.1);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--admin), #ff4d79);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 13px;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 5px 20px var(--admin-glow);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--admin-glow);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        .reset-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* Links */
         .manage-link {
             display: block;
             text-align: center;
-            margin-top: 15px;
+            margin-top: 20px;
             color: var(--admin);
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 13px;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 0, 85, 0.2);
+            background: rgba(255, 0, 85, 0.05);
         }
-        .manage-link:hover { color: var(--neon); }
+
+        .manage-link:hover {
+            color: var(--neon);
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        #status {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 15px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Tables */
+        .table-container {
+            margin: 0;
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .table-container .section-title {
+            padding: 25px 30px;
+            margin-bottom: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--neon);
+            padding: 18px 20px;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        td {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(100, 255, 218, 0.03);
+            color: var(--text);
+        }
+
+        /* Request Cards */
+        .req-container {
+            padding: 20px;
+        }
+
+        .req-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .req-card:hover {
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.03);
+            transform: translateX(5px);
+        }
+
+        .withdraw-card {
+            border-color: rgba(255, 215, 0, 0.2);
+        }
+
+        .withdraw-card:hover {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.03);
+        }
+
+        .req-info {
+            font-size: 12px;
+            line-height: 1.8;
+            flex: 1;
+        }
+
+        .req-info b {
+            color: var(--neon);
+            font-size: 14px;
+        }
+
+        .withdraw-card .req-info b {
+            color: var(--gold);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+            margin-left: 20px;
+        }
+
+        .btn-approve, .btn-cancel {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 10px;
+            cursor: pointer;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            width: auto;
+            margin: 0;
+        }
+
+        .btn-approve {
+            background: var(--neon);
+            color: #000;
+        }
+
+        .btn-approve:hover {
+            background: #4dd9b5;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--neon-glow);
+        }
+
+        .btn-cancel {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-cancel:hover {
+            background: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 77, 77, 0.4);
+        }
+
+        .btn-paid {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .btn-paid:hover {
+            background: #ffe033;
+            box-shadow: 0 5px 15px var(--gold-glow);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+
+            .req-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .btn-group {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .btn-approve, .btn-cancel {
+                flex: 1;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 12px 10px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--admin);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff4d79;
+        }
     </style>
 </head>
 <body>
 
-    <h2 style="text-align:center; color: var(--admin); letter-spacing: 2px;">COMMAND CENTER</h2>
-    
-    <div class="box">
-        <span class="section-title">AGENT MANAGEMENT</span>
-        <input type="email" id="targetEmail" placeholder="Agent Email Address">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <input type="number" id="giveXP" placeholder="+/- XP">
-            <input type="number" id="giveCoins" placeholder="+/- Coins">
-        </div>
-        <select id="setRank">
-            <option value="">-- Change Rank --</option>
-            <option value="recruit">Recruit</option>
-            <option value="agent">Agent</option>
-            <option value="operative">Operative</option>
-            <option value="specialist">Specialist</option>
-            <option value="commander">Commander</option>
-            <option value="legend">Legend</option>
-        </select>
-        <button id="execBtn">EXECUTE UPDATE</button>
-        <button class="reset-btn" id="resetCooldownBtn">RESET WEEKLY MISSION LOCK</button>
-        
-        <a href="userdata.html" class="manage-link">👥 MANAGE ALL USERS (Full DB)</a>
-
-        <p id="status" style="text-align:center; font-size:12px; margin-top:10px; color:#888;">System Ready</p>
+    <div class="admin-header">
+        <h2>⚡ Command Center</h2>
+        <span class="admin-badge">Admin Access Only</span>
     </div>
 
-    <div class="table-container" style="padding: 20px;">
-        <span class="section-title" style="text-align: left; color: var(--neon);">PENDING DEPOSITS</span>
-        <div id="depositContainer">
-            <p style="color: #444; text-align: center;">No pending deposits...</p>
-        </div>
-    </div>
+    <div class="admin-grid">
+        <!-- Left Column - Controls -->
+        <div>
+            <div class="box box-admin">
+                <span class="section-title">Agent Management</span>
+                <input type="email" id="targetEmail" placeholder="Agent Email Address">
+                <div class="input-row">
+                    <input type="number" id="giveXP" placeholder="+/- XP">
+                    <input type="number" id="giveCoins" placeholder="+/- Coins">
+                </div>
+                <select id="setRank">
+                    <option value="">-- Change Rank --</option>
+                    <option value="recruit">Recruit</option>
+                    <option value="agent">Agent</option>
+                    <option value="operative">Operative</option>
+                    <option value="specialist">Specialist</option>
+                    <option value="commander">Commander</option>
+                    <option value="legend">Legend</option>
+                </select>
+                <button id="execBtn">Execute Update</button>
+                <button class="reset-btn" id="resetCooldownBtn">🔄 Reset Weekly Mission Lock</button>
 
-    <div class="table-container" style="padding: 20px; border-color: var(--gold);">
-        <span class="section-title" style="text-align: left; color: var(--gold);">PENDING WITHDRAWALS</span>
-        <div id="withdrawContainer">
-            <p style="color: #444; text-align: center;">No pending withdrawals...</p>
-        </div>
-    </div>
+                <a href="userdata.html" class="manage-link">👥 Manage All Users (Full DB)</a>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>XP</th>
-                    <th>Coins</th>
-                    <th>Rank</th>
-                </tr>
-            </thead>
-            <tbody id="userTableBody"></tbody>
-        </table>
+                <p id="status">System Ready</p>
+            </div>
+        </div>
+
+        <!-- Right Column - Requests & Table -->
+        <div>
+            <!-- Deposits -->
+            <div class="table-container box-deposit" style="margin-bottom: 30px;">
+                <span class="section-title" style="color: var(--neon);">📥 Pending Deposits</span>
+                <div class="req-container" id="depositContainer">
+                    <div class="empty-state">No pending deposits...</div>
+                </div>
+            </div>
+
+            <!-- Withdrawals -->
+            <div class="table-container box-withdraw" style="margin-bottom: 30px;">
+                <span class="section-title" style="color: var(--gold);">📤 Pending Withdrawals</span>
+                <div class="req-container" id="withdrawContainer">
+                    <div class="empty-state">No pending withdrawals...</div>
+                </div>
+            </div>
+
+            <!-- User Table -->
+            <div class="table-container">
+                <span class="section-title">👥 All Agents</span>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>XP</th>
+                            <th>Coins</th>
+                            <th>Rank</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <tr>
+                            <td colspan="5" class="empty-state">Loading agents...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -134,44 +553,46 @@
         // --- LISTEN TO DEPOSITS ---
         onSnapshot(query(collection(db, "deposit_requests"), where("status", "==", "pending")), (snap) => {
             const container = document.getElementById('depositContainer');
-            container.innerHTML = snap.empty ? '<p style="color:#444; text-align:center;">No pending deposits.</p>' : '';
+            container.innerHTML = snap.empty ? '<div class="empty-state">No pending deposits.</div>' : '';
             snap.forEach((req) => {
                 const d = req.data();
-                container.innerHTML += `
-                    <div class="req-card">
-                        <div class="req-info">
-                            <b style="color:var(--neon)">${d.email}</b><br>
-                            PKR: ${d.pkrAmount} ➔ <b>${d.coinsRequested} Coins</b><br>
-                            TID: <span style="color:#fff">${d.transactionID}</span>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn-approve" onclick="approveDeposit('${req.id}', '${d.uid}', ${d.coinsRequested})">APPROVE</button>
-                            <button class="btn-cancel" onclick="cancelRequest('deposit_requests', '${req.id}')">CANCEL</button>
-                        </div>
+                const card = document.createElement('div');
+                card.className = 'req-card';
+                card.innerHTML = `
+                    <div class="req-info">
+                        <b>${d.email}</b><br>
+                        PKR: ${d.pkrAmount} → <b>${d.coinsRequested} Coins</b><br>
+                        TID: <span style="color:#888">${d.transactionID}</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-approve" onclick="approveDeposit('${req.id}', '${d.uid}', ${d.coinsRequested})">Approve</button>
+                        <button class="btn-cancel" onclick="cancelRequest('deposit_requests', '${req.id}')">Cancel</button>
                     </div>
                 `;
+                container.appendChild(card);
             });
         });
 
         // --- LISTEN TO WITHDRAWALS ---
         onSnapshot(query(collection(db, "withdraw_requests"), where("status", "==", "pending")), (snap) => {
             const container = document.getElementById('withdrawContainer');
-            container.innerHTML = snap.empty ? '<p style="color:#444; text-align:center;">No pending withdrawals.</p>' : '';
+            container.innerHTML = snap.empty ? '<div class="empty-state">No pending withdrawals.</div>' : '';
             snap.forEach((req) => {
                 const d = req.data();
-                container.innerHTML += `
-                    <div class="req-card withdraw-card">
-                        <div class="req-info">
-                            <b style="color:var(--gold)">${d.method}: ${d.accountNumber}</b><br>
-                            Name: ${d.accountName} | User: ${d.email}<br>
-                            Coins: ${d.coinsAmount} ➔ <b style="color:#fff">PKR: ${d.pkrAmount}</b>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn-approve" style="background:var(--gold)" onclick="approveWithdraw('${req.id}')">PAID</button>
-                            <button class="btn-cancel" onclick="rejectWithdraw('${req.id}', '${d.uid}', ${d.coinsAmount})">REJECT</button>
-                        </div>
+                const card = document.createElement('div');
+                card.className = 'req-card withdraw-card';
+                card.innerHTML = `
+                    <div class="req-info">
+                        <b>${d.method}: ${d.accountNumber}</b><br>
+                        Name: ${d.accountName} | User: ${d.email}<br>
+                        Coins: ${d.coinsAmount} → <b style="color:#fff">PKR: ${d.pkrAmount}</b>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-approve btn-paid" onclick="approveWithdraw('${req.id}')">Paid</button>
+                        <button class="btn-cancel" onclick="rejectWithdraw('${req.id}', '${d.uid}', ${d.coinsAmount})">Reject</button>
                     </div>
                 `;
+                container.appendChild(card);
             });
         });
 
@@ -180,20 +601,20 @@
             if(!confirm("Approve and add coins?")) return;
             await updateDoc(doc(db, "users", uid), { coins: increment(coins) });
             await deleteDoc(doc(db, "deposit_requests", id));
-            alert("Deposit Approved!");
+            alert("✅ Deposit Approved!");
         };
 
         window.approveWithdraw = async (id) => {
             if(!confirm("Mark as PAID? (Make sure you sent the money first)")) return;
             await deleteDoc(doc(db, "withdraw_requests", id));
-            alert("Withdrawal Closed.");
+            alert("✅ Withdrawal Closed.");
         };
 
         window.rejectWithdraw = async (id, uid, coins) => {
             if(!confirm("Reject and REFUND coins to user?")) return;
             await updateDoc(doc(db, "users", uid), { coins: increment(coins) });
             await deleteDoc(doc(db, "withdraw_requests", id));
-            alert("Rejected and Refunded.");
+            alert("✅ Rejected and Refunded.");
         };
 
         window.cancelRequest = async (col, id) => {
@@ -207,7 +628,7 @@
             const snap = await getDocs(q);
             if(!snap.empty) {
                 await updateDoc(doc(db, "users", snap.docs[0].id), { lastWeeklyCrypt: 0 });
-                alert("Mission Unlocked!");
+                alert("✅ Mission Unlocked!");
             }
         };
 
@@ -216,8 +637,13 @@
             tbody.innerHTML = "";
             snap.forEach(u => {
                 const d = u.data();
-                tbody.innerHTML += `<tr><td style="color:#fff">${d.username || 'N/A'}</td><td>${d.email}</td><td style="color:var(--neon)">${d.score || 0}</td><td style="color:var(--gold)">${d.coins || 0}</td><td style="text-transform:uppercase; font-weight:bold;">${d.rank || 'recruit'}</td></tr>`;
+                const row = document.createElement('tr');
+                row.innerHTML = `<td style="color:#fff">${d.username || 'N/A'}</td><td>${d.email}</td><td style="color:var(--neon)">${d.score || 0}</td><td style="color:var(--gold)">${d.coins || 0}</td><td style="text-transform:uppercase; font-weight:bold; color:var(--admin)">${d.rank || 'recruit'}</td>`;
+                tbody.appendChild(row);
             });
+            if(snap.empty) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No users found.</td></tr>';
+            }
         });
 
         document.getElementById('execBtn').onclick = async () => {
@@ -231,7 +657,11 @@
                 const upData = { score: increment(xp), coins: increment(coins) };
                 if(rank) upData.rank = rank;
                 await updateDoc(doc(db, "users", snap.docs[0].id), upData);
-                alert("Updated!");
+                alert("✅ Updated!");
+                document.getElementById('status').innerText = "Update Executed Successfully";
+                document.getElementById('status').style.color = "var(--neon)";
+            } else {
+                alert("User not found!");
             }
         };
     </script>

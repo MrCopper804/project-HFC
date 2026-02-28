@@ -4,56 +4,316 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HFC - Transaction History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #000; --neon: #64ffda; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); }
-        body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); 
-            background-image: radial-gradient(circle at top, #112240 0%, #000 90%);
-            color: white; margin: 0; padding: 15px; min-height: 100vh; 
+        :root {
+            --bg: #05070a;
+            --bg-secondary: #0a0f1a;
+            --neon: #64ffda;
+            --neon-glow: rgba(100, 255, 218, 0.3);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.3);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-dark: rgba(10, 15, 26, 0.9);
+            --text: #e6f1ff;
+            --text-muted: #556080;
+            --border: rgba(100, 255, 218, 0.15);
+            --success: #00b894;
         }
-        .header { text-align: center; margin-bottom: 20px; }
-        
-        /* Tabs Styling */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-        .tab-btn { 
-            flex: 1; padding: 12px; background: var(--glass); border: 1px solid #333; 
-            color: #888; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 12px;
-        }
-        .tab-btn.active { border-color: var(--neon); color: var(--neon); background: rgba(100, 255, 218, 0.05); }
 
-        .list-container { max-width: 500px; margin: 0 auto; }
-        .history-card { 
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.05); 
-            padding: 15px; border-radius: 15px; margin-bottom: 12px;
-            display: flex; justify-content: space-between; align-items: center;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .info b { display: block; font-size: 14px; margin-bottom: 4px; }
-        .info span { font-size: 10px; color: #666; }
-        
-        .status { font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; }
-        .status-pending { background: #332b00; color: var(--gold); }
-        .status-approved { background: #002b1a; color: var(--neon); }
 
-        .back-btn { display: block; text-align: center; margin-top: 30px; color: #555; text-decoration: none; font-size: 12px; }
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg);
+            background-image: radial-gradient(circle at top, #112240 0%, #05070a 90%);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Back Button */
+        .back-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .back-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass);
+        }
+
+        .back-btn:hover {
+            color: var(--neon);
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            padding: 60px 20px 30px;
+            position: relative;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(100, 255, 218, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            letter-spacing: 3px;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            text-shadow: 0 0 20px var(--neon-glow);
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin: 30px auto;
+            max-width: 400px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .tab-btn:hover {
+            border-color: rgba(100, 255, 218, 0.3);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        .tab-btn.active {
+            border-color: var(--neon);
+            color: var(--neon);
+            background: rgba(100, 255, 218, 0.1);
+            box-shadow: 0 5px 20px var(--neon-glow);
+        }
+
+        .tab-btn[data-tab="withdrawals"].active {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 5px 20px var(--gold-glow);
+        }
+
+        /* List Container */
+        .list-container {
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        /* History Card */
+        .history-card {
+            background: var(--glass-dark);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .history-card:hover {
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+            transform: translateX(5px);
+        }
+
+        .info {
+            flex: 1;
+        }
+
+        .info b {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .info span {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Status Badge */
+        .status {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 8px;
+            letter-spacing: 1px;
+            margin-left: 15px;
+        }
+
+        .status-pending {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .status-approved {
+            background: rgba(100, 255, 218, 0.15);
+            color: var(--neon);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+        }
+
+        .status-rejected {
+            background: rgba(255, 77, 77, 0.15);
+            color: #ff4d4d;
+            border: 1px solid rgba(255, 77, 77, 0.3);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .empty-state-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Return Link */
+        .return-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--neon);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            border: 1px solid var(--neon);
+            padding: 14px 35px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .back-link:hover {
+            background: var(--neon);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-glow);
+            transform: translateY(-3px);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .history-card {
+                padding: 16px;
+            }
+
+            .info b {
+                font-size: 12px;
+            }
+
+            .status {
+                padding: 5px 10px;
+                font-size: 9px;
+                margin-left: 10px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .history-card {
+            animation: fadeIn 0.4s ease forwards;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2 style="color:var(--neon); letter-spacing: 2px;">MISSION LOGS</h2>
-        <p style="font-size: 10px; color: #888;">DEPOSIT & WITHDRAWAL HISTORY</p>
+    <div class="back-nav">
+        <a href="lobby.html" class="back-btn">← Back to Lobby</a>
+    </div>
+
+    <div class="page-header">
+        <h1 class="page-title">📊 Mission Logs</h1>
+        <p class="page-subtitle">Deposit & Withdrawal History</p>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('deposits')">DEPOSITS</button>
-        <button class="tab-btn" onclick="switchTab('withdrawals')">WITHDRAWALS</button>
+        <button class="tab-btn active" onclick="switchTab('deposits')">Deposits</button>
+        <button class="tab-btn" data-tab="withdrawals" onclick="switchTab('withdrawals')">Withdrawals</button>
     </div>
 
     <div class="list-container" id="historyList">
-        <p style="text-align:center; color:#444; margin-top:50px;">Loading logs...</p>
+        <div class="empty-state">
+            <div class="empty-state-icon">⏳</div>
+            <div>Loading transaction logs...</div>
+        </div>
     </div>
 
-    <a href="lobby.html" class="back-btn">← RETURN TO LOBBY</a>
+    <div class="return-section">
+        <a href="lobby.html" class="back-link">Return to Base</a>
+    </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -80,51 +340,71 @@
         if(u) {
             currentUser = u;
             loadHistory();
-        } else { window.location.href="auth.html"; }
+        } else { 
+            window.location.href = "auth.html"; 
+        }
     });
 
     window.switchTab = (tab) => {
         currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.getAttribute('data-tab') === tab || (tab === 'deposits' && !btn.getAttribute('data-tab'))) {
+                btn.classList.add('active');
+            }
+        });
         loadHistory();
     };
 
     function loadHistory() {
         const container = document.getElementById('historyList');
         const collectionName = currentTab === 'deposits' ? 'deposit_requests' : 'withdraw_requests';
-        
+
         const q = query(
-            collection(db, collectionName), 
+            collection(db, collectionName),
             where("uid", "==", currentUser.uid),
             orderBy("timestamp", "desc")
         );
 
         onSnapshot(q, (snap) => {
-            container.innerHTML = snap.empty ? `<p style="text-align:center; color:#444; margin-top:50px;">No ${currentTab} found.</p>` : '';
-            
+            container.innerHTML = snap.empty 
+                ? `<div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div>No ${currentTab} found.</div>
+                   </div>` 
+                : '';
+
             snap.forEach((doc) => {
                 const d = doc.data();
-                const date = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleDateString() : 'Pending...';
-                
-                // PKR and Coins calculation based on type
-                const amountText = currentTab === 'deposits' 
-                    ? `PKR: ${d.pkrAmount} ➔ ${d.coinsRequested} Coins`
-                    : `${d.coinsAmount} Coins ➔ PKR: ${d.pkrAmount}`;
+                const date = d.timestamp 
+                    ? new Date(d.timestamp.seconds * 1000).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      }) 
+                    : 'Pending...';
 
-                container.innerHTML += `
-                    <div class="history-card">
-                        <div class="info">
-                            <b>${amountText}</b>
-                            <span>Date: ${date} | Status: ${d.status}</span>
-                        </div>
-                        <div class="status status-${d.status}">${d.status}</div>
+                const amountText = currentTab === 'deposits'
+                    ? `PKR: ${d.pkrAmount} → ${d.coinsRequested} Coins`
+                    : `${d.coinsAmount} Coins → PKR: ${d.pkrAmount}`;
+
+                const statusClass = d.status === 'pending' ? 'status-pending' 
+                    : d.status === 'approved' ? 'status-approved' 
+                    : 'status-rejected';
+
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                card.innerHTML = `
+                    <div class="info">
+                        <b>${amountText}</b>
+                        <span>Date: ${date} | Status: ${d.status}</span>
                     </div>
+                    <div class="status ${statusClass}">${d.status}</div>
                 `;
+                container.appendChild(card);
             });
         });
     }
 </script>
 </body>
 </html>
-

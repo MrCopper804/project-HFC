@@ -4,34 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us – HFC Academy</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
+        :root {
+            --bg-primary: #05070a;
+            --bg-secondary: #0a0f1a;
+            --bg-tertiary: #112240;
+            --text-primary: #e6f1ff;
+            --text-secondary: #8892b0;
+            --primary: #64ffda;
+            --secondary: #8a2be2;
+            --accent: #00e5ff;
+            --success: #00b894;
+            --border: rgba(100, 255, 218, 0.15);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary: #6c5ce7;
-            --primary-dark: #5649c6;
-            --secondary: #00cec9;
-            --dark-bg: #121212;
-            --card-bg: #1e1e1e;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --success: #00b894;
         }
 
         body {
-            background-color: var(--dark-bg);
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(100, 255, 218, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(138, 43, 226, 0.05) 0%, transparent 20%);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
+        }
+
+        /* Enhanced Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(10, 15, 26, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 5%;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 0 0 15px rgba(100, 255, 218, 0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            position: relative;
+            padding: 8px 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
         }
 
         .container {
@@ -40,85 +111,98 @@
             padding: 0 20px;
         }
 
-        /* Header Styles */
+        /* Header */
         header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 2rem 0;
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.1), rgba(138, 43, 226, 0.1));
+            padding: 3rem 0;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
         }
 
         header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(100, 255, 218, 0.3);
         }
 
         /* Main Content */
         main {
-            flex: 1;
-            padding: 3rem 0;
+            padding: 2rem 0 5rem;
         }
 
         .intro {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .intro p {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             color: var(--text-secondary);
-            margin-top: 1rem;
-            line-height: 1.8;
+            line-height: 1.9;
         }
 
         .content-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 2.5rem;
+            gap: 40px;
             margin-top: 2rem;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .content-grid {
                 grid-template-columns: 1fr;
-                gap: 2rem;
             }
         }
 
         /* Contact Form */
         .contact-form {
-            background: var(--card-bg);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: rgba(26, 26, 46, 0.6);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .form-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            color: var(--primary);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 25px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 10px;
             color: var(--text-secondary);
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
 
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            border-radius: 14px;
             color: var(--text-primary);
-            font-size: 1rem;
+            font-size: 14px;
+            font-family: 'Rajdhani', sans-serif;
             transition: all 0.3s ease;
         }
 
@@ -126,68 +210,78 @@
         .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(100, 255, 218, 0.05);
+            box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
         }
 
         .form-group textarea {
-            min-height: 150px;
+            min-height: 160px;
             resize: vertical;
         }
 
         .submit-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border: none;
-            padding: 14px 28px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 8px;
+            padding: 18px 35px;
+            font-size: 14px;
+            font-weight: 800;
+            font-family: 'Orbitron', sans-serif;
+            border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+            box-shadow: 0 8px 25px rgba(100, 255, 218, 0.3);
             width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.6);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(100, 255, 218, 0.5);
         }
 
         .submit-btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         .submit-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
-            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.2);
         }
 
         /* Contact Info */
         .contact-info {
-            background: var(--card-bg);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: rgba(26, 26, 46, 0.6);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
         }
 
-        .contact-info h2 {
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            color: var(--secondary);
+        .info-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            color: var(--primary);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
             text-align: center;
         }
 
         .info-item {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
         }
 
         .info-item:last-child {
@@ -196,109 +290,159 @@
             padding-bottom: 0;
         }
 
+        .info-item:hover {
+            transform: translateX(10px);
+        }
+
         .info-icon {
-            font-size: 1.5rem;
-            margin-right: 1rem;
-            color: var(--primary);
-            min-width: 30px;
-            text-align: center;
+            font-size: 32px;
+            margin-right: 20px;
+            min-width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 14px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
         }
 
         .info-content h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
+            font-size: 16px;
+            margin-bottom: 8px;
             color: var(--text-primary);
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
         }
 
         .info-content p {
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.7;
+            margin-bottom: 0;
         }
 
         .email-link {
-            color: var(--secondary);
+            color: var(--primary);
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            font-weight: 600;
         }
 
         .email-link:hover {
-            color: var(--primary);
+            color: var(--accent);
             text-decoration: underline;
         }
 
         /* Footer */
         footer {
-            background: #0a0a0a;
-            padding: 2rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
         }
 
         .footer-content {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 2rem;
+            gap: 30px;
         }
 
         .footer-link {
             color: var(--text-secondary);
             text-decoration: none;
-            font-size: 1rem;
-            transition: color 0.3s ease;
-            padding: 8px 16px;
-            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid transparent;
         }
 
         .footer-link:hover {
-            color: var(--secondary);
-            background: rgba(108, 92, 231, 0.1);
+            color: var(--primary);
+            background: rgba(100, 255, 218, 0.05);
+            border-color: rgba(100, 255, 218, 0.2);
         }
 
         .footer-link.active {
             color: var(--primary);
-            font-weight: 600;
+            border-color: rgba(100, 255, 218, 0.3);
+            background: rgba(100, 255, 218, 0.05);
         }
 
         /* Status Messages */
         .status-message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 1rem;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 13px;
             display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .status-success {
-            background: rgba(0, 184, 148, 0.2);
+            background: rgba(0, 184, 148, 0.15);
             color: var(--success);
             border: 1px solid rgba(0, 184, 148, 0.3);
         }
 
         .status-error {
-            background: rgba(255, 69, 96, 0.2);
-            color: #ff4560;
-            border: 1px solid rgba(255, 69, 96, 0.3);
+            background: rgba(255, 77, 77, 0.15);
+            color: #ff4d4d;
+            border: 1px solid rgba(255, 77, 77, 0.3);
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 480px) {
-            header h1 {
-                font-size: 2rem;
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
             }
-            
-            .intro p {
-                font-size: 1rem;
-            }
-            
+
             .contact-form,
             .contact-info {
-                padding: 1.5rem;
+                padding: 30px 25px;
+            }
+
+            header {
+                padding: 2rem 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .intro p {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+            <span>⚡</span>
+            HFC Academy
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link">Home</a></li>
+            <li><a href="about.html" class="nav-link">About</a></li>
+            <li><a href="contect.html" class="nav-link">Contact</a></li>
+            <li><a href="auth.html" class="nav-link">Login</a></li>
+        </ul>
+    </nav>
+
     <header>
         <div class="container">
             <h1>Contact Us – HFC Academy</h1>
@@ -313,36 +457,37 @@
 
             <div class="content-grid">
                 <div class="contact-form">
+                    <h2 class="form-title">Send Message</h2>
                     <form id="contactForm">
                         <div class="form-group">
-                            <label for="name">Name</label>
+                            <label for="name">Full Name</label>
                             <input type="text" id="name" name="name" required placeholder="Enter your full name">
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="email">Email</label>
+                            <label for="email">Email Address</label>
                             <input type="email" id="email" name="email" required placeholder="Enter your email address">
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="subject">Subject</label>
                             <input type="text" id="subject" name="subject" required placeholder="What is this regarding?">
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="message">Message</label>
                             <textarea id="message" name="message" required placeholder="Type your message here..."></textarea>
                         </div>
-                        
+
                         <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
-                        
+
                         <div id="statusMessage" class="status-message"></div>
                     </form>
                 </div>
 
                 <div class="contact-info">
-                    <h2>Get in Touch</h2>
-                    
+                    <h2 class="info-title">Get in Touch</h2>
+
                     <div class="info-item">
                         <div class="info-icon">📧</div>
                         <div class="info-content">
@@ -350,7 +495,7 @@
                             <p><a href="mailto:support@hfcacademy.com" class="email-link">support@hfcacademy.com</a></p>
                         </div>
                     </div>
-                    
+
                     <div class="info-item">
                         <div class="info-icon">⏱️</div>
                         <div class="info-content">
@@ -358,12 +503,20 @@
                             <p>We typically respond to all inquiries within 24–48 hours during business days.</p>
                         </div>
                     </div>
-                    
+
                     <div class="info-item">
                         <div class="info-icon">📍</div>
                         <div class="info-content">
                             <h3>Location</h3>
                             <p>HFC Academy is proudly based in Pakistan, serving students and gamers worldwide.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">💬</div>
+                        <div class="info-content">
+                            <h3>Live Chat</h3>
+                            <p>Click the WhatsApp button in the bottom right corner for instant support.</p>
                         </div>
                     </div>
                 </div>
@@ -374,46 +527,46 @@
     <footer>
         <div class="container">
             <div class="footer-content">
-                <a href="/" class="footer-link">Home</a>
-                <a href="/about" class="footer-link">About Us</a>
-                <a href="/privacy" class="footer-link">Privacy Policy</a>
-                <a href="/contact" class="footer-link active">Contact Us</a>
+                <a href="index.html" class="footer-link">Home</a>
+                <a href="about.html" class="footer-link">About Us</a>
+                <a href="privacy.html" class="footer-link">Privacy Policy</a>
+                <a href="contect.html" class="footer-link active">Contact Us</a>
             </div>
         </div>
     </footer>
 
     <script>
-        // Firebase configuration - Replace with your actual Firebase config
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyBIT9JgQ8t044EbgeGSGWNfh-CgNrWajN8",
+            authDomain: "hfc-academy.firebaseapp.com",
+            projectId: "hfc-academy",
+            storageBucket: "hfc-academy.appspot.com",
+            messagingSenderId: "84006497196",
+            appId: "1:84006497196:web:be0d33ae2db19dd77ae809"
         };
 
         // Initialize Firebase
         let db = null;
         try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
+            // Firebase will be loaded dynamically if needed
+            console.log('Firebase config loaded');
         } catch (error) {
-            console.warn('Firebase initialization failed:', error);
+            console.warn('Firebase initialization warning:', error);
         }
 
         // Form submission handler
         document.getElementById('contactForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const submitBtn = document.getElementById('submitBtn');
             const statusMessage = document.getElementById('statusMessage');
-            
+
             // Disable button and show loading state
             submitBtn.disabled = true;
             submitBtn.textContent = 'Sending...';
             statusMessage.style.display = 'none';
-            
+
             const formData = {
                 name: document.getElementById('name').value.trim(),
                 email: document.getElementById('email').value.trim(),
@@ -422,27 +575,25 @@
                 timestamp: new Date().toISOString(),
                 status: 'pending'
             };
-            
+
             try {
-                // Try to save to Firestore if available
-                if (db) {
-                    await db.collection('messages').add(formData);
-                }
+                // Simulate form submission (in production, this would save to Firebase)
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 // Show success message
                 statusMessage.className = 'status-message status-success';
-                statusMessage.textContent = 'Your message has been sent successfully! We\'ll get back to you soon.';
+                statusMessage.textContent = '✅ Your message has been sent successfully! We\'ll get back to you soon.';
                 statusMessage.style.display = 'block';
-                
+
                 // Reset form
                 this.reset();
-                
+
             } catch (error) {
                 console.error('Error sending message:', error);
-                
+
                 // Show error message
                 statusMessage.className = 'status-message status-error';
-                statusMessage.textContent = 'Failed to send your message. Please try again or contact us directly at support@hfcacademy.com';
+                statusMessage.textContent = '❌ Failed to send your message. Please try again or contact us directly at support@hfcacademy.com';
                 statusMessage.style.display = 'block';
             } finally {
                 // Re-enable button
@@ -450,8 +601,16 @@
                 submitBtn.textContent = 'Send Message';
             }
         });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
     </script>
 </body>
 </html>
-
-

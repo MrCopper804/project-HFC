@@ -4,21 +4,270 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HFC - Secure Inbox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #64ffda; --bg: #000; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 20px; }
-        .msg-card { background: #0a0a0a; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid #222; position: relative; }
-        .msg-card.unread { border-left-color: var(--neon); background: #0d1a17; }
-        .time { font-size: 10px; color: #555; display: block; margin-bottom: 5px; }
-        .text { font-size: 14px; color: #eee; line-height: 1.5; }
-        .badge { background: var(--neon); color: black; font-size: 9px; padding: 2px 6px; border-radius: 4px; position: absolute; top: 10px; right: 10px; font-weight: bold; }
-        #loader { text-align: center; color: var(--neon); margin-top: 50px; font-size: 12px; letter-spacing: 2px; }
+        :root {
+            --bg: #05070a;
+            --bg-secondary: #0a0f1a;
+            --neon: #64ffda;
+            --neon-glow: rgba(100, 255, 218, 0.3);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-dark: rgba(10, 15, 26, 0.9);
+            --text: #e6f1ff;
+            --text-muted: #556080;
+            --border: rgba(100, 255, 218, 0.15);
+            --gold: #ffd700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg);
+            background-image: radial-gradient(circle at top, #112240 0%, #05070a 90%);
+            color: var(--text);
+            margin: 0;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
+        /* Back Button */
+        .back-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .back-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass);
+        }
+
+        .back-btn:hover {
+            color: var(--neon);
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            padding: 40px 20px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(100, 255, 218, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            letter-spacing: 3px;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            text-shadow: 0 0 20px var(--neon-glow);
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Container */
+        .inbox-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Message Card */
+        .msg-card {
+            background: var(--glass-dark);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 22px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            border-left: 4px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .msg-card:hover {
+            transform: translateX(8px);
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .msg-card.unread {
+            border-left-color: var(--neon);
+            background: rgba(13, 26, 23, 0.8);
+        }
+
+        .msg-card.unread::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 10px;
+            height: 10px;
+            background: var(--neon);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Badge */
+        .badge {
+            background: var(--neon);
+            color: #000;
+            font-size: 9px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Time */
+        .time {
+            font-size: 10px;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Text */
+        .text {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.7;
+            padding-right: 60px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .empty-state-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Loader */
+        .loader {
+            text-align: center;
+            color: var(--neon);
+            margin-top: 50px;
+            font-size: 12px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .loader-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 15px;
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .msg-card {
+                padding: 18px;
+            }
+
+            .text {
+                font-size: 13px;
+                padding-right: 0;
+            }
+
+            .badge {
+                position: static;
+                display: inline-block;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-card {
+            animation: fadeIn 0.4s ease forwards;
+        }
     </style>
 </head>
 <body>
 
-    <h2 style="color: var(--neon); letter-spacing: 1px;">MISSION INBOX</h2>
-    <div id="msgContainer"><p id="loader">SYNCHRONIZING WITH DATABASE...</p></div>
+    <div class="back-nav">
+        <a href="lobby.html" class="back-btn">← Back to Lobby</a>
+    </div>
+
+    <div class="page-header">
+        <h1 class="page-title">📩 Mission Inbox</h1>
+        <p class="page-subtitle">Secure Message Center</p>
+    </div>
+
+    <div class="inbox-container">
+        <div id="msgContainer">
+            <div class="loader">
+                <span class="loader-icon">📡</span>
+                Synchronizing with database...
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -48,19 +297,18 @@
                     container.innerHTML = "";
                     let found = false;
 
-                    // Dono type ke data ko support karne wala logic
                     snap.forEach((msgDoc) => {
                         const data = msgDoc.data();
-                        
-                        // Check Target (Jo dono screenshots mein alag hai)
+
+                        // Check Target
                         const target = (data.target || data.to || "").toLowerCase().trim();
 
                         if (target === myEmail || target === "all_users") {
                             found = true;
-                            
-                            // Check Message Content (Jo dono screenshots mein alag hai)
+
+                            // Check Message Content
                             const content = data.message || data.text || "No Data Transmission";
-                            
+
                             // Check Read Status
                             const isUnread = data.read === false || data.read === undefined;
 
@@ -69,13 +317,18 @@
                             if(data.timestamp || data.time) {
                                 let t = data.timestamp || data.time;
                                 let d = t.seconds ? new Date(t.seconds * 1000) : new Date(t);
-                                timeStr = d.toLocaleString();
+                                timeStr = d.toLocaleString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
                             }
 
                             const card = document.createElement('div');
                             card.className = `msg-card ${isUnread ? 'unread' : ''}`;
                             card.innerHTML = `
-                                ${isUnread ? '<span class="badge">ENCRYPTED</span>' : ''}
+                                ${isUnread ? '<span class="badge">New</span>' : ''}
                                 <span class="time">${timeStr}</span>
                                 <div class="text">${content}</div>
                             `;
@@ -87,14 +340,19 @@
                                         readBy: myEmail
                                     });
                                 }
-                                alert("Transmission Acknowledged.");
+                                alert("✓ Transmission Acknowledged");
                             };
                             container.prepend(card);
                         }
                     });
 
                     if(!found) {
-                        container.innerHTML = `<p style="text-align:center; color:#444; margin-top:40px;">NO DATA FOUND FOR:<br>${myEmail}</p>`;
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div>NO MESSAGES FOUND FOR:<br><span style="color: var(--neon)">${myEmail}</span></div>
+                            </div>
+                        `;
                     }
                 });
             } else {

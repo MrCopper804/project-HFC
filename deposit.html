@@ -4,31 +4,385 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HFC - Deposit Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #000; --neon: #64ffda; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --danger: #ff4d4d; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); background-image: radial-gradient(circle at top, #112240 0%, #000 90%); color: white; margin: 0; padding: 20px; min-height: 100vh; }
-        .card { background: var(--glass); border: 1px solid rgba(100, 255, 218, 0.1); padding: 25px; border-radius: 24px; backdrop-filter: blur(15px); max-width: 400px; margin: 0 auto; }
-        input { width: 100%; padding: 15px; margin: 10px 0; background: #111; border: 1px solid #333; color: white; border-radius: 12px; box-sizing: border-box; outline: none; }
-        .btn-deposit { width: 100%; padding: 18px; background: var(--neon); color: #000; border: none; border-radius: 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
-        .status-msg { font-size: 12px; text-align: center; margin-top: 15px; font-weight: bold; }
-        .calc-box { font-size: 14px; color: var(--neon); margin: 15px 0; font-weight: 900; text-align: center; }
+        :root {
+            --bg: #05070a;
+            --bg-secondary: #0a0f1a;
+            --neon: #64ffda;
+            --neon-glow: rgba(100, 255, 218, 0.3);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.3);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-dark: rgba(10, 15, 26, 0.8);
+            --danger: #ff4d4d;
+            --success: #00b894;
+            --text: #e6f1ff;
+            --text-muted: #556080;
+            --border: rgba(100, 255, 218, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at top, #112240 0%, #05070a 90%),
+                radial-gradient(circle at 50% 50%, rgba(100, 255, 218, 0.03) 0%, transparent 60%);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Back Button */
+        .back-nav {
+            width: 100%;
+            padding: 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .back-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass);
+        }
+
+        .back-btn:hover {
+            color: var(--neon);
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            padding: 80px 20px 40px;
+            position: relative;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(100, 255, 218, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(60px);
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            color: var(--neon);
+            letter-spacing: 3px;
+            font-weight: 900;
+            text-shadow: 0 0 20px var(--neon-glow);
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--gold);
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: rgba(255, 215, 0, 0.1);
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Card */
+        .card {
+            background: var(--glass-dark);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            max-width: 450px;
+            width: 90%;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px var(--neon-glow);
+        }
+
+        /* Calculator Display */
+        .calc-display {
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.1), rgba(0, 229, 255, 0.05));
+            border: 1px solid var(--neon);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(100, 255, 218, 0.15);
+        }
+
+        .calc-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .calc-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--neon);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px var(--neon-glow);
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--neon);
+            background: rgba(100, 255, 218, 0.05);
+            box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(255, 215, 0, 0.08);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .info-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .info-text strong {
+            color: var(--gold);
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--neon), #4dd9b5);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 14px;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px var(--neon-glow);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px var(--neon-glow);
+        }
+
+        .btn-submit:active {
+            transform: translateY(-1px);
+        }
+
+        /* Status Message */
+        .status-msg {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 700;
+            min-height: 18px;
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .status-success {
+            color: var(--success);
+            background: rgba(0, 184, 148, 0.1);
+            border: 1px solid rgba(0, 184, 148, 0.2);
+        }
+
+        .status-error {
+            color: var(--danger);
+            background: rgba(255, 77, 77, 0.1);
+            border: 1px solid rgba(255, 77, 77, 0.2);
+        }
+
+        .status-warning {
+            color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        /* Rate Info */
+        .rate-info {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+        }
+
+        .rate-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .rate-info strong {
+            color: var(--neon);
+            font-size: 14px;
+        }
+
+        /* Footer Note */
+        .footer-note {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 11px;
+            color: var(--text-muted);
+            max-width: 400px;
+            line-height: 1.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .card {
+                padding: 30px 25px;
+            }
+
+            .calc-value {
+                font-size: 22px;
+            }
+
+            .form-input {
+                padding: 16px 18px;
+                font-size: 14px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.5s ease;
+        }
     </style>
 </head>
 <body>
 
-    <div style="text-align:center; margin-bottom:20px;">
-        <h2 style="color:var(--neon); letter-spacing: 3px;">DEPOSIT FUNDS</h2>
-        <p style="color:var(--gold); font-size:11px;">SADAPAY: 03018858303 (1 PKR = 30 Coins)</p>
+    <div class="back-nav">
+        <a href="lobby.html" class="back-btn">
+            ← Back to Lobby
+        </a>
+    </div>
+
+    <div class="page-header">
+        <h1 class="page-title">💰 Deposit Center</h1>
+        <p class="page-subtitle">SADAPAY: 03018858303</p>
     </div>
 
     <div class="card">
-        <div id="calcDisplay" class="calc-box">RECEIVE: 0 COINS</div>
-        <input type="number" id="pkrInput" placeholder="Enter PKR Amount" oninput="document.getElementById('calcDisplay').innerText = 'RECEIVE: ' + (this.value * 30) + ' COINS'">
-        <input type="text" id="transID" placeholder="Enter Transaction ID (TID)">
-        
-        <button class="btn-deposit" id="submitReq">SUBMIT REQUEST</button>
+        <div id="calcDisplay" class="calc-display">
+            <div class="calc-label">You Will Receive</div>
+            <div class="calc-value">0 COINS</div>
+        </div>
+
+        <div class="info-box">
+            <span class="info-icon">💡</span>
+            <div class="info-text">
+                <strong>Exchange Rate:</strong> 1 PKR = 30 Coins<br>
+                Send PKR to the number above, then submit your transaction ID.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">PKR Amount</label>
+            <input type="number" id="pkrInput" class="form-input" placeholder="Enter amount (e.g., 100)" oninput="updateCalc()">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Transaction ID (TID)</label>
+            <input type="text" id="transID" class="form-input" placeholder="Enter transaction ID from your payment app">
+        </div>
+
+        <button class="btn-submit" id="submitReq">Submit Request</button>
         <p id="msg" class="status-msg"></p>
+
+        <div class="rate-info">
+            <p>Need help? Contact support on WhatsApp</p>
+            <strong>03018858303</strong>
+        </div>
     </div>
+
+    <p class="footer-note">
+        ⚠️ Please double-check your transaction ID. Incorrect TIDs may delay your deposit processing. 
+        Admin will verify and approve your request within 24-48 hours.
+    </p>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -49,7 +403,20 @@
     const db = getFirestore(app);
 
     let currentUser = null;
-    onAuthStateChanged(auth, u => { if(u) currentUser = u; else window.location.href="auth.html"; });
+    onAuthStateChanged(auth, u => { 
+        if(u) {
+            currentUser = u;
+        } else { 
+            window.location.href = "auth.html"; 
+        }
+    });
+
+    // Update calculator display
+    window.updateCalc = () => {
+        const pkr = document.getElementById('pkrInput').value;
+        const coins = pkr ? parseInt(pkr) * 30 : 0;
+        document.getElementById('calcDisplay').querySelector('.calc-value').innerText = coins.toLocaleString() + ' COINS';
+    }
 
     document.getElementById('submitReq').onclick = async () => {
         const pkr = document.getElementById('pkrInput').value;
@@ -57,13 +424,14 @@
         const statusMsg = document.getElementById('msg');
 
         if (!pkr || pkr <= 0 || !tid) {
-            alert("Please fill all fields correctly!");
+            statusMsg.className = 'status-msg status-warning';
+            statusMsg.innerText = "⚠️ Please fill all fields correctly!";
             return;
         }
 
         try {
-            statusMsg.innerText = "Submitting to HFC Database...";
-            statusMsg.style.color = "var(--gold)";
+            statusMsg.className = 'status-msg status-warning';
+            statusMsg.innerText = "⏳ Submitting to database...";
 
             // Direct Save to Firestore
             await addDoc(collection(db, "deposit_requests"), {
@@ -76,18 +444,17 @@
                 timestamp: serverTimestamp()
             });
 
-            statusMsg.innerText = "SUCCESS! REQUEST SENT TO ADMIN.";
-            statusMsg.style.color = "var(--neon)";
-            alert("Deposit Request Submitted! Admin will verify your TID.");
+            statusMsg.className = 'status-msg status-success';
+            statusMsg.innerText = "✅ SUCCESS! REQUEST SENT TO ADMIN.";
             
+            // Clear form
             document.getElementById('pkrInput').value = "";
             document.getElementById('transID').value = "";
 
         } catch (error) {
             console.error(error);
-            alert("Error: " + error.message);
-            statusMsg.innerText = "Submission Failed.";
-            statusMsg.style.color = "red";
+            statusMsg.className = 'status-msg status-error';
+            statusMsg.innerText = "❌ Error: " + error.message;
         }
     };
 </script>
