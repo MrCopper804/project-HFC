@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SnipeSMM Deposit Calculator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+.wrap{max-width:760px;margin:auto;padding:18px}.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:15px;box-shadow:0 5px 20px #0001}
+h1{font-size:24px;margin:0 0 7px}.muted,.note{color:#667085;font-size:13px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select{width:100%;padding:12px;border:1px solid #d5dbe5;border-radius:10px;font-size:16px;background:#fff}
+.full{grid-column:1/-1}.row{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid #edf0f4}
+.row:last-child{border:0}.row span:last-child{text-align:right;font-weight:700}.big{font-size:25px;font-weight:800}
+.confirm{background:#eef7ff;border:2px solid #1677ff}.confirm .row:last-child span:last-child{font-size:28px;color:#1677ff}
+button{width:100%;border:0;border-radius:11px;padding:13px;background:#1677ff;color:#fff;font-size:16px;font-weight:700}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+<h1>💰 SnipeSMM Deposit → SocialRank Calculator</h1>
+<p class="muted">Calculate the customer's final account balance and the amount you need to fund at SocialRank.</p>
+<div class="grid">
+<div><label>Customer Cash Deposit</label><input id="deposit" type="number" step="0.01" value="500"></div>
+<div><label>Your Markup (%)</label><input id="markup" type="number" step="0.01" value="110"></div>
+
+<div><label>User Discount</label><input id="discount" type="number" step="0.01" value="0"></div>
+<div><label>Discount Type</label><select id="discountType"><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount</option></select></div>
+
+<div><label>Coupon Code Balance</label><input id="coupon" type="number" step="0.01" value="20"></div>
+<div><label>Coupon Type</label><select id="couponType"><option value="fixed">Fixed amount</option><option value="percent">Percentage (%)</option></select></div>
+
+<div><label>Easypaisa Bonus</label><input id="ep" type="number" step="0.01" value="5"></div>
+<div><label>Easypaisa Bonus Type</label><select id="epType"><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount</option></select></div>
+
+<div><label>New User Free Balance</label><input id="free" type="number" step="0.01" value="0"></div>
+<div><label>Free Balance Type</label><select id="freeType"><option value="fixed">Fixed amount</option><option value="percent">Percentage (%)</option></select></div>
+
+<div class="full"><button id="reset">Reset</button></div>
+</div></div>
+
+<div class="card">
+<h3>📊 Calculation</h3>
+<div class="row"><span>Cash Deposit</span><span id="cash">0</span></div>
+<div class="row"><span>User Discount</span><span id="d">0</span></div>
+<div class="row"><span>Coupon Balance</span><span id="c">0</span></div>
+<div class="row"><span>Easypaisa Bonus</span><span id="e">0</span></div>
+<div class="row"><span>New User Free Balance</span><span id="f">0</span></div>
+<div class="row"><span>Total Customer Balance</span><span class="big" id="account">0</span></div>
+<div class="row"><span>SocialRank Required Amount</span><span class="big" id="provider">0</span></div>
+<div class="row"><span>Estimated Difference / Profit</span><span class="big" id="profit">0</span></div>
+</div>
+
+<div class="card confirm">
+<h3>✅ Final Confirmation</h3>
+<div class="row"><span><b>User ke account mein show hoga</b></span><span class="big" id="finalAccount">0</span></div>
+<div class="row"><span><b>SocialRank mein deposit karna hai</b></span><span class="big" id="finalProvider">0</span></div>
+<p class="note">SocialRank amount = final customer balance ÷ (1 + markup/100). This assumes the customer's complete available balance is eventually used for services.</p>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>Number.isFinite(n)?n.toFixed(2):"0.00";
+function val(id){return Math.max(0,parseFloat($(id).value)||0)}
+function benefit(id,type,base){const x=val(id);return $(type).value==="percent"?base*x/100:x}
+
+function calc(){
+ const deposit=val("deposit"), markup=val("markup");
+ const discount=benefit("discount","discountType",deposit);
+ const coupon=benefit("coupon","couponType",deposit);
+ const easypaisa=benefit("ep","epType",deposit);
+ const free=benefit("free","freeType",deposit);
+
+ /*
+   Benefits are credits added to the user's account.
+   User discount is also treated as a benefit/credit, matching the requested
+   "user ke account mein show hoga" model.
+ */
+ const account=Math.max(0,deposit+discount+coupon+easypaisa+free);
+ const provider=account/(1+markup/100);
+ const difference=deposit-provider;
+
+ $("cash").textContent=money(deposit);
+ $("d").textContent=money(discount);
+ $("c").textContent=money(coupon);
+ $("e").textContent=money(easypaisa);
+ $("f").textContent=money(free);
+ $("account").textContent=money(account);
+ $("provider").textContent=money(provider);
+ $("profit").textContent=money(difference);
+ $("finalAccount").textContent=money(account);
+ $("finalProvider").textContent=money(provider);
+}
+
+document.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",calc));
+$("reset").onclick=()=>{
+ $("deposit").value=100;
+ $("markup").value=110;
+ $("discount").value=0;
+ $("discountType").value="percent";
+ $("coupon").value=0;
+ $("couponType").value="fixed";
+ $("ep").value=0;
+ $("epType").value="percent";
+ $("free").value=0;
+ $("freeType").value="fixed";
+ calc();
+};
+calc();
+</script>
+</body>
+</html>
